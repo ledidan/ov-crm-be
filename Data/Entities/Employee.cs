@@ -9,9 +9,9 @@ namespace Data.Entities
         public string? Fullname { get; set; }
         public DateTime DateOfBirth { get; set; }
         public string? PhoneNumber { get; set; }
-
         public string? StreetAddress { get; set; }
         public string? District { get; set; }
         public string? Province { get; set; }
+        public virtual required Partner Partner { get; set; }
     }
 }

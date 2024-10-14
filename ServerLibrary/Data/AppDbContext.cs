@@ -9,5 +9,9 @@ namespace ServerLibrary.Data
         public DbSet<SystemRole> SystemRoles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<RefreshTokenInfo> RefreshTokenInfos { get; set; }
+        public DbSet<Partner> Partners { get; set; }
+        public DbSet<PartnerUser> PartnerUsers { get; set; }
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<Customer> Customers { get; set; }
     }
 }

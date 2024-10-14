@@ -35,7 +35,7 @@ namespace ServerLibrary.Services.Implementations
             var checkingRole = await CheckSystemRole(user.Role!);
             if (checkingRole == null) return new GeneralResponse(false, "Role not found");
 
-            await AddToDatabase(new UserRole() { RoleId = checkingRole.Id, UserId = applicationUser.Id });
+            await AddToDatabase(new UserRole() { Role = checkingRole, User = applicationUser });
 
             return new GeneralResponse(true, "User created");
         }
@@ -59,7 +59,7 @@ namespace ServerLibrary.Services.Implementations
 
         private async Task<UserRole?> FindUserRole(int userId)
         {
-            return await appDbContext.UserRoles.FirstOrDefaultAsync(_ => _.UserId == userId);
+            return await appDbContext.UserRoles.Include(_ => _.Role).FirstOrDefaultAsync(_ => _.User.Id == userId);
         }
 
         private async Task<SystemRole?> FindSystemRole(int roleId)
@@ -80,7 +80,7 @@ namespace ServerLibrary.Services.Implementations
 
             var userRole = await FindUserRole(applicationUser.Id);
             if (userRole == null) return new LoginResponse(false, "User role not found");
-            var systemRole = await FindSystemRole(userRole.RoleId);
+            var systemRole = await FindSystemRole(userRole.Role.Id);
 
             string jwtToken = GenerateToken(applicationUser, systemRole!.Name);
             string refreshToken = GenerateRefreshToken();
@@ -108,13 +108,29 @@ namespace ServerLibrary.Services.Implementations
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.Value.Key!));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            var userClaims = new[]
+            Claim[] userClaims;
+            if (role != Constants.Role.SysAdmin)
             {
-                new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
-                new Claim(ClaimTypes.Name, applicationUser.Fullname!),
-                new Claim(ClaimTypes.Email, applicationUser.Email!),
-                new Claim(ClaimTypes.Role, role!)
-            };
+                var partnerUser = appDbContext.PartnerUsers.Include(_ => _.Partner).FirstOrDefault(x => x.User.Id == applicationUser.Id);
+                userClaims = new[] 
+                {
+                    new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
+                    new Claim(ClaimTypes.Name, applicationUser.Fullname!),
+                    new Claim(ClaimTypes.Email, applicationUser.Email!),
+                    new Claim(ClaimTypes.Role, role!),
+                    new Claim("PartnerId", partnerUser.Partner.Id.ToString()),
+                };
+            }
+            else
+            {
+                userClaims = new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
+                    new Claim(ClaimTypes.Name, applicationUser.Fullname!),
+                    new Claim(ClaimTypes.Email, applicationUser.Email!),
+                    new Claim(ClaimTypes.Role, role!)
+                };
+            }
             var token = new JwtSecurityToken(
                 issuer: config.Value.Issuer,
                 audience: config.Value.Audience,
@@ -142,7 +158,7 @@ namespace ServerLibrary.Services.Implementations
             if (user == null) return new LoginResponse(false, "Refresh token could not be generated because user not found");
 
             var userRole = await FindUserRole(user.Id);
-            var systemRole = await FindSystemRole(userRole.RoleId);
+            var systemRole = await FindSystemRole(userRole.Role.Id);
             string jwtToken = GenerateToken(user, systemRole?.Name);
             string refreshToken = GenerateRefreshToken();
 
