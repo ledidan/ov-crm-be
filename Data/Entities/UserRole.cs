@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Data.Entities
 {
@@ -6,10 +7,10 @@ namespace Data.Entities
     {
         public int Id { get; set; }
 
-        [ForeignKey("SystemRole")]
-        public int RoleId { get; set; }
+        [Required]
+        public virtual required SystemRole Role { get; set; }
 
-        [ForeignKey("ApplicationUser")]
-        public int UserId { get; set; }
+        [Required]
+        public virtual required ApplicationUser User { get; set; }
     }
 }
