@@ -23,6 +23,10 @@ namespace ServerLibrary.Services.Implementations
             var checkingUser = await FindUserByEmail(user.Email);
             if (checkingUser != null) return new GeneralResponse(false, "User already exist");
 
+            //check, create and assign role
+            var checkingRole = await CheckSystemRole(user.Role!);
+            if (checkingRole == null) return new GeneralResponse(false, "Role not found");
+
             //add user
             var applicationUser = await AddToDatabase(new ApplicationUser()
             {
@@ -30,10 +34,6 @@ namespace ServerLibrary.Services.Implementations
                 Fullname = user.Fullname,
                 Password = BCrypt.Net.BCrypt.HashPassword(user.Password)
             });
-
-            //check, create and assign role
-            var checkingRole = await CheckSystemRole(user.Role!);
-            if (checkingRole == null) return new GeneralResponse(false, "Role not found");
 
             await AddToDatabase(new UserRole() { Role = checkingRole, User = applicationUser });
 
@@ -67,7 +67,7 @@ namespace ServerLibrary.Services.Implementations
             return await appDbContext.SystemRoles.FirstOrDefaultAsync(_ => _.Id == roleId);
         }
 
-        public async Task<LoginResponse> SingInAsync(Login user)
+        public async Task<LoginResponse> SignInAsync(Login user)
         {
             if (user == null) return new LoginResponse(false, "Model is empty");
 
