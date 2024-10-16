@@ -28,14 +28,14 @@ namespace ServerLibrary.Services.Implementations
             if (checkingRole == null) return new GeneralResponse(false, "Role not found");
 
             //add user
-            var applicationUser = await AddToDatabase(new ApplicationUser()
+            var applicationUser = await appDbContext.AddToDatabase(new ApplicationUser()
             {
                 Email = user.Email,
                 Fullname = user.Fullname,
                 Password = BCrypt.Net.BCrypt.HashPassword(user.Password)
             });
 
-            await AddToDatabase(new UserRole() { Role = checkingRole, User = applicationUser });
+            await appDbContext.AddToDatabase(new UserRole() { Role = checkingRole, User = applicationUser });
 
             return new GeneralResponse(true, "User created");
         }
@@ -43,13 +43,6 @@ namespace ServerLibrary.Services.Implementations
         private async Task<SystemRole?> CheckSystemRole(string role)
         {
             return await appDbContext.SystemRoles.FirstOrDefaultAsync(r => r.Name!.ToLower().Equals(role.ToLower()));
-        }
-
-        private async Task<T> AddToDatabase<T>(T model)
-        {
-            var result = appDbContext.Add(model!);
-            await appDbContext.SaveChangesAsync();
-            return (T)result.Entity;
         }
 
         private async Task<ApplicationUser?> FindUserByEmail(string? email)
@@ -82,7 +75,8 @@ namespace ServerLibrary.Services.Implementations
             if (userRole == null) return new LoginResponse(false, "User role not found");
             var systemRole = await FindSystemRole(userRole.Role.Id);
 
-            string jwtToken = GenerateToken(applicationUser, systemRole!.Name);
+            string jwtToken = await GenerateToken(applicationUser, systemRole!.Name);
+            if (string.IsNullOrEmpty(jwtToken)) return new LoginResponse(false, "Partner of user not found");
             string refreshToken = GenerateRefreshToken();
 
             //save Refresh token
@@ -94,7 +88,7 @@ namespace ServerLibrary.Services.Implementations
             }
             else
             {
-                await AddToDatabase(new RefreshTokenInfo() { Token = refreshToken, UserId = applicationUser.Id });
+                await appDbContext.AddToDatabase(new RefreshTokenInfo() { Token = refreshToken, UserId = applicationUser.Id });
             }    
             return new LoginResponse(true, "Login sucessfully", jwtToken, refreshToken);
         }
@@ -104,14 +98,15 @@ namespace ServerLibrary.Services.Implementations
             return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         }
 
-        private string GenerateToken(ApplicationUser applicationUser, string? role)
+        private async Task<string> GenerateToken(ApplicationUser applicationUser, string? role)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.Value.Key!));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             Claim[] userClaims;
             if (role != Constants.Role.SysAdmin)
             {
-                var partnerUser = appDbContext.PartnerUsers.Include(_ => _.Partner).FirstOrDefault(x => x.User.Id == applicationUser.Id);
+                var partnerUser = await appDbContext.PartnerUsers.Include(_ => _.Partner).FirstOrDefaultAsync(x => x.User.Id == applicationUser.Id);
+                if (partnerUser == null) return string.Empty;
                 userClaims = new[] 
                 {
                     new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
@@ -158,8 +153,9 @@ namespace ServerLibrary.Services.Implementations
             if (user == null) return new LoginResponse(false, "Refresh token could not be generated because user not found");
 
             var userRole = await FindUserRole(user.Id);
+            if (userRole == null) return new LoginResponse(false, "User role not found");
             var systemRole = await FindSystemRole(userRole.Role.Id);
-            string jwtToken = GenerateToken(user, systemRole?.Name);
+            string jwtToken = await GenerateToken(user, systemRole?.Name);
             string refreshToken = GenerateRefreshToken();
 
             var updatingRefreshToken = await FindRefreshTokenByUserId(user.Id);
