@@ -1,5 +1,7 @@
 ﻿using Data.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServerLibrary.Helpers;
 using ServerLibrary.Services.Interfaces;
 
 namespace Server.Controllers
@@ -8,12 +10,25 @@ namespace Server.Controllers
     [ApiController]
     public class AuthenticationController(IUserService userService) : ControllerBase
     {
-        [HttpPost("register")]
-        public async Task<IActionResult> CreateAsync(Register user)
+        [HttpPost("register-user")]
+        [Authorize(Roles = "Admin,SysAdmin")]
+        public async Task<IActionResult> CreateUserAsync(Register user)
         {
             if (user == null) return BadRequest("User is empty");
 
-            var result = await userService.CreateAsync(user);
+            string role = Constants.Role.User;
+            var result = await userService.CreateAsync(user, role);
+            return Ok(result);
+        }
+
+        [HttpPost("register-admin")]
+        [Authorize(Roles = "SysAdmin")]
+        public async Task<IActionResult> CreateAdminAsync(Register user)
+        {
+            if (user == null) return BadRequest("User is empty");
+
+            string role = Constants.Role.Admin;
+            var result = await userService.CreateAsync(user, role);
             return Ok(result);
         }
 

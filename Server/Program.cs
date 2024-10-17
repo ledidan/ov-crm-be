@@ -52,6 +52,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // services
 builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("JwtSection"));
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPartnerService, PartnerService>();
 
 // authentication
 builder.Services.AddAuthentication(options =>
