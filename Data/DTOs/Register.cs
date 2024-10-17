@@ -7,21 +7,20 @@ namespace Data.DTOs
         [DataType(DataType.EmailAddress)]
         [EmailAddress]
         [Required]
-        public string? Email { get; set; }
+        public required string Email { get; set; }
 
         [Required]
-        public string? Fullname { get; set; }
+        public required string Fullname { get; set; }
 
         [DataType(DataType.Password)]
         [Required]
-        public string? Password { get; set; }
+        public required string Password { get; set; }
 
         [DataType(DataType.Password)]
         [Compare(nameof(Password))]
         [Required]
-        public string? ConfirmPassword { get; set; }
+        public required string ConfirmPassword { get; set; }
 
-        [Required]
-        public string? Role { get; set; }
+        public int PartnerId { get; set; }
     }
 }

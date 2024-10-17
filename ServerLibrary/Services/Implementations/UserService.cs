@@ -14,9 +14,10 @@ using System.Text;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class UserService(IOptions<JwtSection> config, AppDbContext appDbContext) : IUserService
+    public class UserService(IOptions<JwtSection> config, AppDbContext appDbContext,
+        IPartnerService partnerService) : IUserService
     {
-        public async Task<GeneralResponse> CreateAsync(Register user)
+        public async Task<GeneralResponse> CreateAsync(Register user, string role)
         {
             if (user == null) return new GeneralResponse(false, "Model is empty");
 
@@ -24,8 +25,12 @@ namespace ServerLibrary.Services.Implementations
             if (checkingUser != null) return new GeneralResponse(false, "User already exist");
 
             //check, create and assign role
-            var checkingRole = await CheckSystemRole(user.Role!);
+            var checkingRole = await CheckSystemRole(role);
             if (checkingRole == null) return new GeneralResponse(false, "Role not found");
+
+            //check partner
+            var partner = await partnerService.FindPartnerById(user.PartnerId);
+            if (partner == null && role != Constants.Role.SysAdmin) return new GeneralResponse(false, "Partner not found");
 
             //add user
             var applicationUser = await appDbContext.AddToDatabase(new ApplicationUser()
@@ -36,6 +41,8 @@ namespace ServerLibrary.Services.Implementations
             });
 
             await appDbContext.AddToDatabase(new UserRole() { Role = checkingRole, User = applicationUser });
+            if (role != Constants.Role.SysAdmin)
+                await appDbContext.AddToDatabase(new PartnerUser() { User = applicationUser, Partner = partner });
 
             return new GeneralResponse(true, "User created");
         }

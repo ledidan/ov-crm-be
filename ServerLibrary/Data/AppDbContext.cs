@@ -20,5 +20,9 @@ namespace ServerLibrary.Data
         public DbSet<PartnerUser> PartnerUsers { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<ProductCatelogy> ProductCatelogies { get; set; }
+        public DbSet<ProductInventory> ProductInventories { get; set; }
+        public DbSet<ProductPrice> ProductPrices { get; set; }
     }
 }
