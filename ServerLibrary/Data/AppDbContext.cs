@@ -24,5 +24,7 @@ namespace ServerLibrary.Data
         public DbSet<ProductCatelogy> ProductCatelogies { get; set; }
         public DbSet<ProductInventory> ProductInventories { get; set; }
         public DbSet<ProductPrice> ProductPrices { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderDetail> OrderDetails { get; set; }
     }
 }

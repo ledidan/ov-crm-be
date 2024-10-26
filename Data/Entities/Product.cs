@@ -2,7 +2,6 @@
 
 namespace Data.Entities
 {
-    [Index(nameof(Code), IsUnique = true)]
     public class Product
     {
         public int Id { get; set; }
