@@ -34,9 +34,14 @@ namespace ServerLibrary.Services.Implementations
             return await appDbContext.Partners.FirstOrDefaultAsync(_ => _.ShortName == shortName);
         }
 
-        public async Task<Partner?> FindPartnerById(int id)
+        public async Task<Partner?> FindById(int id)
         {
             return await appDbContext.Partners.FirstOrDefaultAsync(_ => _.Id == id);
+        }
+
+        public async Task<List<Partner>> GetAsync()
+        {
+            return await appDbContext.Partners.ToListAsync();
         }
     }
 }

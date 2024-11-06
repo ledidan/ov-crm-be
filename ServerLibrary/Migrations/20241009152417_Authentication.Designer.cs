@@ -33,13 +33,13 @@ namespace ServerLibrary.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Fullname")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Password")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.HasKey("Id");
 
@@ -55,7 +55,7 @@ namespace ServerLibrary.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.HasKey("Id");
 

@@ -31,13 +31,13 @@ namespace ServerLibrary.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Fullname")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Password")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.HasKey("Id");
 
@@ -53,25 +53,25 @@ namespace ServerLibrary.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("District")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<int>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Province")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("StreetAddress")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.HasKey("Id");
 
@@ -89,43 +89,43 @@ namespace ServerLibrary.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CivilId")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("District")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Fullname")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Gender")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("JobTitle")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<int>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Province")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<DateTime>("SignedContractDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("StreetAddress")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("TaxIdentificationNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.HasKey("Id");
 
@@ -143,7 +143,7 @@ namespace ServerLibrary.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime");
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
@@ -155,7 +155,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("PaidDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime");
 
                     b.Property<int?>("PartnerId")
                         .HasColumnType("int");
@@ -215,22 +215,22 @@ namespace ServerLibrary.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("EmailContact")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("LogoUrl")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("ShortName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("TaxIdentificationNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.HasKey("Id");
 
@@ -270,22 +270,22 @@ namespace ServerLibrary.Migrations
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<int>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<string>("ProducerName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<int>("ProductCatelogyId")
                         .HasColumnType("int");
 
                     b.Property<string>("Unit")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<int>("WarrantyPeriodPerMonth")
                         .HasColumnType("int");
@@ -308,10 +308,10 @@ namespace ServerLibrary.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<int?>("PartnerId")
                         .HasColumnType("int");
@@ -359,7 +359,7 @@ namespace ServerLibrary.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime");
 
                     b.Property<bool>("IsLatest")
                         .HasColumnType("bit");
@@ -371,7 +371,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime");
 
                     b.HasKey("Id");
 
@@ -389,7 +389,7 @@ namespace ServerLibrary.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Token")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -408,7 +408,7 @@ namespace ServerLibrary.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(250)");
 
                     b.HasKey("Id");
 

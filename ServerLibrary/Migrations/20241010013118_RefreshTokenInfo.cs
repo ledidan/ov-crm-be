@@ -16,7 +16,7 @@ namespace ServerLibrary.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Token = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Token = table.Column<string>(type: "nvarchar(250)", nullable: true),
                     UserId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

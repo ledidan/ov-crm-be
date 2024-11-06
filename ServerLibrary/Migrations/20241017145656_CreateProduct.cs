@@ -14,62 +14,62 @@ namespace ServerLibrary.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "EmailContact",
                 table: "Partners",
-                type: "nvarchar(max)",
+                type: "nvarchar(250)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "LogoUrl",
                 table: "Partners",
-                type: "nvarchar(max)",
+                type: "nvarchar(250)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PhoneNumber",
                 table: "Partners",
-                type: "nvarchar(max)",
+                type: "nvarchar(250)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShortName",
                 table: "Partners",
-                type: "nvarchar(max)",
+                type: "nvarchar(250)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "TaxIdentificationNumber",
                 table: "Partners",
-                type: "nvarchar(max)",
+                type: "nvarchar(250)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Email",
                 table: "Employees",
-                type: "nvarchar(max)",
+                type: "nvarchar(250)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Gender",
                 table: "Employees",
-                type: "nvarchar(max)",
+                type: "nvarchar(250)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "JobTitle",
                 table: "Employees",
-                type: "nvarchar(max)",
+                type: "nvarchar(250)",
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "SignedContractDate",
                 table: "Employees",
-                type: "datetime2",
+                type: "datetime",
                 nullable: false,
                 defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
             migrationBuilder.AddColumn<string>(
                 name: "TaxIdentificationNumber",
                 table: "Employees",
-                type: "nvarchar(max)",
+                type: "nvarchar(250)",
                 nullable: true);
 
             migrationBuilder.CreateTable(
@@ -78,8 +78,8 @@ namespace ServerLibrary.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(250)", nullable: true),
                     PartnerId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -99,9 +99,9 @@ namespace ServerLibrary.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Code = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Unit = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ProducerName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    Unit = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    ProducerName = table.Column<string>(type: "nvarchar(250)", nullable: true),
                     WarrantyPeriodPerMonth = table.Column<int>(type: "int", nullable: false),
                     ProductCatelogyId = table.Column<int>(type: "int", nullable: false),
                     PartnerId = table.Column<int>(type: "int", nullable: false)
@@ -154,8 +154,8 @@ namespace ServerLibrary.Migrations
                     ProductId = table.Column<int>(type: "int", nullable: false),
                     Price = table.Column<double>(type: "float", nullable: false),
                     IsLatest = table.Column<bool>(type: "bit", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    StartDate = table.Column<DateTime>(type: "datetime", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime", nullable: false)
                 },
                 constraints: table =>
                 {

@@ -29,7 +29,7 @@ namespace ServerLibrary.Services.Implementations
             if (checkingRole == null) return new GeneralResponse(false, "Role not found");
 
             //check partner
-            var partner = await partnerService.FindPartnerById(user.PartnerId);
+            var partner = await partnerService.FindById(user.PartnerId);
             if (partner == null && role != Constants.Role.SysAdmin) return new GeneralResponse(false, "Partner not found");
 
             //add user
