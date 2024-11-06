@@ -18,7 +18,7 @@ namespace ServerLibrary.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Code",
                 table: "Products",
-                type: "nvarchar(max)",
+                type: "nvarchar(250)",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(450)");
@@ -29,10 +29,10 @@ namespace ServerLibrary.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime", nullable: false),
                     TotalAmount = table.Column<double>(type: "float", nullable: false),
                     IsPaid = table.Column<bool>(type: "bit", nullable: false),
-                    PaidDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PaidDate = table.Column<DateTime>(type: "datetime", nullable: false),
                     CustomerId = table.Column<int>(type: "int", nullable: false),
                     EmployeeId = table.Column<int>(type: "int", nullable: true),
                     PartnerId = table.Column<int>(type: "int", nullable: true)
@@ -127,7 +127,7 @@ namespace ServerLibrary.Migrations
                 type: "nvarchar(450)",
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "nvarchar(max)");
+                oldType: "nvarchar(250)");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_Code",

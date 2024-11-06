@@ -17,7 +17,7 @@ namespace ServerLibrary.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Name = table.Column<string>(type: "nvarchar(250)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -30,12 +30,12 @@ namespace ServerLibrary.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    StreetAddress = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    District = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Province = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    StreetAddress = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    District = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    Province = table.Column<string>(type: "nvarchar(250)", nullable: true),
                     PartnerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -55,13 +55,13 @@ namespace ServerLibrary.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    CivilId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Fullname = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    StreetAddress = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    District = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Province = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CivilId = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    Fullname = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    DateOfBirth = table.Column<DateTime>(type: "datetime", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    StreetAddress = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    District = table.Column<string>(type: "nvarchar(250)", nullable: true),
+                    Province = table.Column<string>(type: "nvarchar(250)", nullable: true),
                     PartnerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

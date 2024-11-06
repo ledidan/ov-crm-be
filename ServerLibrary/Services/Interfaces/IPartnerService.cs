@@ -6,7 +6,8 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IPartnerService
     {
-        Task<GeneralResponse> CreateAsync(CreatePartner user);
-        Task<Partner?> FindPartnerById(int id);
+        Task<GeneralResponse> CreateAsync(CreatePartner partner);
+        Task<Partner?> FindById(int id);
+        Task<List<Partner>> GetAsync();
     }
 }

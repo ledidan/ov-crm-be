@@ -19,5 +19,12 @@ namespace Server.Controllers
             var result = await partnerService.CreateAsync(partner);
             return Ok(result);
         }
+
+        [HttpGet("get-partners")]
+        public async Task<List<Partner>> GetPartnersAsync()
+        {
+            var result = await partnerService.GetAsync();
+            return result;
+        }
     }
 }

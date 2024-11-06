@@ -45,7 +45,7 @@ builder.Services.AddSwaggerGen(options =>
 // database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ??
+    options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection") ??
         throw new InvalidOperationException("Your database connection is not found"));
 });
 
