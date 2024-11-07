@@ -32,6 +32,17 @@ namespace Server.Controllers
             return Ok(result);
         }
 
+        [HttpPost("register-sysadmin")]
+        [Authorize(Roles = "SysAdmin")]
+        public async Task<IActionResult> CreateSysAdminAsync(Register user)
+        {
+            if (user == null) return BadRequest("User is empty");
+
+            string role = Constants.Role.SysAdmin;
+            var result = await userService.CreateAsync(user, role);
+            return Ok(result);
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> SigninAsync(Login user)
         {

@@ -6,8 +6,8 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IProductCatelogyService
     {
-        Task<GeneralResponse> CreateAsync(CreateProductCatelogy productCatelogy);
+        Task<GeneralResponse> CreateAsync(CreateProductCatelogy productCatelogy, Partner partner);
         Task<GeneralResponse> UpdateAsync(ProductCatelogy productCatelogy);
-        Task<List<ProductCatelogy>> GetAllAsync(int partnerId);
+        Task<List<ProductCatelogy>> GetAllAsync(Partner partner);
     }
 }
