@@ -4,7 +4,7 @@ using Data.Responses;
 using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
 using ServerLibrary.Services.Interfaces;
-using System.Security.Cryptography.X509Certificates;
+using System.Security.Claims;
 
 namespace ServerLibrary.Services.Implementations
 {
@@ -42,6 +42,24 @@ namespace ServerLibrary.Services.Implementations
         public async Task<List<Partner>> GetAsync()
         {
             return await appDbContext.Partners.ToListAsync();
+        }
+
+        public async Task<Partner?> FindByClaim(ClaimsIdentity? claimsIdentity)
+        {
+            try
+            {
+                var value = claimsIdentity?.FindFirst("PartnerId")?.Value;
+                if (value == null) return default(Partner);
+
+                int partnerId = Int32.Parse(value);
+                var partner = await FindById(partnerId);
+                return partner;
+            }
+            catch (Exception ex)
+            {
+                ex.ToString();
+            }
+            return default(Partner);
         }
     }
 }

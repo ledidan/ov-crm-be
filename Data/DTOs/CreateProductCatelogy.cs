@@ -7,7 +7,5 @@ namespace Data.DTOs
         [Required]
         public required string Name { get; set; }
         public string? Description { get; set; }
-        [Required]
-        public int PartnerId { get; set; }
     }
 }
