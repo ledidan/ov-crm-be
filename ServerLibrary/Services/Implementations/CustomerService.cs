@@ -18,7 +18,7 @@ namespace ServerLibrary.Services.Implementations
             var partner = await partnerService.FindById(customer.PartnerId);
             if (partner == null) return new GeneralResponse(false, "Partner not found");
 
-            await appDbContext.AddToDatabase(new Customer()
+            await appDbContext.InsertIntoDb(new Customer()
             {
                 Name = customer.Name,
                 Email = customer.Email,
@@ -32,27 +32,19 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Customer created");
         }
 
-        public async Task<List<Customer>> GetAllAsync(int partnerId)
+        public async Task<List<Customer>> GetAllAsync(Partner partner)
         {
-            //check partner
-            var partner = await partnerService.FindById(partnerId);
-            if (partner == null) return new List<Customer>();
-
             var result = await appDbContext.Customers.Where(_ => _.Partner.Id == partner.Id).ToListAsync();
-
             return result;
         }
 
         public async Task<GeneralResponse> UpdateAsync(Customer customer)
         {
-            if (customer == null) return new GeneralResponse(false, "Model is empty");
-
             //check customer
             var customerUpdating = await appDbContext.Customers.FirstOrDefaultAsync(_ => _.Id == customer.Id);
             if (customerUpdating == null) return new GeneralResponse(false, "Customer not found");
 
-            appDbContext.Customers.Update(customer);
-            appDbContext.SaveChanges();
+            await appDbContext.UpdateDb(customer);
             return new GeneralResponse(true, "Customer updated successfully");
         }
     }

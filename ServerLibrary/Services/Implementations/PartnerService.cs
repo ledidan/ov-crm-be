@@ -12,12 +12,10 @@ namespace ServerLibrary.Services.Implementations
     {
         public async Task<GeneralResponse> CreateAsync(CreatePartner partner)
         {
-            if (partner == null) return new GeneralResponse(false, "Model is empty");
-
             var checkingPartner = await FindPartnerByShortName(partner.ShortName);
             if (checkingPartner != null) return new GeneralResponse(false, "Partner existing");
 
-            await appDbContext.AddToDatabase(new Partner()
+            await appDbContext.InsertIntoDb(new Partner()
             {
                 ShortName = partner.ShortName,
                 Name = partner.Name,

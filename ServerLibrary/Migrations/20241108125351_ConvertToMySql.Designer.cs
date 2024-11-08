@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServerLibrary.Data;
 
@@ -10,9 +11,11 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241108125351_ConvertToMySql")]
+    partial class ConvertToMySql
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -251,7 +254,7 @@ namespace ServerLibrary.Migrations
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
@@ -276,9 +279,6 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("PartnerId");
 
                     b.HasIndex("ProductCatelogyId");
-
-                    b.HasIndex(new[] { "Code", "PartnerId" }, "Unique_Code_PartnerId")
-                        .IsUnique();
 
                     b.ToTable("Products");
                 });

@@ -8,6 +8,6 @@ namespace ServerLibrary.Services.Interfaces
     {
         Task<GeneralResponse> CreateAsync(CreateCustomer customer);
         Task<GeneralResponse> UpdateAsync(Customer customer);
-        Task<List<Customer>> GetAllAsync(int partnerId);
+        Task<List<Customer>> GetAllAsync(Partner partner);
     }
 }

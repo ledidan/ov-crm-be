@@ -18,7 +18,7 @@ namespace ServerLibrary.Services.Implementations
             var partner = await partnerService.FindById(employee.PartnerId);
             if (partner == null) return new GeneralResponse(false, "Partner not found");
 
-            await appDbContext.AddToDatabase(new Employee() {
+            await appDbContext.InsertIntoDb(new Employee() {
                 CivilId = employee.CivilId,
                 Fullname = employee.Fullname,
                 Gender = employee.Gender,
