@@ -15,8 +15,6 @@ namespace Data.DTOs
         [Required]
         public int ProductCatelogyId { get; set; }
         [Required]
-        public int PartnerId { get; set; }
-        [Required]
         public double SellingPrice { get; set; }
     }
 }

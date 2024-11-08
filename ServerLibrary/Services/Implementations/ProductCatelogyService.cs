@@ -11,9 +11,7 @@ namespace ServerLibrary.Services.Implementations
     {
         public async Task<GeneralResponse> CreateAsync(CreateProductCatelogy productCatelogy, Partner partner)
         {
-            if (productCatelogy == null) return new GeneralResponse(false, "Model is empty");
-            
-            await appDbContext.AddToDatabase(new ProductCatelogy()
+            await appDbContext.InsertIntoDb(new ProductCatelogy()
             {
                 Name = productCatelogy.Name,
                 Description = productCatelogy.Description,
@@ -25,17 +23,12 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<List<ProductCatelogy>> GetAllAsync(Partner partner)
         {
-            if (partner == null) return new List<ProductCatelogy>();
-
             var result = await appDbContext.ProductCatelogies.Where(_ => _.Partner.Id == partner.Id).ToListAsync();
-
             return result;
         }
 
         public async Task<GeneralResponse> UpdateAsync(ProductCatelogy productCatelogy)
         {
-            if (productCatelogy == null) return new GeneralResponse(false, "Model is empty");
-
             //check customer
             var productCatelogyUpdating = await appDbContext.ProductCatelogies.FirstOrDefaultAsync(_ => _.Id == productCatelogy.Id);
             if (productCatelogyUpdating == null) return new GeneralResponse(false, "Product Catelogy not found");
@@ -43,6 +36,11 @@ namespace ServerLibrary.Services.Implementations
             appDbContext.ProductCatelogies.Update(productCatelogy);
             appDbContext.SaveChanges();
             return new GeneralResponse(true, "Customer updated successfully");
+        }
+
+        public async Task<ProductCatelogy?> FindById(int id)
+        {
+            return await appDbContext.ProductCatelogies.FirstOrDefaultAsync(_ => _.Id == id);
         }
     }
 }

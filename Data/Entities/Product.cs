@@ -2,6 +2,7 @@
 
 namespace Data.Entities
 {
+    [Index("Code", "PartnerId", IsUnique = true, Name = "Unique_Code_PartnerId")]
     public class Product
     {
         public int Id { get; set; }

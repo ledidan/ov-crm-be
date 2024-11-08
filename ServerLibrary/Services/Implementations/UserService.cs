@@ -19,8 +19,6 @@ namespace ServerLibrary.Services.Implementations
     {
         public async Task<GeneralResponse> CreateAsync(Register user, string role)
         {
-            if (user == null) return new GeneralResponse(false, "Model is empty");
-
             var checkingUser = await FindUserByEmail(user.Email);
             if (checkingUser != null) return new GeneralResponse(false, "User already exist");
 
@@ -33,16 +31,16 @@ namespace ServerLibrary.Services.Implementations
             if (partner == null && role != Constants.Role.SysAdmin) return new GeneralResponse(false, "Partner not found");
 
             //add user
-            var applicationUser = await appDbContext.AddToDatabase(new ApplicationUser()
+            var applicationUser = await appDbContext.InsertIntoDb(new ApplicationUser()
             {
                 Email = user.Email,
                 Fullname = user.Fullname,
                 Password = BCrypt.Net.BCrypt.HashPassword(user.Password)
             });
 
-            await appDbContext.AddToDatabase(new UserRole() { Role = checkingRole, User = applicationUser });
+            await appDbContext.InsertIntoDb(new UserRole() { Role = checkingRole, User = applicationUser });
             if (role != Constants.Role.SysAdmin)
-                await appDbContext.AddToDatabase(new PartnerUser() { User = applicationUser, Partner = partner });
+                await appDbContext.InsertIntoDb(new PartnerUser() { User = applicationUser, Partner = partner });
 
             return new GeneralResponse(true, "User created");
         }
@@ -69,8 +67,6 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<LoginResponse> SignInAsync(Login user)
         {
-            if (user == null) return new LoginResponse(false, "Model is empty");
-
             var applicationUser = await FindUserByEmail(user.Email);
             if (applicationUser == null) return new LoginResponse(false, "User not found");
 
@@ -95,7 +91,7 @@ namespace ServerLibrary.Services.Implementations
             }
             else
             {
-                await appDbContext.AddToDatabase(new RefreshTokenInfo() { Token = refreshToken, UserId = applicationUser.Id });
+                await appDbContext.InsertIntoDb(new RefreshTokenInfo() { Token = refreshToken, UserId = applicationUser.Id });
             }    
             return new LoginResponse(true, "Login sucessfully", jwtToken, refreshToken);
         }
@@ -150,8 +146,6 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<LoginResponse> RefreshTokenAsync(RefreshToken token)
         {
-            if (token == null) return new LoginResponse(false, "Token is empty");
-
             var findingToken = await appDbContext.RefreshTokenInfos.FirstOrDefaultAsync(_ => _.Token!.Equals(token.Token));
             if (findingToken == null) return new LoginResponse(false, "Refresh token is required");
 

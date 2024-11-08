@@ -54,6 +54,7 @@ builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("JwtSect
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPartnerService, PartnerService>();
 builder.Services.AddScoped<IProductCatelogyService, ProductCatelogyService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 // authentication
 builder.Services.AddAuthentication(options =>

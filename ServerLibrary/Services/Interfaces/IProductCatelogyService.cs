@@ -9,5 +9,6 @@ namespace ServerLibrary.Services.Interfaces
         Task<GeneralResponse> CreateAsync(CreateProductCatelogy productCatelogy, Partner partner);
         Task<GeneralResponse> UpdateAsync(ProductCatelogy productCatelogy);
         Task<List<ProductCatelogy>> GetAllAsync(Partner partner);
+        Task<ProductCatelogy?> FindById(int id);
     }
 }
