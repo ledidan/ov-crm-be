@@ -8,7 +8,7 @@ namespace Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "SysAdmin")]
+    [Authorize(Roles = "Admin,SysAdmin")]
     public class SysAdminController(IPartnerService partnerService) : Controller
     {
         [HttpPost("create-partner")]
@@ -19,7 +19,7 @@ namespace Server.Controllers
             var result = await partnerService.CreateAsync(partner);
             return Ok(result);
         }
-
+        [Authorize(Roles = "Admin,SysAdmin")]
         [HttpGet("get-partners")]
         public async Task<List<Partner>> GetPartnersAsync()
         {

@@ -10,7 +10,7 @@ namespace Data.DTOs
         public required string Email { get; set; }
 
         [Required]
-        public required string Fullname { get; set; }
+        public required string FullName { get; set; }
 
         [DataType(DataType.Password)]
         [Required]
@@ -20,7 +20,8 @@ namespace Data.DTOs
         [Compare(nameof(Password))]
         [Required]
         public required string ConfirmPassword { get; set; }
-
+        [Required]
         public int PartnerId { get; set; }
+        public int EmployeeId { get; set; }
     }
 }

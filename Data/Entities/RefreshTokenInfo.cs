@@ -1,6 +1,6 @@
 ﻿namespace Data.Entities
 {
-    public class RefreshTokenInfo
+    public class RefreshTokenInfo : BaseEntity
     {
         public int Id { get; set; }
         public string? Token { get; set; }

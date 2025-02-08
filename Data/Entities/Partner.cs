@@ -1,6 +1,8 @@
-﻿namespace Data.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Entities
 {
-    public class Partner
+    public class Partner : BaseEntity
     {
         public int Id { get; set; }
         public string? ShortName { get; set; }
@@ -9,5 +11,11 @@
         public string? LogoUrl { get; set; }
         public string? EmailContact { get; set; }
         public string? PhoneNumber { get; set; }
+        public int? OwnerId { get; set; }
+        public ICollection<ContactEmployees> ContactEmployees { get; set; } = new List<ContactEmployees>();
+        public ICollection<CustomerEmployees> CustomerEmployees { get; set; } = new List<CustomerEmployees>();
+        public ICollection<InvoiceEmployees> InvoiceEmployees { get; set; } = new List<InvoiceEmployees>();
+        public ICollection<ActivityEmployees> ActivityEmployees { get; set; } = new List<ActivityEmployees>();
+
     }
 }

@@ -7,12 +7,29 @@ using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Interfaces;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using Data.Interceptor;
+using Data.MongoModels;
+using MongoDB.Driver;
+using Microsoft.Extensions.Options;
+using AutoMapper;
+using System.Text.Json.Serialization;
+using ServerLibrary.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// Add services to the container.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null; // Keep PascalCase
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+
+
+    });
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -40,21 +57,52 @@ builder.Services.AddSwaggerGen(options =>
             new string[]{}
         }
     });
+    options.CustomSchemaIds(type => type.Name);
 });
 
-// database
+//** Mongodb database
+builder.Services.Configure<MongoDBSettings>(
+    builder.Configuration.GetSection("MongoDBSettings"));
+
+builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
+    if (string.IsNullOrEmpty(settings.ConnectionString))
+    {
+        throw new ArgumentNullException(nameof(settings.ConnectionString), "MongoDB connection string cannot be null or empty.");
+    }
+
+    return new MongoClient(settings.ConnectionString);
+});
+
+builder.Services.AddScoped(sp =>
+{
+    var mongoSettings = builder.Configuration.GetSection("MongoDBSettings").Get<MongoDBSettings>();
+    var mongoClient = sp.GetRequiredService<IMongoClient>();
+    return new MongoDbContext(mongoClient, mongoSettings.DatabaseName);
+});
+
+//** Mysql database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection") ??
-        throw new InvalidOperationException("Your database connection is not found"));
+    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
+        new MySqlServerVersion(new Version(8, 0, 30)) // Replace with your MySQL version
+    );
 });
+
+builder.Services.AddSingleton<TimestampInterceptor>();
 
 // services
 builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("JwtSection"));
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPartnerService, PartnerService>();
-builder.Services.AddScoped<IProductCatelogyService, ProductCatelogyService>();
+builder.Services.AddScoped<IProductCategoryService, ProductCategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IContactService, ContactService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<S3Service>();
+builder.Services.AddScoped<OrdersService>();
 
 // authentication
 builder.Services.AddAuthentication(options =>
@@ -87,6 +135,7 @@ builder.Services.AddCors(options =>
         policyBuilder.AllowCredentials();
     });
 });
+builder.Services.AddAuthorization();
 
 
 var app = builder.Build();
@@ -97,13 +146,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors("reactJsApp");
 
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("reactJsApp");
 
 app.MapControllers();
 

@@ -1,4 +1,5 @@
-﻿using Data.DTOs;
+﻿using System.Security.Claims;
+using Data.DTOs;
 using Data.Entities;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
@@ -18,8 +19,8 @@ namespace ServerLibrary.Services.Implementations
             var partner = await partnerService.FindById(employee.PartnerId);
             if (partner == null) return new GeneralResponse(false, "Partner not found");
 
-            await appDbContext.InsertIntoDb(new Employee() {
-                CivilId = employee.CivilId,
+            await appDbContext.InsertIntoDb(new Employee()
+            {
                 Fullname = employee.Fullname,
                 Gender = employee.Gender,
                 DateOfBirth = employee.DateOfBirth,
@@ -37,13 +38,25 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Employee created");
         }
 
+        public async Task<Employee?> FindByIdAsync(int id)
+        {
+            var employee = await appDbContext.Employees.Include(x => x.Contacts)
+          .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (employee == null)
+            {
+                throw new KeyNotFoundException($"Employee with ID {id} not found.");
+            }
+
+            return employee;
+        }
         public async Task<List<Employee>> GetAllAsync(int partnerId)
         {
             //check partner
             var partner = await partnerService.FindById(partnerId);
             if (partner == null) return new List<Employee>();
 
-            var result = await appDbContext.Employees.Where(_ => _.Partner.Id == partnerId).ToListAsync();
+            var result = await appDbContext.Employees.Where(_ => _.Partner.Id == partnerId).Include(c => c.Contacts).ToListAsync();
             return result;
         }
 
@@ -59,5 +72,33 @@ namespace ServerLibrary.Services.Implementations
             appDbContext.SaveChanges();
             return new GeneralResponse(true, "Employee updated successfully");
         }
+
+        public async Task<bool> EmployeeExists(int id)
+        {
+            return await appDbContext.Employees.AnyAsync(s => s.Id == id);
+        }
+        public Task<List<ContactEmployees>> GetAllContactEmployees()
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<Employee?> FindByClaim(ClaimsIdentity? claimsIdentity)
+        {
+            try
+            {
+                var value = claimsIdentity?.FindFirst("EmployeeId")?.Value;
+                if (value == null) return default(Employee);
+
+                int employeeId = Int32.Parse(value);
+                var employee = await FindByIdAsync(employeeId);
+                return employee;
+            }
+            catch (Exception ex)
+            {
+                ex.ToString();
+            }
+            return default(Employee);
+        }
+        
     }
 }

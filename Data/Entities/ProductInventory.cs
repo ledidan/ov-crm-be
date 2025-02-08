@@ -1,6 +1,6 @@
 ﻿namespace Data.Entities
 {
-    public class ProductInventory
+    public class ProductInventory : BaseEntity
     {
         public int Id { get; set; }
         public virtual required Product Product { get; set; }
