@@ -3,7 +3,7 @@ using Data.Entities;
 
 namespace Data.DTOs
 {
-    public class CreateProduct
+    public class CreateProductDTO
     {
         public string? ProductCode { get; set; }
         public string? ProductGroupID { get; set; }
@@ -20,7 +20,6 @@ namespace Data.DTOs
         public string? Equation { get; set; }
         public bool? Inactive { get; set; }
         public string? InventoryItemID { get; set; }
-        public bool? IsDeleted { get; set; }
         public bool? IsFollowSerialNumber { get; set; }
         public bool? IsPublic { get; set; }
         public bool? IsSetProduct { get; set; }
@@ -53,8 +52,8 @@ namespace Data.DTOs
         public string? WarrantyDescription { get; set; }
         public string? WarrantyPeriod { get; set; }
         public string? WarrantyPeriodTypeID { get; set; }
-        // public int? OwnerID { get; set; }
         public int? ProductCategoryId { get; set; }
+        // public int? OwnerID { get; set; }
 
         // public int? ParnterId { get; set; }
     }

@@ -142,10 +142,33 @@ namespace ServerLibrary.Data
               .HasOne(pc => pc.ParentCategory)
               .WithMany(pc => pc.SubCategories)
               .HasForeignKey(pc => pc.ParentProductCategoryID)
-              .OnDelete(DeleteBehavior.SetNull); 
+              .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<ProductEmployees>()
+.Property(ce => ce.AccessLevel)
+.HasConversion<int>();
+            builder.Entity<Product>()
+        .HasMany(c => c.Employees)
+        .WithMany(e => e.Products)
+        .UsingEntity<ProductEmployees>(
+            j => j
+                .HasOne(ce => ce.Employee)
+                .WithMany(e => e.ProductEmployees)
+                .HasForeignKey(ce => ce.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict),
+            j => j
+                .HasOne(ce => ce.Product)
+                .WithMany(c => c.ProductEmployees)
+                .HasForeignKey(ce => ce.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade),
+            j =>
+            {
+                j.HasKey(ce => new { ce.ProductId, ce.EmployeeId, ce.PartnerId });
+            });
         }
         public DbSet<InvoiceEmployees> InvoiceEmployees { get; set; }
         public DbSet<CustomerEmployees> CustomerEmployees { get; set; }
+        public DbSet<ProductEmployees> ProductEmployees { get; set; }
         public DbSet<ContactEmployees> ContactEmployees { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<SystemRole> SystemRoles { get; set; }

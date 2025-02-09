@@ -1,8 +1,8 @@
-using Data.DTOs.Order;
-using Data.Enums;
-using Data.MongoModels;
+
 using Microsoft.AspNetCore.Mvc;
 using ServerLibrary.Services.Implementations;
+using ServerLibrary.Services.Interfaces;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Server.Controllers
@@ -13,9 +13,15 @@ namespace Server.Controllers
     {
         private readonly OrdersService _ordersService;
 
-        public OrdersController(OrdersService ordersService)
+        private readonly IEmployeeService _employeeService;
+
+        private readonly IPartnerService _partnerService;
+
+        public OrdersController(OrdersService ordersService, IPartnerService partnerService, IEmployeeService employeeService)
         {
             _ordersService = ordersService;
+            _partnerService = partnerService;
+            _employeeService = employeeService;
         }
         [HttpPost]
         [Route("create")]
@@ -32,10 +38,13 @@ namespace Server.Controllers
             }
             return StatusCode(500, response);
         }
-        [HttpGet("get-all-orders")]
-        public async Task<IActionResult> GetAllOrders([FromQuery] int employeeId, [FromQuery] int partnerId)
+        [HttpGet("get-all")]
+        public async Task<IActionResult> GetAllOrders()
         {
-            var result = await _ordersService.GetAllAsync(employeeId, partnerId);
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            var result = await _ordersService.GetAllAsync(employee, partner);
 
             return Ok(result);
         }

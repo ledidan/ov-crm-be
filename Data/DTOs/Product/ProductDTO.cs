@@ -19,7 +19,6 @@ namespace Data.DTOs
         public string? Equation { get; set; }
         public bool? Inactive { get; set; }
         public string? InventoryItemID { get; set; }
-        public bool? IsDeleted { get; set; }
         public bool? IsFollowSerialNumber { get; set; }
         public bool? IsPublic { get; set; }
         public bool? IsSetProduct { get; set; }

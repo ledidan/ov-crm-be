@@ -20,10 +20,12 @@
         public List<Customer> Customers { get; set; } = new List<Customer>();
         public List<Invoice> Invoices { get; set; } = new List<Invoice>();
         public List<Activity> Activities { get; set; } = new List<Activity>();
+        public List<Product> Products{ get; set; } = new List<Product>();
         public ICollection<ContactEmployees> ContactEmployees { get; set; } = new List<ContactEmployees>();
         public ICollection<CustomerEmployees> CustomerEmployees { get; set; } = new List<CustomerEmployees>();
         public ICollection<InvoiceEmployees> InvoiceEmployees { get; set; } = new List<InvoiceEmployees>();
         public ICollection<ActivityEmployees> ActivityEmployees { get; set; } = new List<ActivityEmployees>();
+        public ICollection<ProductEmployees> ProductEmployees { get; set; } = new List<ProductEmployees>();
 
     }
 }

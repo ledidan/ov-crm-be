@@ -16,6 +16,7 @@ namespace Data.Entities
         public ICollection<CustomerEmployees> CustomerEmployees { get; set; } = new List<CustomerEmployees>();
         public ICollection<InvoiceEmployees> InvoiceEmployees { get; set; } = new List<InvoiceEmployees>();
         public ICollection<ActivityEmployees> ActivityEmployees { get; set; } = new List<ActivityEmployees>();
+        public ICollection<ProductEmployees> ProductEmployees { get; set; } = new List<ProductEmployees>();
 
     }
 }

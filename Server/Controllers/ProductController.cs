@@ -22,7 +22,7 @@ namespace Server.Controllers
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);
-            var employee  = await employeeService.FindByClaim(identity);
+            var employee = await employeeService.FindByClaim(identity);
             if (partner == null) return new List<ProductDTO>();
 
             var result = await productService.GetAllAsync(employee, partner);
@@ -31,7 +31,7 @@ namespace Server.Controllers
 
         [HttpPost("create")]
         [Authorize(Roles = "User,Admin")]
-        public async Task<IActionResult> CreateProductAsync(CreateProduct product)
+        public async Task<IActionResult> CreateProductAsync(CreateProductDTO product)
         {
             if (product == null) return BadRequest("Model is empty");
 
@@ -44,16 +44,46 @@ namespace Server.Controllers
             return Ok(result);
         }
 
-        // [HttpPost("update-product")]
-        // [Authorize(Roles = "Admin")]
-        // public async Task<IActionResult> UpdateProductAsync(Product product)
-        // {
-        //     if (product == null) return BadRequest("Model is empty");
+        [HttpGet("{id:int}")]
+        [Authorize(Roles = "User,Admin")]
+        public async Task<IActionResult> GetProductDetailAsync(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            if (partner == null) return BadRequest("Partner not found");
 
-        //     var result = await productService.UpdateAsync(product);
-        //     return Ok(result);
-        // }
+            var result = await productService.FindByIdAsync(id, partner);
+            return Ok(result);
+        }
 
+        [HttpPut]
+        [Route("{id:int}")]
+        [Authorize(Roles = "User,Admin")]
+        public async Task<IActionResult> UpdateProductAsync(int id, [FromBody] UpdateProductDTO product)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            if (partner == null) return BadRequest("Partner not found");
+            if (product == null) return BadRequest("Model is empty");
+
+            var result = await productService.UpdateAsync(id, product, partner);
+            return Ok(result);
+        }
+
+        [HttpDelete("bulk-remove")]
+        [Authorize(Roles = "User,Admin")]
+        public async Task<IActionResult> RemoveProduct([FromQuery] string ids)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            if (partner == null) return BadRequest("Unauthorized Partner");
+            if (string.IsNullOrWhiteSpace(ids))
+            {
+                return BadRequest("Invalid request. No category IDs provided.");
+            }
+            var result = await productService.RemoveBulkIdsAsync(ids, partner);
+            return Ok(result);
+        }
         // [HttpPost("update-sellingprice")]
         // [Authorize(Roles = "Admin")]
         // public async Task<IActionResult> UpdateSellingPriceAsync(Product product, double sellingPrice)

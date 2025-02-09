@@ -5,6 +5,7 @@ using Data.Enums;
 using Data.Responses;
 using Data.DTOs.Order;
 using MongoDB.Bson;
+using Data.Entities;
 
 namespace ServerLibrary.Services.Implementations
 {
@@ -19,11 +20,11 @@ namespace ServerLibrary.Services.Implementations
             _ordersDetailsCollection = dbContext.OrderDetails;
         }
 
-        public async Task<List<Orders>> GetAllAsync(int employeeId, int partnerId)
+        public async Task<List<Orders>> GetAllAsync(Employee employee, Partner partner)
         {
-            var orders = Builders<Orders>.Filter.And(Builders<Orders>.Filter.Eq(o => o.PartnerId, partnerId),
+            var orders = Builders<Orders>.Filter.And(Builders<Orders>.Filter.Eq(o => o.PartnerId, partner.Id),
                Builders<Orders>.Filter.ElemMatch(o => o.EmployeeAccessLevels,
-            access => access.EmployeeId == employeeId)
+            access => access.EmployeeId == employee.Id)
               );
             return await _ordersCollection.Find(orders).ToListAsync();
         }

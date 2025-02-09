@@ -1,4 +1,5 @@
 using Data.DTOs.Order;
+using Data.Entities;
 using Data.MongoModels;
 using Data.Responses;
 
@@ -6,7 +7,7 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IOrderService
     {
-        Task<List<Orders>> GetAllAsync(int employeeId, int partnerId);
+        Task<List<Orders>> GetAllAsync(Employee employee, Partner partner);
 
         Task<Orders?> GetOrderDetailAsync(string id, int employeeId);
 
