@@ -20,8 +20,8 @@ Before running the project, ensure you have the following installed:
 ## Installation
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/yourproject.git
-   cd yourproject
+   git clone https://github.com/ledidan/ov-crm-be.git
+   cd ov-crm-be
    ```
 2. Install dependencies:
    ```sh
