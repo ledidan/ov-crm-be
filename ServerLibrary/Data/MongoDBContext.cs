@@ -11,11 +11,10 @@ namespace ServerLibrary.Data
         {
             _mongoDatabase = mongoClient.GetDatabase(databaseName);
         }
-
-        public IMongoCollection<Orders> Orders =>
-            _mongoDatabase.GetCollection<Orders>("Orders");
         public IMongoCollection<OrderDetails> OrderDetails =>
-            _mongoDatabase.GetCollection<OrderDetails>("OrderDetails");
+        _mongoDatabase.GetCollection<OrderDetails>("OrderDetails");
+        public IMongoCollection<InvoiceDetails> InvoiceDetails =>
+        _mongoDatabase.GetCollection<InvoiceDetails>("InvoiceDetails");
 
     }
 }

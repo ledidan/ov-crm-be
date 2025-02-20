@@ -5,24 +5,18 @@
 namespace ServerLibrary.Migrations
 {
     /// <inheritdoc />
-    public partial class updateowneridforpartner : Migration
+    public partial class firstrmcontactcustomersid : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "OwnerId",
-                table: "Partners",
-                type: "int",
-                nullable: true);
+
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "OwnerId",
-                table: "Partners");
+
         }
     }
 }

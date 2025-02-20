@@ -14,7 +14,6 @@ namespace Data.DTOs
         public decimal? ConversionRate { get; set; }
         public string? ConversionUnit { get; set; }
         public string? CreatedBy { get; set; }
-        public string? CustomID { get; set; }
         public string? Description { get; set; }
         public string? Equation { get; set; }
         public bool? Inactive { get; set; }
@@ -37,7 +36,6 @@ namespace Data.DTOs
         public string? SaleDescription { get; set; }
         public string? SearchTagID { get; set; }
         public string? TagColor { get; set; }
-        public string? TagID { get; set; }
         public string? TaxID { get; set; }
         public bool? Taxable { get; set; }
         public decimal? UnitCost { get; set; }

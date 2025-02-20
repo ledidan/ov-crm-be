@@ -70,7 +70,7 @@ namespace Server.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("bulk-remove")]
+        [HttpDelete("bulk-delete")]
         [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> RemoveProduct([FromQuery] string ids)
         {
@@ -84,6 +84,30 @@ namespace Server.Controllers
             var result = await productService.RemoveBulkIdsAsync(ids, partner);
             return Ok(result);
         }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductDTO product)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            var employee = await employeeService.FindByClaim(identity);
+
+            if (product == null)
+                return BadRequest(new { message = "Invalid request data" });
+
+            // Retrieve employee and partner (replace with actual logic)
+
+            if (employee == null || partner == null)
+                return Unauthorized(new { message = "Unauthorized access" });
+
+            var result = await productService.UpdateFieldIdAsync(id, product, employee, partner);
+
+            if (result == null || !result.Flag)
+                return NotFound(new { message = result?.Message ?? "Product not found" });
+
+            return Ok(new { Flag = result.Flag, Message = result.Message });
+        }
+
         // [HttpPost("update-sellingprice")]
         // [Authorize(Roles = "Admin")]
         // public async Task<IActionResult> UpdateSellingPriceAsync(Product product, double sellingPrice)

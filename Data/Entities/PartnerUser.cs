@@ -8,6 +8,6 @@ namespace Data.Entities
         public virtual required Partner Partner { get; set; }
         public virtual required ApplicationUser User { get; set; }
 
-        public int EmployeeId { get; set; }
+        public int? EmployeeId { get; set; }
     }
 }

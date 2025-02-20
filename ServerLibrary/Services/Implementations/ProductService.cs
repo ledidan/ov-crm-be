@@ -3,6 +3,7 @@ using Data.DTOs;
 using Data.Entities;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
+using Mysqlx.Crud;
 using ServerLibrary.Data;
 using ServerLibrary.Services.Interfaces;
 
@@ -34,7 +35,6 @@ namespace ServerLibrary.Services.Implementations
                     ConversionRate = product.ConversionRate ?? 0,
                     ConversionUnit = product.ConversionUnit ?? "",
                     CreatedBy = employee.Fullname,
-                    CustomID = product.CustomID ?? "",
                     Description = product.Description ?? "",
                     Equation = product.Equation ?? "",
                     Inactive = product.Inactive ?? false,
@@ -132,7 +132,34 @@ namespace ServerLibrary.Services.Implementations
             await appDbContext.UpdateDb(existingProduct);
             return new GeneralResponse(true, "Product updated successfully");
         }
+        public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateProductDTO product, Employee employee, Partner partner)
+        {
+            if (partner == null)
+                return new GeneralResponse(false, "Invalid partner");
 
+            var existingProduct = await appDbContext.Products
+                .Where(p => p.Id == id && p.Partner.Id == partner.Id && p.OwnerID == employee.Id)
+                .FirstOrDefaultAsync();
+
+            if (existingProduct == null)
+                return new GeneralResponse(false, "Product not found");
+
+            // Check if the product code already exists for this partner
+            var productChecking = await FindCodeByPartner(product.ProductCode, partner.Id);
+            if (productChecking != null && productChecking.Id != id)
+                return new GeneralResponse(false, "Product code already exists");
+
+            // Overwrite all fields from DTO to entity
+            _mapper.Map(product, existingProduct);
+
+            // Mark entity as modified
+            appDbContext.Entry(existingProduct).State = EntityState.Modified;
+
+            // Save changes
+            await appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Product updated successfully");
+        }
         // public async Task<GeneralResponse> UpdateSellingPriceAsync(Product product, double sellingPrice)
         // {
         //     try

@@ -7,11 +7,11 @@ namespace Data.DTOs
     public class CreateContact
     {
 
-        [Required]
         public string? ContactCode { get; set; } = string.Empty;
         [Required]
         public string? ContactName { get; set; }
         public string? FirstName { get; set; } = string.Empty;
+        [Required]
         public string? LastName { get; set; }
         public string? Email { get; set; }
         public string? OfficeTel { get; set; }

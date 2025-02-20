@@ -29,12 +29,14 @@ namespace Server.Controllers
         [HttpPost("create-customer")]
         public async Task<IActionResult> CreateCustomerAsync(CreateCustomer customer)
         {
-
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
             if (customer == null)
                 return BadRequest("Model is empty");
 
             // Call the service to create the contact
-            var result = await _customerService.CreateAsync(customer);
+            var result = await _customerService.CreateAsync(customer, employee, partner);
 
             if (!result.Flag)
                 return BadRequest(result.Message);
@@ -66,16 +68,15 @@ namespace Server.Controllers
             }
         }
         [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetCustomerIdAsync([FromRoute] int id, [FromQuery] int employeeId, [FromQuery] int partnerId)
+        public async Task<IActionResult> GetCustomerIdAsync([FromRoute] int id)
         {
-            if (employeeId <= 0 || partnerId <= 0)
-            {
-                return BadRequest("Invalid employeeId or partnerId provided.");
-            }
-            var customer = await _customerService.GetCustomerByIdAsync(id, employeeId, partnerId);
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            var customer = await _customerService.GetCustomerByIdAsync(id, employee, partner);
             if (customer == null)
             {
-                return NotFound($"Contact with ID {id} not found for employeeId {employeeId} and partnerId {partnerId}.");
+                return NotFound($"Contact with ID {id} not found for employeeId {employee.Id} and partnerId {partner.Id}.");
             }
             return Ok(customer.ToCustomerDTO());
         }
@@ -84,12 +85,16 @@ namespace Server.Controllers
         public async Task<IActionResult> UpdateCustomerAsync([FromRoute] int id,
    [FromBody] CustomerDTO updateCustomer)
         {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+
             if (id == null)
             {
                 return NotFound($"Customer with ID {id} not found.");
             }
 
-            var customer = await _customerService.UpdateAsync(id, updateCustomer);
+            var customer = await _customerService.UpdateAsync(id, updateCustomer, employee, partner);
 
             if (customer == null)
             {
@@ -99,18 +104,46 @@ namespace Server.Controllers
 
         }
 
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] CustomerDTO updateCustomer)
+        {
+            if (updateCustomer == null)
+                return BadRequest(new { message = "Invalid request data" });
+
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+
+            if (employee == null || partner == null)
+                return Unauthorized(new { message = "Unauthorized access" });
+
+            var result = await _customerService.UpdateFieldIdAsync(id, updateCustomer, employee, partner);
+
+            if (result == null || !result.Flag)
+                return NotFound(new { message = result?.Message ?? "Customer not found" });
+
+            return Ok(new { Flag = result.Flag, Message = result.Message });
+        }
+
+
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteCustomerAsync
-        ([FromRoute] int id, [FromQuery] int employeeId, [FromQuery] int partnerId)
+        ([FromRoute] int id)
         {
-            var result = await _customerService.DeleteAsync(id, employeeId, partnerId);
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            var result = await _customerService.DeleteAsync(id, employee, partner);
             return Ok(result);
         }
 
-        [HttpDelete("delete-bulk")]
-        public async Task<IActionResult> DeleteMultipleCustomers([FromQuery] string ids, [FromQuery] int employeeId, [FromQuery] int partnerId)
+        [HttpDelete("bulk-delete")]
+        public async Task<IActionResult> DeleteMultipleCustomers([FromQuery] string ids)
         {
-            var response = await _customerService.DeleteBulkCustomers(ids, employeeId, partnerId);
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            var response = await _customerService.DeleteBulkCustomers(ids, employee, partner);
 
             if (!response.Flag)
             {

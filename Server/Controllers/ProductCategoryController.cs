@@ -83,11 +83,11 @@ namespace Server.Controllers
                 return BadRequest("Invalid partner.");
             }
 
-            var result = await _productCategoryService.UpdateAsync(id ,productCategory, partner);
+            var result = await _productCategoryService.UpdateAsync(id, productCategory, partner);
             return result.Flag ? Ok(result) : BadRequest(result);
         }
 
-        [HttpDelete("bulk-remove")]
+        [HttpDelete("bulk-delete")]
         [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> RemoveCategories([FromQuery] string ids)
         {
@@ -101,5 +101,27 @@ namespace Server.Controllers
             var result = await _productCategoryService.RemoveBulkIdsAsync(ids, partner);
             return Ok(result);
         }
+        
+        [HttpPatch("{id:int}")]
+        public async Task<IActionResult> UpdateProductCategory(int id, [FromBody] UpdateProductCategoryDTO productCategory)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+
+            if (productCategory == null)
+                return BadRequest(new { message = "Invalid request data" });
+
+            if (employee == null || partner == null)
+                return Unauthorized(new { message = "Unauthorized access" });
+
+            var result = await _productCategoryService.UpdateFieldIdAsync(id, productCategory, employee, partner);
+
+            if (result == null || !result.Flag)
+                return NotFound(new { message = result?.Message ?? "Product category not found" });
+
+            return Ok(new { Flag = result.Flag, Message = result.Message });
+        }
+
     }
 }

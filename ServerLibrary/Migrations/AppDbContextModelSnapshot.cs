@@ -45,47 +45,238 @@ namespace ServerLibrary.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AccountNumber")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("AccountTel")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ActivityCategory")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("ActivityName")
                         .HasColumnType("longtext");
+
+                    b.Property<string>("BatteryStatus")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool?>("CallDone")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("CallDuration")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CallEnd")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CallGoalID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CallID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CallName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CallRecord")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CallResult")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CallResultID")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("CallStart")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CallTypeID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CheckInAddress")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("CheckInTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CheckInType")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CheckOutAddress")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CheckOutPlace")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("CheckOutTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CheckinPlace")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("ContactId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int?>("CustomerId")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("DueDate")
+                    b.Property<double?>("Distance")
+                        .HasColumnType("double");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool?>("Duplicate")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("EventCalendarID")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("EndTime")
+                    b.Property<string>("EventCheckinComment")
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("EventCheckinTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("EventEnd")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("EventName")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("EventStart")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool?>("IsCheckOutImages")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsCorrectRoute")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsFakeGPS")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsOpen")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsPublic")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsReminder")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsRepeat")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsSendNotificationEmail")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsStartActivity")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Journey")
+                        .HasColumnType("longtext");
+
+                    b.Property<double?>("Lat")
+                        .HasColumnType("double");
+
+                    b.Property<double?>("Long")
+                        .HasColumnType("double");
+
+                    b.Property<string>("MissionName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("MissionTypeID")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("ModifiedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int?>("ModuleType")
+                    b.Property<string>("ModuleType")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("OfficeEmail")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("PartnerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("ModuleTypeText")
+                    b.Property<string>("PhoneNumber")
                         .HasColumnType("longtext");
 
                     b.Property<string>("Place")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("StartTimeCustom")
+                    b.Property<string>("PriorityID")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("StatusId")
+                    b.Property<string>("ProviderName")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("RelatedUsersID")
                         .HasColumnType("int");
 
+                    b.Property<string>("RemindID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RouteAddress")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RoutingResultID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RoutingTypeID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RoutingTypeIDText")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SearchTagID")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool?>("SendEmail")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("StartTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("StatusID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TagColor")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TagID")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("TaskOwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("TravelDistance")
+                        .HasColumnType("double");
+
+                    b.Property<string>("WorkDuration")
+                        .HasColumnType("longtext");
+
                     b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("StatusId");
 
                     b.ToTable("Activities");
                 });
@@ -129,9 +320,6 @@ namespace ServerLibrary.Migrations
 
                     b.Property<string>("Email")
                         .HasColumnType("longtext");
-
-                    b.Property<int?>("EmployeeId")
-                        .HasColumnType("int");
 
                     b.Property<string>("FullName")
                         .HasColumnType("longtext");
@@ -574,8 +762,35 @@ namespace ServerLibrary.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double?>("AmountSummary")
-                        .HasColumnType("double");
+                    b.Property<decimal?>("AmountSummary")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("BankAccount")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BankName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingCountryID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingDistrictID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingLat")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingLong")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingProvinceID")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("BuyerId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
@@ -583,41 +798,72 @@ namespace ServerLibrary.Migrations
                     b.Property<int>("CurrencyTypeId")
                         .HasColumnType("int");
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int?>("CustomerId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
 
                     b.Property<double?>("DiscountSummary")
                         .HasColumnType("double");
 
+                    b.Property<string>("InvoiceAddress")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("InvoiceRequestName")
                         .HasColumnType("longtext");
 
-                    b.Property<int>("InvoiceTypeId")
-                        .HasColumnType("int");
+                    b.Property<string>("InvoiceTypeId")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool?>("IsInvoicePaper")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("ModifiedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("PaymentTypeId")
+                    b.Property<int?>("OwnerId")
                         .HasColumnType("int");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PaymentTypeId")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RecipientEmail")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RecipientName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RecipientPhone")
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime?>("RequestDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int?>("StatusId")
-                        .HasColumnType("int");
+                    b.Property<string>("StatusID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TaxBudgetCode")
+                        .HasColumnType("longtext");
 
                     b.Property<double?>("TaxSummary")
                         .HasColumnType("double");
 
-                    b.Property<double?>("TotalSummary")
-                        .HasColumnType("double");
+                    b.Property<decimal?>("ToCurrencyAfterDiscountSummary")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal?>("ToCurrencySummary")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal?>("TotalSummary")
+                        .HasColumnType("decimal(65,30)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("StatusId");
+                    b.HasIndex("PartnerId");
 
                     b.ToTable("Invoices");
                 });
@@ -643,6 +889,275 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("PartnerId");
 
                     b.ToTable("InvoiceEmployees");
+                });
+
+            modelBuilder.Entity("Data.Entities.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("BalanceReceiptAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<int?>("BillingAccountID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BillingAccountIDText")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingContactID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingCountryID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingDistrictID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingProvinceID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingStreet")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BillingWardID")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("BookDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("ContactId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ContactName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ContractNumber")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeadlineDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("DeliveryStatusID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal?>("DiscountAfterTaxSummary")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal?>("DiscountSummary")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("InvoiceDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("InvoiceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InvoiceReceivingEmail")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("InvoiceReceivingPhone")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal?>("InvoicedAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<bool?>("IsContractPartner")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsInvoiced")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsSentBill")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsShared")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<decimal?>("LiquidateAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal?>("NotPaidAmountSummary")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<int?>("NumberOfDaysOwed")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("PaidAmountSummary")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime?>("PaidDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PayStatusID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PayStatusIDText")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RecordedSale")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RecordedSaleOrganizationUnitID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RecordedSaleUsersID")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal?>("RemainingAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal?>("ReturnedSummary")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal?>("RevenueAccountingAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime?>("RevenueRecognitionDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("RevenueStatusID")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal>("SaleOrderAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime>("SaleOrderDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("SaleOrderName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SaleOrderNo")
+                        .HasColumnType("longtext");
+
+                    b.Property<double>("SaleOrderProcessCost")
+                        .HasColumnType("double");
+
+                    b.Property<string>("SaleOrderTypeID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ShippingCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ShippingContactID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ShippingCountryID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ShippingDistrictID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ShippingProvinceID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ShippingReceivingPerson")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ShippingStreet")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ShippingWardID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("StatusID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TaxCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<double?>("TaxSummary")
+                        .HasColumnType("double");
+
+                    b.Property<decimal?>("ToCurrencySummary")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal?>("TotalReceiptedAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal?>("TotalSummary")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal?>("UnInvoicedAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContactId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("Data.Entities.OrderEmployees", b =>
+                {
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AccessLevel")
+                        .HasColumnType("int");
+
+                    b.HasKey("OrderId", "EmployeeId", "PartnerId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("OrderEmployees");
                 });
 
             modelBuilder.Entity("Data.Entities.Partner", b =>
@@ -696,7 +1211,7 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("EmployeeId")
+                    b.Property<int?>("EmployeeId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("ModifiedDate")
@@ -743,9 +1258,6 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("CustomID")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
@@ -757,9 +1269,6 @@ namespace ServerLibrary.Migrations
 
                     b.Property<string>("InventoryItemID")
                         .HasColumnType("longtext");
-
-                    b.Property<int?>("InvoiceId")
-                        .HasColumnType("int");
 
                     b.Property<bool>("IsFollowSerialNumber")
                         .HasColumnType("tinyint(1)");
@@ -879,8 +1388,6 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("InvoiceId");
 
                     b.HasIndex("PartnerId");
 
@@ -1065,32 +1572,6 @@ namespace ServerLibrary.Migrations
                     b.ToTable("RefreshTokenInfos");
                 });
 
-            modelBuilder.Entity("Data.Entities.Status", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("ModifiedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Statuses");
-                });
-
             modelBuilder.Entity("Data.Entities.SystemRole", b =>
                 {
                     b.Property<int>("Id")
@@ -1105,6 +1586,23 @@ namespace ServerLibrary.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SystemRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "User"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Admin"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "SysAdmin"
+                        });
                 });
 
             modelBuilder.Entity("Data.Entities.UserRole", b =>
@@ -1149,23 +1647,6 @@ namespace ServerLibrary.Migrations
                         .HasForeignKey("CustomersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Data.Entities.Activity", b =>
-                {
-                    b.HasOne("Data.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Data.Entities.Status", "Status")
-                        .WithMany()
-                        .HasForeignKey("StatusId");
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("Data.Entities.ActivityEmployees", b =>
@@ -1282,19 +1763,13 @@ namespace ServerLibrary.Migrations
 
             modelBuilder.Entity("Data.Entities.Invoice", b =>
                 {
-                    b.HasOne("Data.Entities.Customer", "Customer")
+                    b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
-                        .HasForeignKey("CustomerId")
+                        .HasForeignKey("PartnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Data.Entities.Status", "Status")
-                        .WithMany()
-                        .HasForeignKey("StatusId");
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Status");
+                    b.Navigation("Partner");
                 });
 
             modelBuilder.Entity("Data.Entities.InvoiceEmployees", b =>
@@ -1324,6 +1799,58 @@ namespace ServerLibrary.Migrations
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("Data.Entities.Order", b =>
+                {
+                    b.HasOne("Data.Entities.Contact", null)
+                        .WithMany("Orders")
+                        .HasForeignKey("ContactId");
+
+                    b.HasOne("Data.Entities.Customer", null)
+                        .WithMany("Orders")
+                        .HasForeignKey("CustomerId");
+
+                    b.HasOne("Data.Entities.Invoice", "Invoice")
+                        .WithMany("Orders")
+                        .HasForeignKey("InvoiceId");
+
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Invoice");
+
+                    b.Navigation("Partner");
+                });
+
+            modelBuilder.Entity("Data.Entities.OrderEmployees", b =>
+                {
+                    b.HasOne("Data.Entities.Employee", "Employee")
+                        .WithMany("OrderEmployees")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Order", "Order")
+                        .WithMany("OrderEmployees")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Partner");
+                });
+
             modelBuilder.Entity("Data.Entities.PartnerUser", b =>
                 {
                     b.HasOne("Data.Entities.Partner", "Partner")
@@ -1345,10 +1872,6 @@ namespace ServerLibrary.Migrations
 
             modelBuilder.Entity("Data.Entities.Product", b =>
                 {
-                    b.HasOne("Data.Entities.Invoice", null)
-                        .WithMany("Products")
-                        .HasForeignKey("InvoiceId");
-
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
                         .HasForeignKey("PartnerId")
@@ -1458,11 +1981,15 @@ namespace ServerLibrary.Migrations
             modelBuilder.Entity("Data.Entities.Contact", b =>
                 {
                     b.Navigation("ContactEmployees");
+
+                    b.Navigation("Orders");
                 });
 
             modelBuilder.Entity("Data.Entities.Customer", b =>
                 {
                     b.Navigation("CustomerEmployees");
+
+                    b.Navigation("Orders");
                 });
 
             modelBuilder.Entity("Data.Entities.Employee", b =>
@@ -1475,6 +2002,8 @@ namespace ServerLibrary.Migrations
 
                     b.Navigation("InvoiceEmployees");
 
+                    b.Navigation("OrderEmployees");
+
                     b.Navigation("ProductEmployees");
                 });
 
@@ -1482,7 +2011,12 @@ namespace ServerLibrary.Migrations
                 {
                     b.Navigation("InvoiceEmployees");
 
-                    b.Navigation("Products");
+                    b.Navigation("Orders");
+                });
+
+            modelBuilder.Entity("Data.Entities.Order", b =>
+                {
+                    b.Navigation("OrderEmployees");
                 });
 
             modelBuilder.Entity("Data.Entities.Partner", b =>

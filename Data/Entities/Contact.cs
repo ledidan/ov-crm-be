@@ -41,6 +41,8 @@ namespace Data.Entities
         public virtual required Partner Partner { get; set; }
         public List<Customer> Customers { get; set; } = new List<Customer>();
         public List<Employee> Employees { get; set; } = new List<Employee>();
+
+        public List<Order> Orders { get; set; } = new List<Order>();
         public ICollection<ContactEmployees> ContactEmployees { get; set; } = new List<ContactEmployees>();
     }
 }

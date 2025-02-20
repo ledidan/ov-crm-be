@@ -1,3 +1,4 @@
+using AutoMapper;
 using Data.DTOs;
 using Data.DTOs.Contact;
 using Data.Entities;
@@ -6,6 +7,7 @@ using Data.Responses;
 using Mapper.ContactMapper;
 using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
+using ServerLibrary.Helpers;
 using ServerLibrary.Services.Interfaces;
 
 namespace ServerLibrary.Services.Implementations
@@ -13,18 +15,24 @@ namespace ServerLibrary.Services.Implementations
     public class ContactService : IContactService
     {
         private readonly AppDbContext _appDbContext;
+
+        private readonly IMapper _mapper;
         private readonly IPartnerService _partnerService;
         private readonly IEmployeeService _employeeService;
-
         public ContactService(AppDbContext appDbContext,
-        IPartnerService partnerService, IEmployeeService employeeService)
+        IPartnerService partnerService, IEmployeeService employeeService,
+        IMapper mapper
+        )
         {
             _appDbContext = appDbContext;
             _partnerService = partnerService;
             _employeeService = employeeService;
+            _mapper = mapper;
         }
+
         public async Task<GeneralResponse> CreateAsync(CreateContact contact, Employee employee, Partner partner)
         {
+            var codeGenerator = new GenerateNextCode(_appDbContext);
             if (contact == null)
                 return new GeneralResponse(false, "Model is empty");
 
@@ -40,6 +48,10 @@ namespace ServerLibrary.Services.Implementations
             else
             {
                 return new GeneralResponse(false, "EmployeeId is required");
+            }
+            if (string.IsNullOrEmpty(contact.ContactCode))
+            {
+                contact.ContactCode = await codeGenerator.GenerateNextCodeAsync<Contact>("LH", c => c.ContactCode);
             }
             var newContact = new Contact()
             {
@@ -110,11 +122,18 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<GeneralResponse?> UpdateContactIdAsync(int id, UpdateContactDTO updateContact, Employee employee, Partner partner)
         {
+
+            var codeGenerator = new GenerateNextCode(_appDbContext);
             var existingContact = await _appDbContext.Contacts
         .FirstOrDefaultAsync(c => c.Id == id && c.EmployeeId == employee.Id && c.PartnerId == partner.Id);
             var updatedContact = updateContact.FromUpdateContactDTO();
             if (existingContact == null)
                 return new GeneralResponse(false, "Contact not found");
+
+            if (string.IsNullOrEmpty(updateContact.ContactCode))
+            {
+                updateContact.ContactCode = await codeGenerator.GenerateNextCodeAsync<Contact>("LH", c => c.ContactCode);
+            }
             existingContact.AccountTypeID = updateContact.AccountTypeID;
             existingContact.ContactCode = updateContact.ContactCode;
             existingContact.ContactName = updateContact.ContactName;
@@ -145,30 +164,41 @@ namespace ServerLibrary.Services.Implementations
             existingContact.IsPublic = updateContact.IsPublic;
             existingContact.EmailOptOut = updateContact.EmailOptOut;
             existingContact.PhoneOptOut = updateContact.PhoneOptOut;
-            // var existingEmployees = existingContact.ContactEmployees.ToDictionary(ce => ce.EmployeeId);
-            // foreach (var contactEmployee in existingContact.ContactEmployees)
-            // {
-            //     if (contactEmployee != null && contactEmployee.EmployeeId == newEmployeeId)
-            //     {
-            //         contactEmployee.AccessLevel = accessLevel;
-            //     }
-            // }
-            // if (!existingContact.ContactEmployees.Any(ce => ce.EmployeeId == newEmployeeId))
-            // {
-            //     if (existingContact?.PartnerId == null)
-            //         return new GeneralResponse(false, "Partner information is missing for this contact");
-            //     existingContact.ContactEmployees.Add(new ContactEmployees
-            //     {
-            //         ContactId = existingContact.Id,
-            //         EmployeeId = newEmployeeId,
-            //         PartnerId = existingContact.PartnerId,
-            //         AccessLevel = accessLevel
-            //     });
-            // }
-
             await _appDbContext.UpdateDb(existingContact);
             return new GeneralResponse(true, "Contact updated successfully");
         }
+
+
+        public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateContactDTO updateContact,
+         Employee employee, Partner partner)
+        {
+            var existingContact = await _appDbContext.Contacts.FirstOrDefaultAsync(
+                c => c.Id == id && c.EmployeeId == employee.Id && c.PartnerId == partner.Id
+            );
+
+            if (existingContact == null)
+            {
+                return new GeneralResponse(false, "Contact not found");
+            }
+
+            foreach (var prop in typeof(UpdateContactDTO).GetProperties())
+            {
+                var newValue = prop.GetValue(updateContact);
+                if (newValue != null)
+                {
+                    var existingProp = typeof(Contact).GetProperty(prop.Name);
+                    if (existingProp != null)
+                    {
+                        existingProp.SetValue(existingContact, newValue);
+                        _appDbContext.Entry(existingContact).Property(existingProp.Name).IsModified = true;
+                    }
+                }
+                await _appDbContext.SaveChangesAsync();
+
+            }
+            return new GeneralResponse(true, "Contact updated successfully");
+        }
+
         public async Task<GeneralResponse?> DeleteIdAsync(int id, Employee employee, Partner partner)
         {
             var existingContact = await _appDbContext.Contacts
@@ -253,6 +283,73 @@ namespace ServerLibrary.Services.Implementations
             await _appDbContext.SaveChangesAsync();
 
             return new GeneralResponse(true, "Contacts deleted successfully");
+        }
+
+
+        public async Task<List<ContactOrderDTO?>> GetAllOrdersByContactAsync(int contactId, Employee employee, Partner partner)
+        {
+            try
+            {
+                if (contactId == null)
+                {
+                    throw new ArgumentNullException(nameof(contactId), "Contact cannot be null.");
+                }
+                var orders = await _appDbContext.Orders
+                      .Where(o =>
+                          o.Partner == partner && o.ContactId == contactId && o.OwnerId == employee.Id ||
+                          o.OrderEmployees.Any(oe => oe.EmployeeId == employee.Id))
+                          .Include(oce => oce.OrderEmployees)
+                      .ToListAsync();
+
+                if (!orders.Any())
+                {
+                    return new List<ContactOrderDTO>();
+                }
+                var orderDtos = orders.Select(order =>
+                {
+                    var dto = _mapper.Map<ContactOrderDTO>(order);
+                    return dto;
+                }).ToList();
+
+                return orderDtos;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to retrieve orders: {ex.Message}");
+            }
+        }
+
+        public async Task<List<ContactInvoiceDTO?>> GetAllInvoicesByContactAsync(int contactId, Employee employee, Partner partner)
+        {
+            try
+            {
+                if (contactId == null)
+                {
+                    throw new ArgumentNullException(nameof(contactId), "ID Liên hệ không được để trống.");
+                }
+                var invoices = await _appDbContext.Invoices
+                      .Where(o =>
+                          o.Partner == partner && o.BuyerId == contactId && o.OwnerId == employee.Id ||
+                          o.InvoiceEmployees.Any(oe => oe.EmployeeId == employee.Id))
+                          .Include(oce => oce.InvoiceEmployees)
+                      .ToListAsync();
+
+                if (!invoices.Any())
+                {
+                    return new List<ContactInvoiceDTO?>();
+                }
+                var invoiceDtos = invoices.Select(invoice =>
+                {
+                    var dto = _mapper.Map<ContactInvoiceDTO>(invoice);
+                    return dto;
+                }).ToList();
+
+                return invoiceDtos;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to retrieve invoices: {ex.Message}");
+            }
         }
     }
 }

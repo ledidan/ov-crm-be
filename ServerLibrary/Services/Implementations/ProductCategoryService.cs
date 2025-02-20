@@ -1,4 +1,5 @@
-﻿using Data.DTOs;
+﻿using AutoMapper;
+using Data.DTOs;
 using Data.Entities;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +8,7 @@ using ServerLibrary.Services.Interfaces;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class ProductCategoryService(AppDbContext appDbContext, S3Service s3Service) : IProductCategoryService
+    public class ProductCategoryService(AppDbContext appDbContext, S3Service s3Service, IMapper mapper) : IProductCategoryService
     {
         public async Task<GeneralResponse> CreateAsync(CreateProductCategory productCategory, Employee employee, Partner partner)
         {
@@ -53,7 +54,7 @@ namespace ServerLibrary.Services.Implementations
                     Id = category.Id,
                     ProductCategoryCode = category.ProductCategoryCode,
                     ProductCategoryName = category.ProductCategoryName,
-                    ParentProductCategoryID = category.ParentProductCategoryID 
+                    ParentProductCategoryID = category.ParentProductCategoryID
                 };
 
                 flattenedCategories.Add(categoryDTO);
@@ -233,6 +234,52 @@ namespace ServerLibrary.Services.Implementations
             string failedString = failedIds.Any() ? $"Cannot remove (has subcategories): {string.Join(", ", failedIds)}" : "";
 
             return new GeneralResponse(true, $"{removedString} {failedString}".Trim());
+        }
+
+        public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateProductCategoryDTO productCategory, Employee employee, Partner partner)
+        {
+            if (productCategory == null || id <= 0)
+            {
+                return new GeneralResponse(false, "Invalid product category data provided.");
+            }
+
+            if (partner == null)
+            {
+                return new GeneralResponse(false, "Invalid partner.");
+            }
+
+            var existingCategory = await appDbContext.ProductCategories
+                .FirstOrDefaultAsync(pc => pc.Id == id && pc.Partner.Id == partner.Id);
+
+            if (existingCategory == null)
+            {
+                return new GeneralResponse(false, "Product category not found or does not belong to the specified partner.");
+            }
+
+            // Validate Parent Category
+            if (productCategory.ParentProductCategoryID.HasValue)
+            {
+                if (productCategory.ParentProductCategoryID == id)
+                {
+                    return new GeneralResponse(false, "A category cannot be its own parent.");
+                }
+
+                // var parentCategory = await appDbContext.ProductCategories
+                //     .FirstOrDefaultAsync(pc => pc.Id == productCategory.ParentProductCategoryID.Value);
+
+                // if (parentCategory == null || parentCategory.InActive == false)
+                // {
+                //     return new GeneralResponse(false, "The specified parent category does not exist or is inactive.");
+                // }
+            }
+
+            mapper.Map(productCategory, existingCategory);
+
+            appDbContext.Entry(existingCategory).State = EntityState.Modified;
+
+            await appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Product category updated successfully.");
         }
     }
 }

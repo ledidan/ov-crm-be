@@ -15,7 +15,6 @@ namespace Data.DTOs
         public decimal? ConversionRate { get; set; }
         public string? ConversionUnit { get; set; }
         public string? CreatedBy { get; set; }
-        public string? CustomID { get; set; }
         public string? Description { get; set; }
         public string? Equation { get; set; }
         public bool? Inactive { get; set; }

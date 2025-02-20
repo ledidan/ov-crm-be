@@ -36,8 +36,9 @@ namespace ServerLibrary.Services
                 throw new Exception("Invalid file type. Only JPG, PNG, GIF, and PDF files are allowed.");
             }
             var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-            var partnerRoute = $"organizations/partnerId_{partnerId}/userId_{userId}/{app}/{timestamp}_{fileName}";
-            var individualRoute = $"individuals/userId_{userId}/{app}/{timestamp}_{fileName}";
+            var formattedFileName = $"{timestamp}_{fileName}";
+            var partnerRoute = $"organizations/partnerId_{partnerId}/userId_{userId}/{app}/{formattedFileName}";
+            var individualRoute = $"individuals/userId_{userId}/{app}/{formattedFileName}";
 
             string location = userType == "partner" ? partnerRoute : individualRoute;
 
@@ -52,7 +53,7 @@ namespace ServerLibrary.Services
 
             await _s3Client.PutObjectAsync(request);
 
-            return $"https://{_bucketName}.s3.amazonaws.com/{request.Key}"; // Return S3 file URL
+            return $"{app}/{formattedFileName}"; // Return S3 file URL
         }
 
            public async Task<string> UploadBase64ImageToS3(string base64Image, string categoryName, int partnerId, int userId, string app, string userType)

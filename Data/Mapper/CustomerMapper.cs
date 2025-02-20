@@ -9,7 +9,7 @@ namespace Mapper.CustomerMapper
         {
             return new CustomerDTO
             {
-                Id = customerModel.Id,
+                Id = customerModel.Id, 
                 AccountName = customerModel.AccountName,
                 AccountNumber = customerModel.AccountNumber,
                 AccountReferredID = customerModel.AccountReferredID,

@@ -86,6 +86,36 @@ namespace Server.Controllers
             return Ok(contact.ToContactDTO());
         }
 
+        [HttpPatch("{id:int}")]
+
+        public async Task<IActionResult> UpdateFieldContact(int id,
+        [FromBody] UpdateContactDTO updateContact)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+
+            if (updateContact == null)
+            {
+                return BadRequest(new { message = "Invalid request data" });
+            }
+
+            if (employee == null || partner == null)
+            {
+                return Unauthorized(new { message = "Unauthorized access" });
+            }
+
+            var result = await _contactService.UpdateFieldIdAsync(id, updateContact,
+             employee, partner);
+
+            if (!result.Flag)
+            {
+                return NotFound(new { message = result.Message });
+            }
+
+            return Ok(new { Flag = result.Flag, Message = result.Message });
+
+        }
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateContactAsync([FromRoute] int id,
     [FromBody] UpdateContactDTO newUpdate
@@ -118,7 +148,7 @@ namespace Server.Controllers
             var contactResult = await _contactService.DeleteIdAsync(id, employee, partner);
             return Ok(contactResult);
         }
-        [HttpDelete("delete-bulk")]
+        [HttpDelete("bulk-delete")]
         public async Task<IActionResult> DeleteMultipleContacts([FromQuery] string ids)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -135,7 +165,39 @@ namespace Server.Controllers
 
             return Ok(response);
         }
+        [HttpGet("{id:int}/all-order")]
+        public async Task<IActionResult> GetAllOrdersByContact(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
 
+            if (id == null)
+            {
+                return BadRequest("Cannot found orders id");
+            }
+
+            var result = await _contactService.GetAllOrdersByContactAsync(id, employee, partner);
+
+            if (result != null)
+            {
+                return Ok(result);
+            }
+            return BadRequest("Failed to get order");
+        }
+        [HttpGet("{id:int}/all-invoice")]
+        public async Task<IActionResult> GetAllInvoicesByContact(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            var result = await _contactService.GetAllInvoicesByContactAsync(id, employee, partner);
+            if (result != null)
+            {
+                return Ok(result);
+            }
+            return BadRequest("Lỗi khi lấy dữ liệu hoá đơn");
+        }
     }
 }
 

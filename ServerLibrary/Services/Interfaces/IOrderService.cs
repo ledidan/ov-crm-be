@@ -1,4 +1,4 @@
-using Data.DTOs.Order;
+using Data.DTOs;
 using Data.Entities;
 using Data.MongoModels;
 using Data.Responses;
@@ -7,14 +7,20 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IOrderService
     {
-        Task<List<Orders>> GetAllAsync(Employee employee, Partner partner);
+        Task<List<OrderDTO>> GetAllOrdersAsync(Employee employee, Partner partner);
 
-        Task<Orders?> GetOrderDetailAsync(string id, int employeeId);
+        Task<OrderDTO?> GetOrderByIdAsync(int id, Employee employee, Partner partner);
 
-        Task<GeneralResponse?> CreateOrderAsync(Orders orders, List<OrderDetails> orderDetails);
+        Task<GeneralResponse?> CreateOrderAsync(OrderDTO orderDto, Employee employee, Partner partner);
 
-        Task<GeneralResponse?> UpdateOrderAsync(string orderId, OrderDTO orders, List<OrderDetailDTO> orderDetailsDTO);
+        Task<GeneralResponse?> UpdateFieldIdAsync(int id, OrderDTO orders, Employee employee, Partner partner);
 
-        Task<GeneralResponse?> RemoveOrderAsync(string orderId, int employeeId);
+        Task<GeneralResponse?> UpdateOrderAsync(int id, OrderDTO orders, Employee employee, Partner partner);
+
+        Task<GeneralResponse?> DeleteBulkOrdersAsync(string ids, Employee employee, Partner partner);
+
+        Task<GeneralResponse?> BulkUpdateOrdersAsync(List<int> orderIds, int? ContactId, int? CustomerId,
+         Employee employee, Partner partner);
+        // Task<GeneralResponse?> RemoveOrderAsync(int orderId, int employeeId);
     }
 }

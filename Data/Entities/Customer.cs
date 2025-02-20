@@ -74,6 +74,7 @@ namespace Data.Entities
 
         public List<Employee> Employees { get; set; } = new List<Employee>();
 
+        public List<Order> Orders { get; set; } = new List<Order>();
         public ICollection<CustomerEmployees> CustomerEmployees { get; set; } = new List<CustomerEmployees>();
 
     }

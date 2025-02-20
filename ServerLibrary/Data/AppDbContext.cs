@@ -1,6 +1,7 @@
 ﻿using Data.Entities;
 using Data.Interceptor;
 using Microsoft.EntityFrameworkCore;
+using ServerLibrary.Helpers;
 
 namespace ServerLibrary.Data
 {
@@ -52,7 +53,11 @@ namespace ServerLibrary.Data
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(builder);
+            builder.Entity<SystemRole>().HasData(
+                 new SystemRole { Id = 1, Name = Constants.Role.User },
+                 new SystemRole { Id = 2, Name = Constants.Role.Admin },
+                 new SystemRole { Id = 3, Name = Constants.Role.SysAdmin }
+             );
             builder.Entity<ContactEmployees>()
         .Property(ce => ce.AccessLevel)
         .HasConversion<int>();
@@ -165,11 +170,35 @@ namespace ServerLibrary.Data
             {
                 j.HasKey(ce => new { ce.ProductId, ce.EmployeeId, ce.PartnerId });
             });
+            builder.Entity<OrderEmployees>()
+            .Property(ce => ce.AccessLevel)
+            .HasConversion<int>();
+            builder.Entity<Order>()
+        .HasMany(c => c.Employees)
+        .WithMany(e => e.Orders)
+        .UsingEntity<OrderEmployees>(
+            j => j
+                .HasOne(ce => ce.Employee)
+                .WithMany(e => e.OrderEmployees)
+                .HasForeignKey(ce => ce.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict),
+            j => j
+                .HasOne(ce => ce.Order)
+                .WithMany(c => c.OrderEmployees)
+                .HasForeignKey(ce => ce.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade),
+            j =>
+            {
+                j.HasKey(ce => new { ce.OrderId, ce.EmployeeId, ce.PartnerId });
+            });
+            base.OnModelCreating(builder);
+
         }
         public DbSet<InvoiceEmployees> InvoiceEmployees { get; set; }
         public DbSet<CustomerEmployees> CustomerEmployees { get; set; }
         public DbSet<ProductEmployees> ProductEmployees { get; set; }
         public DbSet<ContactEmployees> ContactEmployees { get; set; }
+        public DbSet<OrderEmployees> OrderEmployees { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<SystemRole> SystemRoles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
@@ -185,7 +214,7 @@ namespace ServerLibrary.Data
 
         public DbSet<Activity> Activities { get; set; }
 
-        public DbSet<Status> Statuses { get; set; }
+        public DbSet<Order> Orders { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductCategory> ProductCategories { get; set; }
 

@@ -6,6 +6,7 @@ using Data.Enums;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
+using ServerLibrary.Helpers;
 using ServerLibrary.Services.Interfaces;
 
 namespace ServerLibrary.Services.Implementations
@@ -30,19 +31,23 @@ namespace ServerLibrary.Services.Implementations
             _employeeService = employeeService;
             _mapper = mapper;
         }
-        public async Task<GeneralResponse> CreateAsync(CreateCustomer customer)
+        public async Task<GeneralResponse> CreateAsync(CreateCustomer customer, Employee employee, Partner partner)
         {
+            var codeGenerator = new GenerateNextCode(_appDbContext);
+
             if (customer == null) return new GeneralResponse(false, "Model is empty");
 
             // Check partner
-            var partner = await _partnerService.FindById(customer.PartnerId);
             if (partner == null) return new GeneralResponse(false, "Partner not found");
 
             // Check employee   
-            var employee = await _employeeService.FindByIdAsync(customer.EmployeeId.Value);
             if (employee == null)
                 return new GeneralResponse(false, "Employee not found");
 
+            if (string.IsNullOrEmpty(customer.AccountNumber))
+            {
+                customer.AccountNumber = await codeGenerator.GenerateNextCodeAsync<Customer>("KH", c => c.AccountNumber);
+            }
             var newCustomer = new Customer
             {
                 AccountName = customer.AccountName,
@@ -120,21 +125,22 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Customer created");
         }
 
+
         public async Task<GeneralResponse> DeleteAsync(int customerId,
-         int employeeId, int partnerId)
+       Employee employee, Partner partner)
         {
             var customer = await _appDbContext.Customers.Include(c => c.CustomerEmployees)
-            .Where(c => c.PartnerId == partnerId)
+            .Where(c => c.PartnerId == partner.Id)
             .FirstOrDefaultAsync(ce => ce.Id == customerId);
             if (customer == null)
             {
                 return new GeneralResponse(false, "Customer not found ");
             }
-            var employeeExists = customer.CustomerEmployees.Any(ce => ce.EmployeeId == employeeId && ce.AccessLevel == AccessLevel.ReadWrite);
+            var employeeExists = customer.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id && ce.AccessLevel == AccessLevel.ReadWrite);
 
             if (!employeeExists)
             {
-                return new GeneralResponse(false, $"Employee with ID {employeeId} does not have permission to remove this customer.");
+                return new GeneralResponse(false, $"Employee with ID {employee.Id} does not have permission to remove this customer.");
             }
 
             _appDbContext.Customers.Remove(customer);
@@ -144,7 +150,7 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Removed customer successfully");
         }
 
-        public async Task<GeneralResponse?> DeleteBulkCustomers(string ids, int employeeId, int partnerId)
+        public async Task<GeneralResponse?> DeleteBulkCustomers(string ids, Employee employee, Partner partner)
         {
             if (string.IsNullOrWhiteSpace(ids))
             {
@@ -166,7 +172,7 @@ namespace ServerLibrary.Services.Implementations
             // Fetch customers that match the provided IDs and belong to the given partner
             var customers = await _appDbContext.Customers
                 .Include(c => c.CustomerEmployees)
-                .Where(c => idList.Contains(c.Id) && c.PartnerId == partnerId)
+                .Where(c => idList.Contains(c.Id) && c.PartnerId == partner.Id)
                 .ToListAsync();
 
             if (!customers.Any())
@@ -176,7 +182,7 @@ namespace ServerLibrary.Services.Implementations
 
             // Check if the employee has the required permission to delete each customer
             var unauthorizedCustomers = customers
-                .Where(c => !c.CustomerEmployees.Any(ce => ce.EmployeeId == employeeId && ce.AccessLevel == AccessLevel.ReadWrite))
+                .Where(c => !c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id && ce.AccessLevel == AccessLevel.ReadWrite))
                 .ToList();
 
             if (unauthorizedCustomers.Any())
@@ -190,7 +196,7 @@ namespace ServerLibrary.Services.Implementations
 
             return new GeneralResponse(true, "Customers deleted successfully");
         }
-        public async Task<List<Customer>> GetAllAsync(Employee employee, Partner partner)
+        public async Task<List<Customer?>> GetAllAsync(Employee employee, Partner partner)
         {
 
             var employeeData = await _employeeService.FindByIdAsync(employee.Id);
@@ -207,13 +213,13 @@ namespace ServerLibrary.Services.Implementations
             return result.Any() ? result : new List<Customer>();
         }
 
-        public async Task<Customer?> GetCustomerByIdAsync(int id, int employeeId, int partnerId)
+        public async Task<Customer?> GetCustomerByIdAsync(int id, Employee employee, Partner partner)
         {
             var customer = await _appDbContext.Customers
                 .Include(c => c.CustomerEmployees)
                 .FirstOrDefaultAsync(c =>
                     c.Id == id &&
-                    c.CustomerEmployees.Any(ce => ce.EmployeeId == employeeId && ce.Employee.PartnerId == partnerId));
+                    c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id && ce.Employee.PartnerId == partner.Id));
 
             if (customer == null)
             {
@@ -221,18 +227,39 @@ namespace ServerLibrary.Services.Implementations
             }
             return customer;
         }
-        public async Task<CustomerDTO?> UpdateAsync(int id, CustomerDTO updateDto)
+        public async Task<CustomerDTO?> UpdateAsync(int id, CustomerDTO updateDto, Employee employee, Partner partner)
         {
             var existingCustomer = await _appDbContext.Customers
-                .Include(c => c.CustomerEmployees)
-                .AsNoTracking() // Prevents unnecessary tracking
-                .FirstOrDefaultAsync(c => c.Id == id);
-
+                            .Include(c => c.CustomerEmployees).AsNoTracking()
+                            .FirstOrDefaultAsync(c =>
+                                c.Id == id &&
+                                c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id && ce.Employee.PartnerId == partner.Id));
             if (existingCustomer == null)
                 return null;
             _mapper.Map(updateDto, existingCustomer);
             await _appDbContext.UpdateDb(existingCustomer);
             return _mapper.Map<CustomerDTO>(existingCustomer);
         }
+
+        public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, CustomerDTO updateCustomer, Employee employee, Partner partner)
+        {
+            var existingCustomer = await _appDbContext.Customers
+                    .Include(c => c.CustomerEmployees)
+                    .FirstOrDefaultAsync(c =>
+                        c.Id == id &&
+                        c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id && ce.Employee.PartnerId == partner.Id));
+
+            if (existingCustomer == null)
+                return new GeneralResponse(false, "Customer not found");
+
+            _mapper.Map(updateCustomer, existingCustomer);
+
+            _appDbContext.Entry(existingCustomer).State = EntityState.Modified;
+
+            await _appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Customer updated successfully");
+        }
+
     }
 }
