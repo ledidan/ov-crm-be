@@ -22,7 +22,8 @@ namespace ServerLibrary.Services.Implementations
                 TaxIdentificationNumber = partner.TaxIdentificationNumber,
                 LogoUrl = partner.LogoUrl,
                 EmailContact = partner.EmailContact,
-                PhoneNumber = partner.PhoneNumber
+                PhoneNumber = partner.PhoneNumber,
+                OwnerId = partner.OwnerId
             });
             return new GeneralResponse(true, "Partner created");
         }

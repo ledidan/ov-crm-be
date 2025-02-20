@@ -11,79 +11,111 @@ namespace Server.Controllers
     [ApiController]
     [Authorize]
     public class ProductController
-        (IProductCatelogyService productCatelogyService,
+        (
         IPartnerService partnerService,
-        IProductService productService) : ControllerBase
+        IProductService productService,
+        IEmployeeService employeeService) : ControllerBase
     {
-        [HttpGet("get-products")]
-        public async Task<List<Product>> GetProductsAsync()
+        [HttpGet("get-all")]
+        [Authorize(Roles = "User,Admin")]
+        public async Task<List<ProductDTO>> GetProductsAsync()
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);
-            if (partner == null) return new List<Product>();
+            var employee = await employeeService.FindByClaim(identity);
+            if (partner == null) return new List<ProductDTO>();
 
-            var result = await productService.GetAllAsync(partner);
+            var result = await productService.GetAllAsync(employee, partner);
             return result;
         }
 
-        [HttpPost("create-product")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateProductAsync(CreateProduct product)
+        [HttpPost("create")]
+        [Authorize(Roles = "User,Admin")]
+        public async Task<IActionResult> CreateProductAsync(CreateProductDTO product)
         {
             if (product == null) return BadRequest("Model is empty");
 
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            var employee = await employeeService.FindByClaim(identity);
+            if (partner == null) return BadRequest("Partner not found");
+
+            var result = await productService.CreateAsync(product, employee, partner);
+            return Ok(result);
+        }
+
+        [HttpGet("{id:int}")]
+        [Authorize(Roles = "User,Admin")]
+        public async Task<IActionResult> GetProductDetailAsync(int id)
+        {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);
             if (partner == null) return BadRequest("Partner not found");
 
-            var result = await productService.CreateAsync(product, partner);
+            var result = await productService.FindByIdAsync(id, partner);
             return Ok(result);
         }
 
-        [HttpPost("update-product")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateProductAsync(Product product)
+        [HttpPut]
+        [Route("{id:int}")]
+        [Authorize(Roles = "User,Admin")]
+        public async Task<IActionResult> UpdateProductAsync(int id, [FromBody] UpdateProductDTO product)
         {
-            if (product == null) return BadRequest("Model is empty");
-
-            var result = await productService.UpdateAsync(product);
-            return Ok(result);
-        }
-
-        [HttpPost("update-sellingprice")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateSellingPriceAsync(Product product, double sellingPrice)
-        {
-            if (product == null) return BadRequest("Model is empty");
-
-            var result = await productService.UpdateSellingPriceAsync(product, sellingPrice);
-            return Ok(result);
-        }
-
-        [HttpPost("create-productcatelogy")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateProductCatelogyAsync(CreateProductCatelogy productCatelogy)
-        {
-            if (productCatelogy == null) return BadRequest("Model is empty");
-
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);
             if (partner == null) return BadRequest("Partner not found");
+            if (product == null) return BadRequest("Model is empty");
 
-            var result = await productCatelogyService.CreateAsync(productCatelogy, partner);
+            var result = await productService.UpdateAsync(id, product, partner);
             return Ok(result);
         }
 
-        [HttpGet("get-productcatelogies")]
-        [Authorize(Roles = "Admin")]
-        public async Task<List<ProductCatelogy>> GetProductCatelogiesAsync()
+        [HttpDelete("bulk-delete")]
+        [Authorize(Roles = "User,Admin")]
+        public async Task<IActionResult> RemoveProduct([FromQuery] string ids)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);
-            if (partner == null) return new List<ProductCatelogy>();
-
-            var result = await productCatelogyService.GetAllAsync(partner);
-            return result;
+            if (partner == null) return BadRequest("Unauthorized Partner");
+            if (string.IsNullOrWhiteSpace(ids))
+            {
+                return BadRequest("Invalid request. No category IDs provided.");
+            }
+            var result = await productService.RemoveBulkIdsAsync(ids, partner);
+            return Ok(result);
         }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductDTO product)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            var employee = await employeeService.FindByClaim(identity);
+
+            if (product == null)
+                return BadRequest(new { message = "Invalid request data" });
+
+            // Retrieve employee and partner (replace with actual logic)
+
+            if (employee == null || partner == null)
+                return Unauthorized(new { message = "Unauthorized access" });
+
+            var result = await productService.UpdateFieldIdAsync(id, product, employee, partner);
+
+            if (result == null || !result.Flag)
+                return NotFound(new { message = result?.Message ?? "Product not found" });
+
+            return Ok(new { Flag = result.Flag, Message = result.Message });
+        }
+
+        // [HttpPost("update-sellingprice")]
+        // [Authorize(Roles = "Admin")]
+        // public async Task<IActionResult> UpdateSellingPriceAsync(Product product, double sellingPrice)
+        // {
+        //     if (product == null) return BadRequest("Model is empty");
+
+        //     var result = await productService.UpdateSellingPriceAsync(product, sellingPrice);
+        //     return Ok(result);
+        // }
     }
 }

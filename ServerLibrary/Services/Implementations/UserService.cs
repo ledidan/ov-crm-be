@@ -15,39 +15,59 @@ using System.Text;
 namespace ServerLibrary.Services.Implementations
 {
     public class UserService(IOptions<JwtSection> config, AppDbContext appDbContext,
-        IPartnerService partnerService) : IUserService
+        IPartnerService partnerService, IEmployeeService employeeService) : IUserService
     {
         public async Task<GeneralResponse> CreateAsync(Register user, string role)
         {
             var checkingUser = await FindUserByEmail(user.Email);
-            if (checkingUser != null) return new GeneralResponse(false, "User already exist");
-
-            //check, create and assign role
+            if (checkingUser != null) return new GeneralResponse(false, "User already exists");
             var checkingRole = await CheckSystemRole(role);
             if (checkingRole == null) return new GeneralResponse(false, "Role not found");
+            Partner? partner = null;
+            Employee? employee = null;
+            if (role != Constants.Role.SysAdmin)
+            {
+                // Check Partner
+                partner = await partnerService.FindById(user.PartnerId);
+                if (partner == null) return new GeneralResponse(false, "Partner not found");
 
-            //check partner
-            var partner = await partnerService.FindById(user.PartnerId);
-            if (partner == null && role != Constants.Role.SysAdmin) return new GeneralResponse(false, "Partner not found");
+                // check Employee
+                if (role != Constants.Role.Admin)
+                {
+                    employee = await employeeService.FindByIdAsync(user.EmployeeId);
+                    if (employee == null)
+                        return new GeneralResponse(false, "Employee not found");
+                }
+            }
 
-            //add user
             var applicationUser = await appDbContext.InsertIntoDb(new ApplicationUser()
             {
                 Email = user.Email,
-                Fullname = user.Fullname,
-                Password = BCrypt.Net.BCrypt.HashPassword(user.Password)
+                FullName = user.FullName,
+                Password = BCrypt.Net.BCrypt.HashPassword(user.Password),
             });
-
             await appDbContext.InsertIntoDb(new UserRole() { Role = checkingRole, User = applicationUser });
-            if (role != Constants.Role.SysAdmin)
-                await appDbContext.InsertIntoDb(new PartnerUser() { User = applicationUser, Partner = partner });
 
-            return new GeneralResponse(true, "User created");
+            if (role != Constants.Role.SysAdmin)
+            {
+                await appDbContext.InsertIntoDb(new PartnerUser()
+                {
+                    User = applicationUser,
+                    Partner = partner,
+                    EmployeeId = (role == Constants.Role.Admin) ? null : employee.Id
+                });
+            }
+            return new GeneralResponse(true, $"{role} created");
         }
 
         private async Task<SystemRole?> CheckSystemRole(string role)
         {
             return await appDbContext.SystemRoles.FirstOrDefaultAsync(r => r.Name!.ToLower().Equals(role.ToLower()));
+        }
+
+        private async Task<bool?> FindUserByEmployee(int? employeeId)
+        {
+            return await appDbContext.PartnerUsers.AnyAsync(user => user.EmployeeId == employeeId);
         }
 
         private async Task<ApplicationUser?> FindUserByEmail(string? email)
@@ -68,12 +88,11 @@ namespace ServerLibrary.Services.Implementations
         public async Task<LoginResponse> SignInAsync(Login user)
         {
             var applicationUser = await FindUserByEmail(user.Email);
-            if (applicationUser == null) return new LoginResponse(false, "User not found");
+            if (applicationUser == null) return new LoginResponse(false, "Email not found");
 
             //verify
             if (!BCrypt.Net.BCrypt.Verify(user.Password, applicationUser.Password))
-                return new LoginResponse(false, "Email/Password not valid");
-
+                return new LoginResponse(false, "Password not valid");
             var userRole = await FindUserRole(applicationUser.Id);
             if (userRole == null) return new LoginResponse(false, "User role not found");
             var systemRole = await FindSystemRole(userRole.Role.Id);
@@ -92,7 +111,7 @@ namespace ServerLibrary.Services.Implementations
             else
             {
                 await appDbContext.InsertIntoDb(new RefreshTokenInfo() { Token = refreshToken, UserId = applicationUser.Id });
-            }    
+            }
             return new LoginResponse(true, "Login sucessfully", jwtToken, refreshToken);
         }
 
@@ -108,27 +127,48 @@ namespace ServerLibrary.Services.Implementations
             Claim[] userClaims;
             if (role != Constants.Role.SysAdmin)
             {
-                var partnerUser = await appDbContext.PartnerUsers.Include(_ => _.Partner).FirstOrDefaultAsync(x => x.User.Id == applicationUser.Id);
+                var partnerUser = await appDbContext.PartnerUsers
+                    .Include(_ => _.Partner)
+                    .FirstOrDefaultAsync(x => x.User.Id == applicationUser.Id);
+
                 if (partnerUser == null) return string.Empty;
-                userClaims = new[] 
+
+                if (role == Constants.Role.Admin)
                 {
-                    new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
-                    new Claim(ClaimTypes.Name, applicationUser.Fullname!),
-                    new Claim(ClaimTypes.Email, applicationUser.Email!),
-                    new Claim(ClaimTypes.Role, role!),
-                    new Claim("PartnerId", partnerUser.Partner.Id.ToString()),
-                };
+                    userClaims = new[]
+                    {
+            new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
+            new Claim(ClaimTypes.Name, applicationUser.FullName!),
+            new Claim(ClaimTypes.Email, applicationUser.Email!),
+            new Claim(ClaimTypes.Role, role!),
+            new Claim("PartnerId", partnerUser.Partner.Id.ToString()),
+            new Claim("Owner", "true") // Admins get Owner = true
+        };
+                }
+                else
+                {
+                    userClaims = new[]
+                    {
+            new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
+            new Claim(ClaimTypes.Name, applicationUser.FullName!),
+            new Claim(ClaimTypes.Email, applicationUser.Email!),
+            new Claim(ClaimTypes.Role, role!),
+            new Claim("PartnerId", partnerUser.Partner.Id.ToString()),
+            new Claim("EmployeeId", partnerUser.EmployeeId.ToString())
+        };
+                }
             }
             else
             {
                 userClaims = new[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
-                    new Claim(ClaimTypes.Name, applicationUser.Fullname!),
-                    new Claim(ClaimTypes.Email, applicationUser.Email!),
-                    new Claim(ClaimTypes.Role, role!)
-                };
+        new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
+        new Claim(ClaimTypes.Name, applicationUser.FullName!),
+        new Claim(ClaimTypes.Email, applicationUser.Email!),
+        new Claim(ClaimTypes.Role, role!)
+    };
             }
+
             var token = new JwtSecurityToken(
                 issuer: config.Value.Issuer,
                 audience: config.Value.Audience,

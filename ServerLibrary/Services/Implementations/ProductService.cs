@@ -1,7 +1,9 @@
-﻿using Data.DTOs;
+﻿using AutoMapper;
+using Data.DTOs;
 using Data.Entities;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
+using Mysqlx.Crud;
 using ServerLibrary.Data;
 using ServerLibrary.Services.Interfaces;
 
@@ -9,35 +11,76 @@ namespace ServerLibrary.Services.Implementations
 {
     public class ProductService
         (AppDbContext appDbContext,
-        IProductCatelogyService productCatelogyService) : IProductService
+        IProductCategoryService productCategoryService, IMapper _mapper) : IProductService
     {
-        public async Task<GeneralResponse> CreateAsync(CreateProduct product, Partner partner)
+        public async Task<GeneralResponse> CreateAsync(CreateProductDTO product, Employee employee, Partner partner)
         {
             try
             {
-                //check Product Catelogy
-                var productCatelogy = await productCatelogyService.FindById(product.ProductCatelogyId);
-                if (productCatelogy == null) return new GeneralResponse(false, "Product Catelogy not found");
-
                 //check Code Product existing
-                var productChecking = await FindCodeByPartner(product.Code, partner);
+                var productChecking = await FindCodeByPartner(product.ProductCode, partner.Id);
                 if (productChecking != null) return new GeneralResponse(false, "Code product existing");
 
-                var productCreating = await appDbContext.InsertIntoDb(new Product()
+                var productCategory = await appDbContext.ProductCategories
+                    .FirstOrDefaultAsync(pc => pc.Id == product.ProductCategoryId);
+
+                var productCreating = new Product()
                 {
-                    Code = product.Code,
-                    Name = product.Name,
-                    Unit = product.Unit,
-                    ProducerName = product.ProducerName,
-                    WarrantyPeriodPerMonth = product.WarrantyPeriodPerMonth,
-                    ProductCatelogy = productCatelogy,
+                    ProductCode = product.ProductCode,
+                    ProductGroupID = product.ProductGroupID ?? "",
+                    ProductGroupName = product.ProductGroupName ?? "",
+                    ProductName = product.ProductName,
+                    AmountSummary = product.AmountSummary ?? 0,
+                    Avatar = product.Avatar ?? "",
+                    ConversionRate = product.ConversionRate ?? 0,
+                    ConversionUnit = product.ConversionUnit ?? "",
+                    CreatedBy = employee.Fullname,
+                    Description = product.Description ?? "",
+                    Equation = product.Equation ?? "",
+                    Inactive = product.Inactive ?? false,
+                    InventoryItemID = product.InventoryItemID ?? "",
+                    IsFollowSerialNumber = product.IsFollowSerialNumber ?? false,
+                    IsPublic = product.IsPublic ?? false,
+                    IsSetProduct = product.IsSetProduct ?? false,
+                    IsSystem = product.IsSystem ?? false,
+                    IsUseTax = product.IsUseTax ?? false,
+                    ModifiedBy = employee.Id.ToString(),
+                    OldProductCode = product.OldProductCode ?? "",
+                    OperatorID = product.OperatorID ?? "",
+                    PriceAfterTax = product.PriceAfterTax ?? false,
+                    ProductPropertiesID = product.ProductPropertiesID ?? "",
+                    PurchasedPrice = product.PurchasedPrice ?? 0,
+                    QuantityDemanded = product.QuantityDemanded ?? 0,
+                    QuantityFormula = product.QuantityFormula ?? "",
+                    QuantityInstock = product.QuantityInstock ?? 0,
+                    QuantityOrdered = product.QuantityOrdered ?? 0,
+                    SaleDescription = product.SaleDescription ?? "",
+                    SearchTagID = product.SearchTagID ?? "",
+                    TagColor = product.TagColor ?? "",
+                    TagID = product.TagID ?? "",
+                    TaxID = product.TaxID ?? "",
+                    Taxable = product.Taxable ?? false,
+                    UnitCost = product.UnitCost ?? 0,
+                    UnitPrice = product.UnitPrice ?? 0,
+                    UnitPrice1 = product.UnitPrice1 ?? 0,
+                    UnitPrice2 = product.UnitPrice2 ?? 0,
+                    UnitPriceFixed = product.UnitPriceFixed ?? 0,
+                    UsageUnitID = product.UsageUnitID ?? "",
+                    VendorNameID = product.VendorNameID ?? "",
+                    WarrantyDescription = product.WarrantyDescription ?? "",
+                    WarrantyPeriod = product.WarrantyPeriod ?? "",
+                    WarrantyPeriodTypeID = product.WarrantyPeriodTypeID ?? "",
+                    OwnerID = employee.Id,
+                    ProductCategory = productCategory,
                     Partner = partner
-                });
+                };
+
+                await appDbContext.InsertIntoDb(productCreating);
 
                 await appDbContext.InsertIntoDb(new ProductPrice()
                 {
                     Product = productCreating,
-                    Price = product.SellingPrice,
+                    Price = product.UnitPrice ?? 0,
                     IsLatest = true,
                     StartDate = DateTime.Now
                 });
@@ -50,58 +93,135 @@ namespace ServerLibrary.Services.Implementations
             }
         }
 
-        private async Task<Product?> FindCodeByPartner(string code, Partner partner)
+        private async Task<Product?> FindCodeByPartner(string ProductCode, int partnerId)
         {
-            return await appDbContext.Products.FirstOrDefaultAsync(_ => _.Partner.Id == partner.Id
-                                                                    && _.Code == code);
+            return await appDbContext.Products.FirstOrDefaultAsync(_ => _.Partner.Id == partnerId
+                                                                    && _.ProductCode == ProductCode);
         }
 
-        public async Task<List<Product>> GetAllAsync(Partner partner)
+        public async Task<List<ProductDTO>> GetAllAsync(Employee employee, Partner partner)
         {
-            var result = await appDbContext.Products.Where(_ => _.Partner.Id == partner.Id).ToListAsync();
-            return result;
+            if (partner == null) return new List<ProductDTO>();
+
+            var products = await appDbContext.Products
+            .Where(p => p.Partner.Id == partner.Id)
+            .ToListAsync();
+
+            return _mapper.Map<List<ProductDTO>>(products);
         }
 
-        public async Task<GeneralResponse> UpdateAsync(Product product)
+
+        public async Task<GeneralResponse> UpdateAsync(int id, UpdateProductDTO product, Partner partner)
         {
+            // Check if product exists
+            if (partner == null) return new GeneralResponse(false, "Invalid partner");
+            var existingProduct = await appDbContext.Products
+        .Where(p => p.Id == id && p.Partner.Id == partner.Id)
+
+        .FirstOrDefaultAsync();
+            if (existingProduct == null) return new GeneralResponse(false, "Product not found");
+
             //check Code Product
-            var productChecking = await FindCodeByPartner(product.Code, product.Partner);
-            if (productChecking != null) return new GeneralResponse(false, "Code product existing");
 
-            await appDbContext.UpdateDb(product);
-            return new GeneralResponse(true, "Product updated");
+            var productChecking = await FindCodeByPartner(product.ProductCode, partner.Id);
+            if (productChecking != null && productChecking.Id != id)
+                return new GeneralResponse(false, "Product code already exists");
+
+            _mapper.Map(product, existingProduct);
+
+            await appDbContext.UpdateDb(existingProduct);
+            return new GeneralResponse(true, "Product updated successfully");
         }
-
-        public async Task<GeneralResponse> UpdateSellingPriceAsync(Product product, double sellingPrice)
+        public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateProductDTO product, Employee employee, Partner partner)
         {
-            try
-            {
-                var productLatestPrice = await FindLatestPrice(product.Id);
+            if (partner == null)
+                return new GeneralResponse(false, "Invalid partner");
 
-                productLatestPrice.IsLatest = false;
-                productLatestPrice.EndDate = DateTime.Now;
+            var existingProduct = await appDbContext.Products
+                .Where(p => p.Id == id && p.Partner.Id == partner.Id && p.OwnerID == employee.Id)
+                .FirstOrDefaultAsync();
 
-                await appDbContext.UpdateDb(productLatestPrice);
+            if (existingProduct == null)
+                return new GeneralResponse(false, "Product not found");
 
-                await appDbContext.InsertIntoDb(new ProductPrice()
-                {
-                    Product = product,
-                    Price = sellingPrice,
-                    IsLatest = true,
-                    StartDate = productLatestPrice.EndDate.AddSeconds(1)
-                });
+            // Check if the product code already exists for this partner
+            var productChecking = await FindCodeByPartner(product.ProductCode, partner.Id);
+            if (productChecking != null && productChecking.Id != id)
+                return new GeneralResponse(false, "Product code already exists");
 
-                return new GeneralResponse(true, "Selling Price updated");
-            }
-            catch
-            {
-                return new GeneralResponse(false, "Error!");
-            }
+            // Overwrite all fields from DTO to entity
+            _mapper.Map(product, existingProduct);
+
+            // Mark entity as modified
+            appDbContext.Entry(existingProduct).State = EntityState.Modified;
+
+            // Save changes
+            await appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Product updated successfully");
         }
+        // public async Task<GeneralResponse> UpdateSellingPriceAsync(Product product, double sellingPrice)
+        // {
+        //     try
+        //     {
+        //         var productLatestPrice = await FindLatestPrice(product.Id);
+
+        //         productLatestPrice.IsLatest = false;
+        //         productLatestPrice.EndDate = DateTime.Now;
+
+        //         await appDbContext.UpdateDb(productLatestPrice);
+
+        //         await appDbContext.InsertIntoDb(new ProductPrice()
+        //         {
+        //             Product = product,
+        //             Price = sellingPrice,
+        //             IsLatest = true,
+        //             StartDate = productLatestPrice.EndDate.AddSeconds(1)
+        //         });
+
+        //         return new GeneralResponse(true, "Selling Price updated");
+        //     }
+        //     catch
+        //     {
+        //         return new GeneralResponse(false, "Error!");
+        //     }
+        // }
 
         private async Task<ProductPrice> FindLatestPrice(int productId)
         {
             return await appDbContext.ProductPrices.FirstAsync(_ => _.Product.Id == productId && _.IsLatest);
+        }
+
+        public async Task<ProductDTO?> FindByIdAsync(int id, Partner partner)
+        {
+            if (partner == null) return null;
+
+            var product = await appDbContext.Products.Where(p => p.Id == id && p.Partner.Id == partner.Id).FirstOrDefaultAsync();
+
+            return product == null ? null : _mapper.Map<ProductDTO>(product);
+        }
+
+        public async Task<GeneralResponse> RemoveBulkIdsAsync(string ids, Partner partner)
+        {
+            if (partner == null) return new GeneralResponse(false, "Invalid partner");
+
+            var idList = ids.Split(',')
+                .Select(id => int.TryParse(id.Trim(), out int parsedId) ? parsedId : (int?)null)
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .ToList();
+
+            if (!idList.Any()) return new GeneralResponse(false, "No valid IDs provided");
+
+            var products = await appDbContext.Products
+                .Where(p => idList.Contains(p.Id) && p.Partner.Id == partner.Id)
+                .ToListAsync();
+
+            if (!products.Any()) return new GeneralResponse(false, "No matching products found");
+
+            appDbContext.Products.RemoveRange(products);
+            await appDbContext.SaveChangesAsync();
+            return new GeneralResponse(true, $"{products.Count} product(s) marked as deleted");
         }
     }
 }

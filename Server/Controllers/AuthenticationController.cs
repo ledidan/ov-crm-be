@@ -22,7 +22,7 @@ namespace Server.Controllers
         }
 
         [HttpPost("register-admin")]
-        [Authorize(Roles = "SysAdmin")]
+        // [Authorize(Roles = "SysAdmin")]
         public async Task<IActionResult> CreateAdminAsync(Register user)
         {
             if (user == null) return BadRequest("User is empty");
@@ -33,7 +33,7 @@ namespace Server.Controllers
         }
 
         [HttpPost("register-sysadmin")]
-        [Authorize(Roles = "SysAdmin")]
+        // [Authorize(Roles = "SysAdmin")]
         public async Task<IActionResult> CreateSysAdminAsync(Register user)
         {
             if (user == null) return BadRequest("User is empty");
@@ -47,7 +47,6 @@ namespace Server.Controllers
         public async Task<IActionResult> SigninAsync(Login user)
         {
             if (user == null) return BadRequest("User is empty");
-
             var result = await userService.SignInAsync(user);
             return Ok(result);
         }

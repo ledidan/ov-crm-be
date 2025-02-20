@@ -14,5 +14,7 @@ namespace Data.DTOs
         public string? LogoUrl { get; set; }
         public string? EmailContact { get; set; }
         public string? PhoneNumber { get; set; }
+
+        public int? OwnerId { get; set; }
     }
 }

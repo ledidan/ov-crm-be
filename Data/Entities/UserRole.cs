@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Data.Entities
 {
-    public class UserRole
+    public class UserRole : BaseEntity
     {
         public int Id { get; set; }
 
