@@ -38,4 +38,8 @@ EXPOSE 5000
 ENV ASPNETCORE_URLS=http://+:5000
 
 # Run the main Server project
+<<<<<<< Updated upstream
 CMD ["dotnet", "Server.dll"]
+=======
+CMD ["dotnet", "Server.dll"]
+>>>>>>> Stashed changes

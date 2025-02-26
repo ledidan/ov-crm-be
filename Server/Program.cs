@@ -85,7 +85,8 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 30)) // Replace with your MySQL version,
+        new MySqlServerVersion(new Version(8, 0, 30)), // Replace with your MySQL version,
+        mysqlOptions => mysqlOptions.EnableRetryOnFailure()
     );
 });
 
@@ -128,9 +129,9 @@ builder.Services.AddAuthentication(options =>
 // cors
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("reactJsApp", policyBuilder =>
+    options.AddPolicy("OVIE_CLIENT", policyBuilder =>
     {
-        policyBuilder.WithOrigins("http://localhost:3000");
+        policyBuilder.WithOrigins("http://localhost:3000", "${NEXT_PUBLIC_CLIENT_URL}");
         policyBuilder.AllowAnyHeader();
         policyBuilder.AllowAnyMethod();
         policyBuilder.AllowCredentials();
@@ -147,8 +148,13 @@ var app = builder.Build();
 // {
     app.UseSwagger();
     app.UseSwaggerUI();
+<<<<<<< Updated upstream
 // }
 app.UseCors("reactJsApp");
+=======
+}
+app.UseCors("OVIE_CLIENT");
+>>>>>>> Stashed changes
 
 // app.UseHttpsRedirection();
 
