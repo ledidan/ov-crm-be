@@ -85,12 +85,14 @@ builder.Services.AddScoped(sp =>
     return new MongoDbContext(mongoClient, mongoSettings.DatabaseName);
 });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 // if (!string.IsNullOrEmpty(connectionString))
 // {
 // }
 // var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 //** Mysql database
+var connectionString = "Server=ov-crm-test-sql-ov-crm-test.k.aivencloud.com;Port=24048;User=avnadmin;Password=AVNS_sAjRnZh1n14WdHyIDzX;Database=defaultdb;SslMode=Required;";
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(connectionString,
