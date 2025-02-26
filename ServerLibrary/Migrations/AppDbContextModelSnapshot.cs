@@ -153,11 +153,11 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime>("EventEnd")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<DateTime?>("EventName")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<DateTime?>("EventStart")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<bool?>("IsAllDay")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool?>("IsCheckOutImages")
                         .HasColumnType("tinyint(1)");

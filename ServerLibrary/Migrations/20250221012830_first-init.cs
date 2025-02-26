@@ -4,15 +4,146 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace ServerLibrary.Migrations
 {
     /// <inheritdoc />
-    public partial class zo : Migration
+    public partial class firstinit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterDatabase()
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Activities",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    TagID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TagColor = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    ActivityName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    MissionName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    MissionTypeID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ActivityCategory = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DueDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    StatusID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PriorityID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsSendNotificationEmail = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    IsRepeat = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    IsReminder = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    EndTime = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    StartTime = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CallStart = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CallDuration = table.Column<int>(type: "int", nullable: true),
+                    Description = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CallName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CallGoalID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CallTypeID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CallDone = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    ModuleType = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CallResult = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RemindID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    EventName = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    EventStart = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    EventEnd = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    Place = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Duplicate = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    SendEmail = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    SearchTagID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsPublic = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    Lat = table.Column<double>(type: "double", nullable: true),
+                    Long = table.Column<double>(type: "double", nullable: true),
+                    EventCheckinComment = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    EventCheckinTime = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CheckInAddress = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CallID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CallRecord = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CheckInTime = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CheckOutTime = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    WorkDuration = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsOpen = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    Distance = table.Column<double>(type: "double", nullable: true),
+                    BatteryStatus = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RouteAddress = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CallEnd = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    EventCalendarID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Journey = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsCorrectRoute = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    CheckOutAddress = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsFakeGPS = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    CallResultID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PhoneNumber = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsCheckOutImages = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    ProviderName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RoutingResultID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TravelDistance = table.Column<double>(type: "double", nullable: true),
+                    RoutingTypeID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RoutingTypeIDText = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CheckinPlace = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CheckOutPlace = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsStartActivity = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    AccountNumber = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AccountTel = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    OfficeEmail = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CheckInType = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CustomerId = table.Column<int>(type: "int", nullable: true),
+                    PartnerId = table.Column<int>(type: "int", nullable: false),
+                    TaskOwnerId = table.Column<int>(type: "int", nullable: true),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ContactId = table.Column<int>(type: "int", nullable: true),
+                    RelatedUsersID = table.Column<int>(type: "int", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Activities", x => x.Id);
+                })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
@@ -83,25 +214,6 @@ namespace ServerLibrary.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RefreshTokenInfos", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "Statuses",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Description = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Statuses", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -367,6 +479,76 @@ namespace ServerLibrary.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Invoices",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    InvoiceRequestName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    InvoiceAddress = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Description = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TotalSummary = table.Column<decimal>(type: "decimal(65,30)", nullable: true),
+                    PaymentTypeId = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CurrencyTypeId = table.Column<int>(type: "int", nullable: false),
+                    InvoiceTypeId = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    BankName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    BillingCode = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    BillingCountryID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    BillingDistrictID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    BillingLat = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    BillingLong = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    BillingProvinceID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    BankAccount = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RequestDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    AmountSummary = table.Column<decimal>(type: "decimal(65,30)", nullable: true),
+                    StatusID = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TaxBudgetCode = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsInvoicePaper = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    TaxSummary = table.Column<double>(type: "double", nullable: true),
+                    DiscountSummary = table.Column<double>(type: "double", nullable: true),
+                    ToCurrencyAfterDiscountSummary = table.Column<decimal>(type: "decimal(65,30)", nullable: true),
+                    ToCurrencySummary = table.Column<decimal>(type: "decimal(65,30)", nullable: true),
+                    RecipientName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RecipientPhone = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RecipientEmail = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    OwnerId = table.Column<int>(type: "int", nullable: true),
+                    CustomerId = table.Column<int>(type: "int", nullable: true),
+                    BuyerId = table.Column<int>(type: "int", nullable: true),
+                    PartnerId = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Invoices", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Invoices_Partners_PartnerId",
+                        column: x => x.PartnerId,
+                        principalTable: "Partners",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "PartnerUsers",
                 columns: table => new
                 {
@@ -374,7 +556,7 @@ namespace ServerLibrary.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     PartnerId = table.Column<int>(type: "int", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    EmployeeId = table.Column<int>(type: "int", nullable: false),
+                    EmployeeId = table.Column<int>(type: "int", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
@@ -470,49 +652,6 @@ namespace ServerLibrary.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Activities",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    ActivityName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ModuleType = table.Column<int>(type: "int", nullable: true),
-                    ModuleTypeText = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DueDate = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    EndTime = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Place = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    StartTimeCustom = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Description = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    CustomerId = table.Column<int>(type: "int", nullable: false),
-                    StatusId = table.Column<int>(type: "int", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Activities", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Activities_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Activities_Statuses_StatusId",
-                        column: x => x.StatusId,
-                        principalTable: "Statuses",
-                        principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
                 name: "ContactCustomer",
                 columns: table => new
                 {
@@ -538,78 +677,31 @@ namespace ServerLibrary.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Invoices",
+                name: "ActivityEmployees",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    InvoiceRequestName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    InvoiceAddress = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AccountTel = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Description = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    TotalSummary = table.Column<decimal>(type: "decimal(65,30)", nullable: true),
-                    PaymentTypeId = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    CurrencyTypeId = table.Column<int>(type: "int", nullable: false),
-                    InvoiceTypeId = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    BankName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    BillingCode = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    BillingCountryID = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    BillingDistrictID = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    BillingLat = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    BillingLong = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    BillingProvinceID = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    BankAccount = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    RequestDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    AmountSummary = table.Column<decimal>(type: "decimal(65,30)", nullable: true),
-                    StatusID = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    TaxBudgetCode = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    IsInvoicePaper = table.Column<bool>(type: "tinyint(1)", nullable: true),
-                    TaxSummary = table.Column<double>(type: "double", nullable: true),
-                    DiscountSummary = table.Column<double>(type: "double", nullable: true),
-                    RecipientName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    RecipientPhone = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    RecipientEmail = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    OwnerId = table.Column<int>(type: "int", nullable: true),
-                    CustomerId = table.Column<int>(type: "int", nullable: true),
-                    BuyerId = table.Column<int>(type: "int", nullable: true),
+                    ActivityId = table.Column<int>(type: "int", nullable: false),
+                    EmployeeId = table.Column<int>(type: "int", nullable: false),
                     PartnerId = table.Column<int>(type: "int", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    AccessLevel = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Invoices", x => x.Id);
+                    table.PrimaryKey("PK_ActivityEmployees", x => new { x.ActivityId, x.EmployeeId, x.PartnerId });
                     table.ForeignKey(
-                        name: "FK_Invoices_Contacts_BuyerId",
-                        column: x => x.BuyerId,
-                        principalTable: "Contacts",
-                        principalColumn: "Id");
+                        name: "FK_ActivityEmployees_Activities_ActivityId",
+                        column: x => x.ActivityId,
+                        principalTable: "Activities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Invoices_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "Id");
+                        name: "FK_ActivityEmployees_Employees_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "Employees",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Invoices_Partners_PartnerId",
+                        name: "FK_ActivityEmployees_Partners_PartnerId",
                         column: x => x.PartnerId,
                         principalTable: "Partners",
                         principalColumn: "Id",
@@ -676,39 +768,6 @@ namespace ServerLibrary.Migrations
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_CustomerEmployees_Partners_PartnerId",
-                        column: x => x.PartnerId,
-                        principalTable: "Partners",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "ActivityEmployees",
-                columns: table => new
-                {
-                    ActivityId = table.Column<int>(type: "int", nullable: false),
-                    EmployeeId = table.Column<int>(type: "int", nullable: false),
-                    PartnerId = table.Column<int>(type: "int", nullable: false),
-                    AccessLevel = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ActivityEmployees", x => new { x.ActivityId, x.EmployeeId, x.PartnerId });
-                    table.ForeignKey(
-                        name: "FK_ActivityEmployees_Activities_ActivityId",
-                        column: x => x.ActivityId,
-                        principalTable: "Activities",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ActivityEmployees_Employees_EmployeeId",
-                        column: x => x.EmployeeId,
-                        principalTable: "Employees",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_ActivityEmployees_Partners_PartnerId",
                         column: x => x.PartnerId,
                         principalTable: "Partners",
                         principalColumn: "Id",
@@ -970,18 +1029,12 @@ namespace ServerLibrary.Migrations
                     OwnerID = table.Column<int>(type: "int", nullable: true),
                     ProductCategoryId = table.Column<int>(type: "int", nullable: true),
                     PartnerId = table.Column<int>(type: "int", nullable: false),
-                    InvoiceId = table.Column<int>(type: "int", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Products", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Products_Invoices_InvoiceId",
-                        column: x => x.InvoiceId,
-                        principalTable: "Invoices",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Products_Partners_PartnerId",
                         column: x => x.PartnerId,
@@ -1113,15 +1166,15 @@ namespace ServerLibrary.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Activities_CustomerId",
-                table: "Activities",
-                column: "CustomerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Activities_StatusId",
-                table: "Activities",
-                column: "StatusId");
+            migrationBuilder.InsertData(
+                table: "SystemRoles",
+                columns: new[] { "Id", "Name" },
+                values: new object[,]
+                {
+                    { 1, "User" },
+                    { 2, "Admin" },
+                    { 3, "SysAdmin" }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ActivityEmployees_EmployeeId",
@@ -1182,16 +1235,6 @@ namespace ServerLibrary.Migrations
                 name: "IX_InvoiceEmployees_PartnerId",
                 table: "InvoiceEmployees",
                 column: "PartnerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Invoices_BuyerId",
-                table: "Invoices",
-                column: "BuyerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Invoices_CustomerId",
-                table: "Invoices",
-                column: "CustomerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Invoices_PartnerId",
@@ -1267,11 +1310,6 @@ namespace ServerLibrary.Migrations
                 name: "IX_ProductPrices_ProductId",
                 table: "ProductPrices",
                 column: "ProductId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Products_InvoiceId",
-                table: "Products",
-                column: "InvoiceId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_PartnerId",
@@ -1358,19 +1396,16 @@ namespace ServerLibrary.Migrations
                 name: "SystemRoles");
 
             migrationBuilder.DropTable(
-                name: "Statuses");
+                name: "Contacts");
+
+            migrationBuilder.DropTable(
+                name: "Customers");
 
             migrationBuilder.DropTable(
                 name: "Invoices");
 
             migrationBuilder.DropTable(
                 name: "ProductCategories");
-
-            migrationBuilder.DropTable(
-                name: "Contacts");
-
-            migrationBuilder.DropTable(
-                name: "Customers");
 
             migrationBuilder.DropTable(
                 name: "Partners");

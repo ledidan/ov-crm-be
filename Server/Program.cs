@@ -85,7 +85,7 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 30)) // Replace with your MySQL version
+        new MySqlServerVersion(new Version(8, 0, 30)) // Replace with your MySQL version,
     );
 });
 
@@ -102,6 +102,7 @@ builder.Services.AddScoped<IContactService, ContactService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IOrderService, OrdersService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<S3Service>();
 
 // authentication

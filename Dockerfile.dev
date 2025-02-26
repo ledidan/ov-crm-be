@@ -1,0 +1,43 @@
+# # 1) Build stage
+
+
+# FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# WORKDIR /app
+
+
+# #Copy .csproj and restore as distinct layers
+# COPY *.sln .
+# COPY ov-crm-be/*.csproj ./ov-crm-be/
+# # If have multiple projects, copy their .csproj files similarly:
+# # COPY ov-crm-be/Data/*.csproj ./ov-crm-be/Data/
+# # COPY ov-crm-be/Server/*.csproj ./ov-crm-be/Server/
+# # ... etc.
+
+# RUN dotnet restore ov-crm-be/ov-crm/be.csproj \
+# || dotnet restore ov-crm-be/BeCRM.sln \
+# || echo "REstore fallback if needed"
+
+
+# # Copy everthing else and build 
+# COPY ov-crm-be/ ./ov-crm-be/
+# WORKDIR /app/ov-crm-be
+# RUN dotnet publish -c Release -o /app/publish
+
+# # 2) Runtime stage
+# FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+# WORKDIR /app
+# COPY --from=build /app/publish .
+# EXPOSE 5000
+# ENV ASPNETCORE_URLS=http://+:5000
+# ENTRYPOINT ["dotnet", "ov-crm-be.dll"]
+# Use the .NET SDK image (version 7.0 or 8.0)
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Expose the port  .NET app listens on
+EXPOSE 5000
+
+# By default, do nothing (we'll override the command in docker-compose)
+CMD ["dotnet", "--info"]

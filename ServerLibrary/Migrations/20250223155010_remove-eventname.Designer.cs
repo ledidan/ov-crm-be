@@ -12,8 +12,8 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250220040030_update-activity")]
-    partial class updateactivity
+    [Migration("20250223155010_remove-eventname")]
+    partial class removeeventname
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -154,9 +154,6 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("EventEnd")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("EventName")
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("EventStart")
