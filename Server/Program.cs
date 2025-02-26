@@ -14,15 +14,15 @@ using Microsoft.Extensions.Options;
 using AutoMapper;
 using System.Text.Json.Serialization;
 using ServerLibrary.Services;
-using dotenv.net;
+using DotNetEnv;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
+Env.Load("../.env");
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-DotEnv.Load();
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -77,7 +77,6 @@ builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 
     return new MongoClient(settings.ConnectionString);
 });
-builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddScoped(sp =>
 {
@@ -85,14 +84,15 @@ builder.Services.AddScoped(sp =>
     var mongoClient = sp.GetRequiredService<IMongoClient>();
     return new MongoDbContext(mongoClient, mongoSettings.DatabaseName);
 });
-var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                     ?? builder.Configuration.GetConnectionString("DefaultConnection");
+string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+//  ?? builder.Configuration.GetConnectionString("DefaultConnection");
+Console.WriteLine($"DB_CONNECTION_STRING: {connectionString}");
 
 //** Mysql database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(connectionString,
-        new MySqlServerVersion(new Version(8, 0, 30)), // Replace with your MySQL version,
+        new MySqlServerVersion(new Version(8, 0, 30)),
         mysqlOptions => mysqlOptions.EnableRetryOnFailure()
     );
 });
@@ -113,56 +113,44 @@ builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<S3Service>();
 
-
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? builder.Configuration["JwtSection:Key"];
-
-if (string.IsNullOrEmpty(jwtKey))
+// authentication
+builder.Services.AddAuthentication(options =>
 {
-    throw new InvalidOperationException("JWT Key is missing. Set it in the environment variables.");
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    var jwtSection = builder.Configuration.GetSection(nameof(JwtSection)).Get<JwtSection>();
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidateLifetime = true,
+        // ValidIssuer = jwtSection!.Issuer,
+        // ValidAudience = jwtSection!.Audience,
+        ValidIssuer = builder.Configuration["JwtSection:Issuer"],
+        ValidAudience = builder.Configuration["JwtSection:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
+    };
+});
+var clientUrls = new List<string>
+{
+    "http://localhost:3000"
+};
+var prodClientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL");
+if (!string.IsNullOrEmpty(prodClientUrl))
+{
+    clientUrls.Add(prodClientUrl);
 }
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateIssuerSigningKey = true,
-            ValidateLifetime = true,
-            ValidIssuer = builder.Configuration["JwtSection:Issuer"],
-            ValidAudience = builder.Configuration["JwtSection:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-        };
-    });
-// authentication
-// builder.Services.AddAuthentication(options =>
-// {
-//     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-// }).AddJwtBearer(options =>
-// {
-//     var jwtSection = builder.Configuration.GetSection(nameof(JwtSection)).Get<JwtSection>();
-//     options.TokenValidationParameters = new TokenValidationParameters
-//     {
-//         ValidateIssuer = true,
-//         ValidateAudience = true,
-//         ValidateIssuerSigningKey = true,
-//         ValidateLifetime = true,
-//         ValidIssuer = jwtSection!.Issuer,
-//         ValidAudience = jwtSection!.Audience,
-//         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection.Key!))
-//     };
-// });
-
 // cors
-var clientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL") ?? "http://localhost:3000";
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("OVIE_CLIENT", policyBuilder =>
     {
-        policyBuilder.WithOrigins(clientUrl);
+        policyBuilder.WithOrigins(clientUrls.ToArray());
         policyBuilder.AllowAnyHeader();
         policyBuilder.AllowAnyMethod();
         policyBuilder.AllowCredentials();
@@ -178,8 +166,8 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 // if (app.Environment.IsDevelopment())
 // {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+app.UseSwagger();
+app.UseSwaggerUI();
 // }
 app.UseCors("OVIE_CLIENT");
 

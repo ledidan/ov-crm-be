@@ -14,12 +14,20 @@ namespace ServerLibrary.Services
 
         public S3Service(IConfiguration configuration)
         {
+            var accessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY");
+            var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_KEY");
+            var region = Environment.GetEnvironmentVariable("AWS_REGION");
+            _bucketName = Environment.GetEnvironmentVariable("AWS_BUCKET");
+
+            if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(region) || string.IsNullOrEmpty(_bucketName))
+            {
+                throw new InvalidOperationException("AWS credentials are missing. Make sure they are set in the .env file.");
+            }
             _s3Client = new AmazonS3Client(
-                configuration["AWS:AccessKey"],
-                configuration["AWS:SecretKey"],
-                RegionEndpoint.GetBySystemName(configuration["AWS:Region"])
+                accessKey,
+                secretKey,
+                RegionEndpoint.GetBySystemName(region)
             );
-            _bucketName = configuration["AWS:BucketName"];
         }
 
         public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType, string app, string userType,
@@ -56,7 +64,7 @@ namespace ServerLibrary.Services
             return $"{app}/{formattedFileName}"; // Return S3 file URL
         }
 
-           public async Task<string> UploadBase64ImageToS3(string base64Image, string categoryName, int partnerId, int userId, string app, string userType)
+        public async Task<string> UploadBase64ImageToS3(string base64Image, string categoryName, int partnerId, int userId, string app, string userType)
         {
             try
             {
@@ -66,9 +74,9 @@ namespace ServerLibrary.Services
                     throw new Exception("Invalid base64 image format.");
                 }
 
-                string fileType = match.Groups["type"].Value; 
+                string fileType = match.Groups["type"].Value;
                 string base64Data = match.Groups["data"].Value;
-                
+
                 byte[] imageBytes = Convert.FromBase64String(base64Data);
                 using var memoryStream = new MemoryStream(imageBytes);
 
