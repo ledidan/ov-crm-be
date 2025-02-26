@@ -148,13 +148,8 @@ var app = builder.Build();
 // {
     app.UseSwagger();
     app.UseSwaggerUI();
-<<<<<<< Updated upstream
 // }
-app.UseCors("reactJsApp");
-=======
-}
 app.UseCors("OVIE_CLIENT");
->>>>>>> Stashed changes
 
 // app.UseHttpsRedirection();
 
