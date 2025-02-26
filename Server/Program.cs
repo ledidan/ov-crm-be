@@ -77,6 +77,7 @@ builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 
     return new MongoClient(settings.ConnectionString);
 });
+builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddScoped(sp =>
 {
@@ -84,11 +85,13 @@ builder.Services.AddScoped(sp =>
     var mongoClient = sp.GetRequiredService<IMongoClient>();
     return new MongoDbContext(mongoClient, mongoSettings.DatabaseName);
 });
+var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 //** Mysql database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
+    options.UseMySql(connectionString,
         new MySqlServerVersion(new Version(8, 0, 30)), // Replace with your MySQL version,
         mysqlOptions => mysqlOptions.EnableRetryOnFailure()
     );
