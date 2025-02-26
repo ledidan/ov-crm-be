@@ -14,11 +14,15 @@ using Microsoft.Extensions.Options;
 using AutoMapper;
 using System.Text.Json.Serialization;
 using ServerLibrary.Services;
+using dotenv.net;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+DotEnv.Load();
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -106,37 +110,62 @@ builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<S3Service>();
 
-// authentication
-builder.Services.AddAuthentication(options =>
+
+var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? builder.Configuration["JwtSection:Key"];
+
+if (string.IsNullOrEmpty(jwtKey))
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
-{
-    var jwtSection = builder.Configuration.GetSection(nameof(JwtSection)).Get<JwtSection>();
-    options.TokenValidationParameters = new TokenValidationParameters
+    throw new InvalidOperationException("JWT Key is missing. Set it in the environment variables.");
+}
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateIssuerSigningKey = true,
-        ValidateLifetime = true,
-        ValidIssuer = jwtSection!.Issuer,
-        ValidAudience = jwtSection!.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection.Key!))
-    };
-});
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidIssuer = builder.Configuration["JwtSection:Issuer"],
+            ValidAudience = builder.Configuration["JwtSection:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+// authentication
+// builder.Services.AddAuthentication(options =>
+// {
+//     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+//     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+// }).AddJwtBearer(options =>
+// {
+//     var jwtSection = builder.Configuration.GetSection(nameof(JwtSection)).Get<JwtSection>();
+//     options.TokenValidationParameters = new TokenValidationParameters
+//     {
+//         ValidateIssuer = true,
+//         ValidateAudience = true,
+//         ValidateIssuerSigningKey = true,
+//         ValidateLifetime = true,
+//         ValidIssuer = jwtSection!.Issuer,
+//         ValidAudience = jwtSection!.Audience,
+//         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection.Key!))
+//     };
+// });
 
 // cors
+var clientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL") ?? "http://localhost:3000";
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("OVIE_CLIENT", policyBuilder =>
     {
-        policyBuilder.WithOrigins("http://localhost:3000", "${NEXT_PUBLIC_CLIENT_URL}");
+        policyBuilder.WithOrigins(clientUrl);
         policyBuilder.AllowAnyHeader();
         policyBuilder.AllowAnyMethod();
         policyBuilder.AllowCredentials();
     });
 });
+
 builder.Services.AddAuthorization();
 
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
@@ -152,7 +181,7 @@ var app = builder.Build();
 app.UseCors("OVIE_CLIENT");
 
 // app.UseHttpsRedirection();
-
+// **  Enable Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
