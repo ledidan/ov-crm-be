@@ -31,7 +31,6 @@ namespace Data.DTOs
         public string? ModuleType { get; set; }
         public string? CallResult { get; set; }
         public string? RemindID { get; set; }
-        public DateTime? EventName { get; set; }
         public DateTime? EventStart { get; set; }
         public DateTime EventEnd { get; set; }
         public string? Place { get; set; }

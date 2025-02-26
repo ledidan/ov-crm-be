@@ -1,9 +1,8 @@
 
-namespace Data.Entities
+namespace Data.DTOs
 {
-    public class Activity : BaseEntity
+    public class UpdateActivityDTO
     {
-        public int Id { get; set; }
         public string? TagID { get; set; }
         public string? TagColor { get; set; }
         public bool? IsDeleted { get; set; }
@@ -31,7 +30,6 @@ namespace Data.Entities
         public string? ModuleType { get; set; }
         public string? CallResult { get; set; }
         public string? RemindID { get; set; }
-        
         public DateTime? EventStart { get; set; }
         public DateTime EventEnd { get; set; }
         public string? Place { get; set; }
@@ -50,8 +48,6 @@ namespace Data.Entities
         public DateTime? CheckOutTime { get; set; }
         public string? WorkDuration { get; set; }
         public bool? IsOpen { get; set; }
-
-        public bool? IsAllDay { get; set; }
         public double? Distance { get; set; }
         public string? BatteryStatus { get; set; }
         public string? RouteAddress { get; set; }
@@ -82,8 +78,8 @@ namespace Data.Entities
         public int? ModifiedBy { get; set; }
         public int? ContactId { get; set; }
         public int? RelatedUsersID { get; set; }
-        public List<Employee> Employees { get; set; } = new List<Employee>();
-        public ICollection<ActivityEmployees> ActivityEmployees { get; set; } = new List<ActivityEmployees>();
+        // public List<Employee> Employees { get; set; } = new List<Employee>();
+        // public ICollection<ActivityEmployees> ActivityEmployees { get; set; } = new List<ActivityEmployees>();
 
     }
 }
