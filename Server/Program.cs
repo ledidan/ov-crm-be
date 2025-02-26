@@ -84,10 +84,12 @@ builder.Services.AddScoped(sp =>
     var mongoClient = sp.GetRequiredService<IMongoClient>();
     return new MongoDbContext(mongoClient, mongoSettings.DatabaseName);
 });
-string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
-//  ?? builder.Configuration.GetConnectionString("DefaultConnection");
-Console.WriteLine($"DB_CONNECTION_STRING: {connectionString}");
 
+string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (!string.IsNullOrEmpty(connectionString))
+{
+    connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+}
 //** Mysql database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
