@@ -85,11 +85,11 @@ builder.Services.AddScoped(sp =>
     return new MongoDbContext(mongoClient, mongoSettings.DatabaseName);
 });
 
-// string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 // if (!string.IsNullOrEmpty(connectionString))
 // {
 // }
-var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+// var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 //** Mysql database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
