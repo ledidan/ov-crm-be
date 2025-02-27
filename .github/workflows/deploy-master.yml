@@ -13,29 +13,30 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Log in to AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-        with:
-          registry: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-          region: ap-southeast-1
 
       - name: Set environment variables
         run: |
           echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
-          echo "ECR_REPO=${{ secrets.ECR_REPO }}" >> $GITHUB_ENV
+          echo "ECR_REPO=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}" >> $GITHUB_ENV
 
       - name: Build & Push Docker Image
         run: |
           docker build -t $ECR_REPO .
-          docker tag $ECR_REPO:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
+          docker tag $ECR_REPO:latest $ECR_REPO:latest
+          docker push $ECR_REPO:latest
 
       - name: Deploy on EC2
         env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -44,14 +45,17 @@ jobs:
           chmod 600 private_key.pem
           
           ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST << 'EOF'
-            # Stop old container
+            # Authenticate Docker with AWS ECR
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
+
+            # Stop and remove old container if running
             docker stop crm-backend || true
             docker rm crm-backend || true
-            
+
             # Pull the latest image
-            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
-            docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
-            
+            docker pull $ECR_REPO:latest
+
             # Run the new container
-            docker run --env-file .env -d -p 5000:5000 --name crm-backend ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
+            docker run --env-file .env -d -p 5000:5000 --name crm-backend $ECR_REPO:latest
           EOF
+
