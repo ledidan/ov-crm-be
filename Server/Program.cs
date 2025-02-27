@@ -64,9 +64,16 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 //** Mongodb database
-builder.Services.Configure<MongoDBSettings>(
-    builder.Configuration.GetSection("MongoDBSettings"));
+// builder.Services.Configure<MongoDBSettings>(
+//     builder.Configuration.GetSection("MongoDBSettings"));
+builder.Services.Configure<MongoDBSettings>(options =>
+{
+    options.ConnectionString = Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING") ??
+                               builder.Configuration.GetValue<string>("MongoDBSettings:ConnectionString");
 
+    options.DatabaseName = Environment.GetEnvironmentVariable("MONGODB_DATABASE") ??
+                           builder.Configuration.GetValue<string>("MongoDBSettings:DatabaseName");
+});
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
@@ -86,10 +93,17 @@ builder.Services.AddScoped(sp =>
 });
 
 // var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ??
+    $"Server={Environment.GetEnvironmentVariable("DB_HOST")};" +
+    $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
+    $"User={Environment.GetEnvironmentVariable("DB_USER")};" +
+    $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
+    $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
+    "SslMode=Required;";
 // if (!string.IsNullOrEmpty(connectionString))
 // {
 // }
-var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+// var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 //** Mysql database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -132,8 +146,8 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         // ValidIssuer = jwtSection!.Issuer,
         // ValidAudience = jwtSection!.Audience,
-        ValidIssuer = builder.Configuration["JwtSection:Issuer"],
-        ValidAudience = builder.Configuration["JwtSection:Audience"],
+        ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? builder.Configuration["JwtSection:Issuer"],
+        ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? builder.Configuration["JwtSection:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
     };
 });
