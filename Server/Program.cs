@@ -91,7 +91,6 @@ builder.Services.AddScoped(sp =>
 // }
 var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 //** Mysql database
-
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(connectionString,

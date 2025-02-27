@@ -1,0 +1,40 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to AWS ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and Push Docker Image
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        run: |
+          IMAGE_TAG=$(date +%Y%m%d%H%M%S)
+          REPO_URI=060795933067.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}
+
+          docker build --platform linux/amd64 -t $REPO_URI:$IMAGE_TAG .
+          docker push $REPO_URI:$IMAGE_TAG
+
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Deploy on EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/aws-key.pem $EC2_HOST << 'EOF'
+          docker stop crm-backend || true
+          docker rm crm-backend || true
+          docker pull 060795933067.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG
+          docker run --env-file .env -d -p 5000:5000 --name crm-backend 060795933067.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG
+          EOF

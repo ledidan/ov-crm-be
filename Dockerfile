@@ -36,6 +36,5 @@ COPY --from=build /publish .
 # Expose port 5000 for HTTP
 EXPOSE 5000
 ENV ASPNETCORE_URLS=http://+:5000
-
 # Run the main Server project
 CMD ["dotnet", "Server.dll"]
