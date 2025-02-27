@@ -64,6 +64,9 @@ jobs:
 
           # Stop and remove the old container if it exists
           ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST "docker stop crm-backend 2>/dev/null || true && docker rm crm-backend 2>/dev/null || true"
+          
+          # Remove old Docker images (except the latest one)
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST "docker image prune -af --filter 'until=24h' || true"
 
           # Pull the latest image
           ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST "docker pull $ECR_REPO:latest"
