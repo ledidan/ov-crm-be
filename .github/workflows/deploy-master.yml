@@ -52,13 +52,13 @@ jobs:
             docker stop crm-backend || true
             docker rm crm-backend || true
 
-            # Pull the latest image
+            # Pull the latest image 
             docker pull $ECR_REPO:latest
             
             # Move .env to the correct directory if needed
             chmod 644 /home/$EC2_USER/ov-crm-be/.env
             
-            # Run the new container
+            # Run the new container 
             docker run --env-file /home/$EC2_USER/ov-crm-be/.env -d -p 5000:5000 --name crm-backend $ECR_REPO:latest
           EOF
 
