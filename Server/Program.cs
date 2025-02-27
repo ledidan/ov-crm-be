@@ -93,7 +93,7 @@ builder.Services.AddScoped(sp =>
 });
 
 // var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ??
+var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
     $"Server={Environment.GetEnvironmentVariable("DB_HOST")};" +
     $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
     $"User={Environment.GetEnvironmentVariable("DB_USER")};" +
