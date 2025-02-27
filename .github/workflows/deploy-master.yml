@@ -49,11 +49,6 @@ jobs:
             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
 
             # Ensure the .env file exists and has correct permissions
-            if [ ! -f "/home/$EC2_USER/ov-crm-be/.env" ]; then
-              echo "⚠️ WARNING: .env file is missing! Creating an empty one."
-              touch /home/$EC2_USER/ov-crm-be/.env
-            fi
-            chmod 644 /home/$EC2_USER/ov-crm-be/.env
 
             # Stop and remove old container if running
             docker stop crm-backend || true
@@ -63,6 +58,6 @@ jobs:
             docker pull $ECR_REPO:latest
             
             # Run the new container 
-            docker run --env-file /home/$EC2_USER/ov-crm-be/.env -d -p 5000:5000 --name crm-backend $ECR_REPO:latest
+            docker run -d -p 5000:5000 --name crm-backend $ECR_REPO:latest
           EOF
 
