@@ -104,6 +104,7 @@ var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ??
 // {
 // }
 // var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+Console.WriteLine($"Connection: {connectionString}");
 //** Mysql database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
