@@ -1,8 +1,10 @@
 ﻿using System.Security.Claims;
 using Data.DTOs;
 using Data.Entities;
+using Data.Enums;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
+using MySqlX.XDevAPI.Common;
 using ServerLibrary.Data;
 using ServerLibrary.Services.Interfaces;
 
@@ -11,31 +13,42 @@ namespace ServerLibrary.Services.Implementations
     public class EmployeeService(AppDbContext appDbContext,
         IPartnerService partnerService) : IEmployeeService
     {
-        public async Task<GeneralResponse> CreateAsync(CreateEmployee employee)
+        public async Task<DataStringResponse> CreateAsync(CreateEmployee employee)
         {
-            if (employee == null) return new GeneralResponse(false, "Model is empty");
+            if (employee == null) return new DataStringResponse(false, "Không tìm thấy nhân viên", null);
 
             //check partner
             var partner = await partnerService.FindById(employee.PartnerId);
-            if (partner == null) return new GeneralResponse(false, "Partner not found");
+            if (partner == null) return new DataStringResponse(false, "Không tìm thấy tổ chức", null);
 
-            await appDbContext.InsertIntoDb(new Employee()
+            var checkEmployeeExist = await CheckMatchingEmployeeCode(employee.EmployeeCode, partner.Id);
+            if (checkEmployeeExist == true)
             {
-                Fullname = employee.Fullname,
+                return new DataStringResponse(false, "Mã nhân viên đã tồn tại, vui lòng nhập mã khác");
+            }
+            var newEmployee = new Employee()
+            {
+                EmployeeCode = employee.EmployeeCode,
+                FullName = employee.FullName,
+                PhoneNumber = employee.PhoneNumber,
                 Gender = employee.Gender,
                 DateOfBirth = employee.DateOfBirth,
-                PhoneNumber = employee.PhoneNumber,
-                JobTitle = employee.JobTitle,
+                JobTitleGroupId = employee.JobTitleGroupId,
+                JobPositionGroupId = employee.JobPositionGroupId,
                 Email = employee.Email,
-                StreetAddress = employee.StreetAddress,
-                District = employee.District,
-                Province = employee.Province,
+                Address = employee.Address,
+                OfficePhone = employee.OfficePhone,
+                OfficeEmail = employee.OfficeEmail,
                 TaxIdentificationNumber = employee.TaxIdentificationNumber,
                 SignedContractDate = employee.SignedContractDate,
-                Partner = partner,
-            });
+                SignedProbationaryContract = employee.SignedProbationaryContract,
+                Resignation = employee.Resignation,
+                JobStatus = JobStatus.Active,
+                Partner = partner
+            };
+            await appDbContext.InsertIntoDb(newEmployee);
 
-            return new GeneralResponse(true, "Employee created");
+            return new DataStringResponse(true, "Tạo nhân viên thành công", newEmployee.Id.ToString());
         }
 
         public async Task<Employee?> FindByIdAsync(int id)
@@ -47,7 +60,6 @@ namespace ServerLibrary.Services.Implementations
             {
                 throw new KeyNotFoundException($"Employee with ID {id} not found.");
             }
-
             return employee;
         }
         public async Task<List<Employee>> GetAllAsync(int partnerId)
@@ -56,7 +68,7 @@ namespace ServerLibrary.Services.Implementations
             var partner = await partnerService.FindById(partnerId);
             if (partner == null) return new List<Employee>();
 
-            var result = await appDbContext.Employees.Where(_ => _.Partner.Id == partnerId).Include(c => c.Contacts).ToListAsync();
+            var result = await appDbContext.Employees.Where(_ => _.PartnerId == partnerId).Include(c => c.Contacts).ToListAsync();
             return result;
         }
 
@@ -73,13 +85,15 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Employee updated successfully");
         }
 
-        public async Task<bool> EmployeeExists(int id)
+
+        public async Task<bool> EmployeeExists(int id, int partnerId)
         {
-            return await appDbContext.Employees.AnyAsync(s => s.Id == id);
+            return await appDbContext.Employees.AnyAsync(s => s.Id == id && s.PartnerId == partnerId);
         }
-        public Task<List<ContactEmployees>> GetAllContactEmployees()
+
+        private async Task<bool?> CheckMatchingEmployeeCode(string code, int? partnerId)
         {
-            throw new NotImplementedException();
+            return await appDbContext.Employees.AnyAsync(e => e.EmployeeCode == code && e.PartnerId == partnerId);
         }
 
         public async Task<Employee?> FindByClaim(ClaimsIdentity? claimsIdentity)
@@ -99,6 +113,5 @@ namespace ServerLibrary.Services.Implementations
             }
             return default(Employee);
         }
-        
     }
 }

@@ -55,13 +55,9 @@ namespace Server.Controllers
                 var resultDTO = result.Select(x => x.ToContactDTO()).ToList();
                 return Ok(resultDTO);
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, new { Message = "An unexpected error occurred. Please try again later." });
+                return StatusCode(500, new { Message = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau." });
             }
         }
 

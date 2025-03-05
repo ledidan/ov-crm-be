@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ServerLibrary.Migrations
 {
     /// <inheritdoc />
-    public partial class firstinit : Migration
+    public partial class _ : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -64,7 +64,6 @@ namespace ServerLibrary.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     RemindID = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    EventName = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     EventStart = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     EventEnd = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     Place = table.Column<string>(type: "longtext", nullable: true)
@@ -90,6 +89,7 @@ namespace ServerLibrary.Migrations
                     WorkDuration = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     IsOpen = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    IsAllDay = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     Distance = table.Column<double>(type: "double", nullable: true),
                     BatteryStatus = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -158,9 +158,15 @@ namespace ServerLibrary.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Email = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    Phone = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Gender = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Birthday = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     Password = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     IsActive = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    AccountStatus = table.Column<int>(type: "int", nullable: false),
                     IsActivateEmail = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
@@ -168,6 +174,28 @@ namespace ServerLibrary.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ApplicationUsers", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "EmailVerifications",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Email = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Token = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    IsVerified = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmailVerifications", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -188,6 +216,11 @@ namespace ServerLibrary.Migrations
                     EmailContact = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     PhoneNumber = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TotalEmployees = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsOrganization = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    OwnerFullName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     OwnerId = table.Column<int>(type: "int", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
@@ -229,6 +262,35 @@ namespace ServerLibrary.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SystemRoles", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "CompanyJobPositions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    PositionCode = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    JobPositionName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    JobPositionGroupId = table.Column<int>(type: "int", nullable: true),
+                    JobTitleGroupId = table.Column<int>(type: "int", nullable: true),
+                    IsActive = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    PartnerId = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CompanyJobPositions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CompanyJobPositions_Partners_PartnerId",
+                        column: x => x.PartnerId,
+                        principalTable: "Partners",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -442,27 +504,32 @@ namespace ServerLibrary.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Fullname = table.Column<string>(type: "longtext", nullable: true)
+                    EmployeeCode = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    FullName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Gender = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     DateOfBirth = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     PhoneNumber = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    JobTitle = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
                     Email = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    StreetAddress = table.Column<string>(type: "longtext", nullable: true)
+                    Address = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    District = table.Column<string>(type: "longtext", nullable: true)
+                    OfficePhone = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Province = table.Column<string>(type: "longtext", nullable: true)
+                    OfficeEmail = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     TaxIdentificationNumber = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    JobStatus = table.Column<int>(type: "int", nullable: false),
+                    SignedProbationaryContract = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    Resignation = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     SignedContractDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     PartnerId = table.Column<int>(type: "int", nullable: false),
+                    JobPositionGroupId = table.Column<int>(type: "int", nullable: true),
+                    JobTitleGroupId = table.Column<int>(type: "int", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
@@ -545,6 +612,52 @@ namespace ServerLibrary.Migrations
                         principalTable: "Partners",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "JobPositionGroups",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    JobPositionGroupCode = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    JobPositionGroupName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PartnerId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_JobPositionGroups", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_JobPositionGroups_Partners_PartnerId",
+                        column: x => x.PartnerId,
+                        principalTable: "Partners",
+                        principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "JobTitleGroups",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    JobTitleGroupCode = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    JobTitleGroupName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PartnerId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_JobTitleGroups", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_JobTitleGroups_Partners_PartnerId",
+                        column: x => x.PartnerId,
+                        principalTable: "Partners",
+                        principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -1187,6 +1300,11 @@ namespace ServerLibrary.Migrations
                 column: "PartnerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CompanyJobPositions_PartnerId",
+                table: "CompanyJobPositions",
+                column: "PartnerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ContactCustomer_CustomersId",
                 table: "ContactCustomer",
                 column: "CustomersId");
@@ -1239,6 +1357,16 @@ namespace ServerLibrary.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Invoices_PartnerId",
                 table: "Invoices",
+                column: "PartnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobPositionGroups_PartnerId",
+                table: "JobPositionGroups",
+                column: "PartnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobTitleGroups_PartnerId",
+                table: "JobTitleGroups",
                 column: "PartnerId");
 
             migrationBuilder.CreateIndex(
@@ -1345,6 +1473,9 @@ namespace ServerLibrary.Migrations
                 name: "ActivityEmployees");
 
             migrationBuilder.DropTable(
+                name: "CompanyJobPositions");
+
+            migrationBuilder.DropTable(
                 name: "ContactCustomer");
 
             migrationBuilder.DropTable(
@@ -1354,7 +1485,16 @@ namespace ServerLibrary.Migrations
                 name: "CustomerEmployees");
 
             migrationBuilder.DropTable(
+                name: "EmailVerifications");
+
+            migrationBuilder.DropTable(
                 name: "InvoiceEmployees");
+
+            migrationBuilder.DropTable(
+                name: "JobPositionGroups");
+
+            migrationBuilder.DropTable(
+                name: "JobTitleGroups");
 
             migrationBuilder.DropTable(
                 name: "OrderEmployees");

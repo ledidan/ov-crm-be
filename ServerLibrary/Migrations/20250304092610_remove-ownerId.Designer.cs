@@ -12,8 +12,8 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250225151600_Isallday-activity")]
-    partial class Isalldayactivity
+    [Migration("20250304092610_remove-ownerId")]
+    partial class removeownerId
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -315,8 +315,14 @@ namespace ServerLibrary.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AccountStatus")
+                        .HasColumnType("int");
+
                     b.Property<string>("Avatar")
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("Birthday")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
@@ -325,6 +331,9 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("FullName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Gender")
                         .HasColumnType("longtext");
 
                     b.Property<bool?>("IsActivateEmail")
@@ -339,9 +348,53 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("Password")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("Phone")
+                        .HasColumnType("longtext");
+
                     b.HasKey("Id");
 
                     b.ToTable("ApplicationUsers");
+                });
+
+            modelBuilder.Entity("Data.Entities.CompanyJobPosition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("JobPositionGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("JobPositionName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("JobTitleGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PositionCode")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("CompanyJobPositions");
                 });
 
             modelBuilder.Entity("Data.Entities.Contact", b =>
@@ -700,7 +753,7 @@ namespace ServerLibrary.Migrations
                     b.ToTable("CustomerEmployees");
                 });
 
-            modelBuilder.Entity("Data.Entities.Employee", b =>
+            modelBuilder.Entity("Data.Entities.EmailVerification", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -711,26 +764,77 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<DateTime>("DateOfBirth")
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("District")
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EmailVerifications");
+                });
+
+            modelBuilder.Entity("Data.Entities.Employee", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Email")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Fullname")
+                    b.Property<string>("EmployeeCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("FullName")
                         .HasColumnType("longtext");
 
                     b.Property<string>("Gender")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("JobTitle")
-                        .HasColumnType("longtext");
+                    b.Property<int?>("JobPositionGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("JobStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("JobTitleGroupId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("ModifiedDate")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<string>("OfficeEmail")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("OfficePhone")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("PartnerId")
                         .HasColumnType("int");
@@ -738,14 +842,14 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Province")
-                        .HasColumnType("longtext");
+                    b.Property<DateTime?>("Resignation")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("SignedContractDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("StreetAddress")
-                        .HasColumnType("longtext");
+                    b.Property<DateTime?>("SignedProbationaryContract")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("TaxIdentificationNumber")
                         .HasColumnType("longtext");
@@ -892,6 +996,58 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("PartnerId");
 
                     b.ToTable("InvoiceEmployees");
+                });
+
+            modelBuilder.Entity("Data.Entities.JobPositionGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("JobPositionGroupCode")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("JobPositionGroupName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("JobPositionGroups");
+                });
+
+            modelBuilder.Entity("Data.Entities.JobTitleGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("JobTitleGroupCode")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("JobTitleGroupName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("JobTitleGroups");
                 });
 
             modelBuilder.Entity("Data.Entities.Order", b =>
@@ -1177,6 +1333,9 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("EmailContact")
                         .HasColumnType("longtext");
 
+                    b.Property<bool?>("IsOrganization")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("LogoUrl")
                         .HasColumnType("longtext");
 
@@ -1186,8 +1345,8 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("OwnerId")
-                        .HasColumnType("int");
+                    b.Property<string>("OwnerFullName")
+                        .HasColumnType("longtext");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("longtext");
@@ -1196,6 +1355,9 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("TaxIdentificationNumber")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TotalEmployees")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
@@ -1679,6 +1841,17 @@ namespace ServerLibrary.Migrations
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("Data.Entities.CompanyJobPosition", b =>
+                {
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Partner");
+                });
+
             modelBuilder.Entity("Data.Entities.Contact", b =>
                 {
                     b.HasOne("Data.Entities.Partner", "Partner")
@@ -1798,6 +1971,24 @@ namespace ServerLibrary.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("Invoice");
+
+                    b.Navigation("Partner");
+                });
+
+            modelBuilder.Entity("Data.Entities.JobPositionGroup", b =>
+                {
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany("JobPositionGroup")
+                        .HasForeignKey("PartnerId");
+
+                    b.Navigation("Partner");
+                });
+
+            modelBuilder.Entity("Data.Entities.JobTitleGroup", b =>
+                {
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany("JobTitleGroup")
+                        .HasForeignKey("PartnerId");
 
                     b.Navigation("Partner");
                 });
@@ -2031,6 +2222,10 @@ namespace ServerLibrary.Migrations
                     b.Navigation("CustomerEmployees");
 
                     b.Navigation("InvoiceEmployees");
+
+                    b.Navigation("JobPositionGroup");
+
+                    b.Navigation("JobTitleGroup");
 
                     b.Navigation("ProductEmployees");
                 });

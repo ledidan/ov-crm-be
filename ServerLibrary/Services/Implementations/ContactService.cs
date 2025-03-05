@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AutoMapper;
 using Data.DTOs;
 using Data.DTOs.Contact;
@@ -5,6 +6,7 @@ using Data.Entities;
 using Data.Enums;
 using Data.Responses;
 using Mapper.ContactMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
 using ServerLibrary.Helpers;
@@ -12,7 +14,7 @@ using ServerLibrary.Services.Interfaces;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class ContactService : IContactService
+    public class ContactService : BaseService, IContactService
     {
         private readonly AppDbContext _appDbContext;
 
@@ -21,8 +23,8 @@ namespace ServerLibrary.Services.Implementations
         private readonly IEmployeeService _employeeService;
         public ContactService(AppDbContext appDbContext,
         IPartnerService partnerService, IEmployeeService employeeService,
-        IMapper mapper
-        )
+        IMapper mapper, IHttpContextAccessor httpContextAccessor
+        ) : base(appDbContext, httpContextAccessor)
         {
             _appDbContext = appDbContext;
             _partnerService = partnerService;
@@ -51,7 +53,7 @@ namespace ServerLibrary.Services.Implementations
             }
             if (string.IsNullOrEmpty(contact.ContactCode))
             {
-                contact.ContactCode = await codeGenerator.GenerateNextCodeAsync<Contact>("LH", c => c.ContactCode);
+                contact.ContactCode = await codeGenerator.GenerateNextCodeAsync<Contact>("LH", c => c.ContactCode, c => c.PartnerId == c.PartnerId);
             }
             var newContact = new Contact()
             {
@@ -132,7 +134,7 @@ namespace ServerLibrary.Services.Implementations
 
             if (string.IsNullOrEmpty(updateContact.ContactCode))
             {
-                updateContact.ContactCode = await codeGenerator.GenerateNextCodeAsync<Contact>("LH", c => c.ContactCode);
+                updateContact.ContactCode = await codeGenerator.GenerateNextCodeAsync<Contact>("LH", c => c.ContactCode, c => c.PartnerId == c.PartnerId);
             }
             existingContact.AccountTypeID = updateContact.AccountTypeID;
             existingContact.ContactCode = updateContact.ContactCode;
@@ -208,7 +210,7 @@ namespace ServerLibrary.Services.Implementations
 
             if (existingContact == null)
             {
-                return new GeneralResponse(false, "Contact not found");
+                return new GeneralResponse(false, "Không tìm thấy liên hệ");
             }
 
             var creatorEmployee = existingContact.ContactEmployees
@@ -216,28 +218,34 @@ namespace ServerLibrary.Services.Implementations
 
             if (creatorEmployee == null)
             {
-                return new GeneralResponse(false, "You are not authorized to delete this contact");
+                return new GeneralResponse(false, "Bạn không có quyền xoá liên hệ");
             }
 
             _appDbContext.Contacts.Remove(existingContact);
             await _appDbContext.SaveChangesAsync();
 
-            return new GeneralResponse(true, "Contact deleted successfully");
+            return new GeneralResponse(true, "Xoá liên hệ thành công");
         }
 
         public async Task<List<Contact>> GetAllAsync(Employee employee, Partner partner)
         {
-            var employeeData = await _employeeService.FindByIdAsync(employee.Id);
-            if (employeeData == null)
-            {
-                throw new ArgumentException($"Employee with ID {employee.Id} does not exist.");
-            }
             var result = await _appDbContext.Contacts
-       .Include(c => c.ContactEmployees)
-       .Where(c => c.PartnerId == partner.Id
-                   && c.ContactEmployees.Any(ce => ce.EmployeeId == employee.Id))
-       .ToListAsync();
+    .Where(c => c.PartnerId == partner.Id)
+    .ToListAsync();
 
+            if (!IsOwner)
+            {
+                var employeeData = await _employeeService.FindByIdAsync(employee.Id);
+                if (employeeData == null)
+                {
+                    throw new ArgumentException($"Employee with ID {employee.Id} does not exist.");
+                }
+                result = await _appDbContext.Contacts
+                    .Include(c => c.ContactEmployees)
+                    .Where(c => c.PartnerId == partner.Id
+                                && c.ContactEmployees.Any(ce => ce.EmployeeId == employee.Id))
+                    .ToListAsync();
+            }
             return result.Any() ? result : new List<Contact>();
         }
 

@@ -1,7 +1,9 @@
 ﻿using Data.DTOs;
 using Data.Entities;
+using Data.Enums;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using ServerLibrary.Data;
@@ -15,49 +17,53 @@ using System.Text;
 namespace ServerLibrary.Services.Implementations
 {
     public class UserService(IOptions<JwtSection> config, AppDbContext appDbContext,
-        IPartnerService partnerService, IEmployeeService employeeService) : IUserService
+        IPartnerService partnerService, IEmployeeService employeeService, IEmailService emailService)
+        : IUserService
     {
-        public async Task<GeneralResponse> CreateAsync(Register user, string role)
+        public async Task<GeneralResponse> CreateUnverifiedAdminAsync(RegisterAdmin user)
         {
             var checkingUser = await FindUserByEmail(user.Email);
-            if (checkingUser != null) return new GeneralResponse(false, "User already exists");
-            var checkingRole = await CheckSystemRole(role);
-            if (checkingRole == null) return new GeneralResponse(false, "Role not found");
-            Partner? partner = null;
-            Employee? employee = null;
-            if (role != Constants.Role.SysAdmin)
-            {
-                // Check Partner
-                partner = await partnerService.FindById(user.PartnerId);
-                if (partner == null) return new GeneralResponse(false, "Partner not found");
+            if (checkingUser != null) return new GeneralResponse(false, "Email đã được sử dụng !");
 
-                // check Employee
-                if (role != Constants.Role.Admin)
-                {
-                    employee = await employeeService.FindByIdAsync(user.EmployeeId);
-                    if (employee == null)
-                        return new GeneralResponse(false, "Employee not found");
-                }
-            }
+            var adminRole = await CheckSystemRole(Constants.Role.Admin);
+            if (adminRole == null) return new GeneralResponse(false, "Vai trò Admin không được tìm thấy");
+
+            var partner = await partnerService.FindById(user.PartnerId);
+            if (partner == null) return new GeneralResponse(false, "Không tìm thấy tổ chức");
+
+            var strategy = appDbContext.Database.CreateExecutionStrategy();
+
+            return await strategy.ExecuteAsync(async () =>
+    {
+        await using var transaction = await appDbContext.Database.BeginTransactionAsync();
+        try
+        {
 
             var applicationUser = await appDbContext.InsertIntoDb(new ApplicationUser()
             {
                 Email = user.Email,
                 FullName = user.FullName,
-                Password = BCrypt.Net.BCrypt.HashPassword(user.Password),
+                AccountStatus = AccountStatus.WaitingVerification,
             });
-            await appDbContext.InsertIntoDb(new UserRole() { Role = checkingRole, User = applicationUser });
-
-            if (role != Constants.Role.SysAdmin)
+            await appDbContext.InsertIntoDb(new UserRole() { Role = adminRole, User = applicationUser });
+            await appDbContext.InsertIntoDb(new PartnerUser()
             {
-                await appDbContext.InsertIntoDb(new PartnerUser()
-                {
-                    User = applicationUser,
-                    Partner = partner,
-                    EmployeeId = (role == Constants.Role.Admin) ? null : employee.Id
-                });
+                User = applicationUser,
+                Partner = partner,
+                EmployeeId = user.EmployeeId,
+            });
+            await transaction.CommitAsync();
+            return await SendVerificationEmailAsync(applicationUser);
+        }
+        catch (Exception ex)
+        {
+            if (transaction.GetDbTransaction().Connection != null)
+            {
+                await transaction.RollbackAsync();
             }
-            return new GeneralResponse(true, $"{role} created");
+            return new GeneralResponse(false, $"Lỗi khi tạo tài khoản: {ex.Message}");
+        }
+    });
         }
 
         private async Task<SystemRole?> CheckSystemRole(string role)
@@ -70,10 +76,11 @@ namespace ServerLibrary.Services.Implementations
             return await appDbContext.PartnerUsers.AnyAsync(user => user.EmployeeId == employeeId);
         }
 
-        private async Task<ApplicationUser?> FindUserByEmail(string? email)
+        public async Task<ApplicationUser?> FindUserByEmail(string? email)
         {
             return await appDbContext.ApplicationUsers.FirstOrDefaultAsync(user => user.Email!.ToLower().Equals(email!.ToLower()));
         }
+
 
         private async Task<UserRole?> FindUserRole(int userId)
         {
@@ -122,60 +129,53 @@ namespace ServerLibrary.Services.Implementations
 
         private async Task<string> GenerateToken(ApplicationUser applicationUser, string? role)
         {
+            if (applicationUser == null) throw new ArgumentNullException(nameof(applicationUser));
+            if (string.IsNullOrEmpty(role)) throw new ArgumentNullException(nameof(role));
+
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.Value.Key!));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            Claim[] userClaims;
+            List<Claim> userClaims = new();
+
+            userClaims.Add(new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()));
+            if (!string.IsNullOrEmpty(applicationUser.FullName))
+                userClaims.Add(new Claim(ClaimTypes.Name, applicationUser.FullName));
+            if (!string.IsNullOrEmpty(applicationUser.Email))
+                userClaims.Add(new Claim(ClaimTypes.Email, applicationUser.Email));
+            if (!string.IsNullOrEmpty(applicationUser.Phone))
+                userClaims.Add(new Claim("Phone", applicationUser.Phone));
+            if (!string.IsNullOrEmpty(applicationUser.Avatar))
+                userClaims.Add(new Claim("Avatar", applicationUser.Avatar));
+            userClaims.Add(new Claim(ClaimTypes.Role, role));
+
             if (role != Constants.Role.SysAdmin)
             {
                 var partnerUser = await appDbContext.PartnerUsers
                     .Include(_ => _.Partner)
                     .FirstOrDefaultAsync(x => x.User.Id == applicationUser.Id);
-
+                userClaims.Add(new Claim("CompanyName", partnerUser.Partner.Name));
                 if (partnerUser == null) return string.Empty;
+
+                if (partnerUser.Partner != null)
+                    userClaims.Add(new Claim("PartnerId", partnerUser.Partner.Id.ToString()));
 
                 if (role == Constants.Role.Admin)
                 {
-                    userClaims = new[]
-                    {
-            new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
-            new Claim(ClaimTypes.Name, applicationUser.FullName!),
-            new Claim(ClaimTypes.Email, applicationUser.Email!),
-            new Claim(ClaimTypes.Role, role!),
-            new Claim("PartnerId", partnerUser.Partner.Id.ToString()),
-            new Claim("Owner", "true") // Admins get Owner = true
-        };
+                    userClaims.Add(new Claim("Owner", "true")); // Admins get Owner = true
+                    userClaims.Add(new Claim("EmployeeId", partnerUser.EmployeeId.ToString()));
                 }
                 else
                 {
-                    userClaims = new[]
-                    {
-            new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
-            new Claim(ClaimTypes.Name, applicationUser.FullName!),
-            new Claim(ClaimTypes.Email, applicationUser.Email!),
-            new Claim(ClaimTypes.Role, role!),
-            new Claim("PartnerId", partnerUser.Partner.Id.ToString()),
-            new Claim("EmployeeId", partnerUser.EmployeeId.ToString())
-        };
+                    if (partnerUser.EmployeeId != null)
+                        userClaims.Add(new Claim("EmployeeId", partnerUser.EmployeeId.ToString()));
                 }
             }
-            else
-            {
-                userClaims = new[]
-                {
-        new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
-        new Claim(ClaimTypes.Name, applicationUser.FullName!),
-        new Claim(ClaimTypes.Email, applicationUser.Email!),
-        new Claim(ClaimTypes.Role, role!)
-    };
-            }
-
             var token = new JwtSecurityToken(
                 issuer: config.Value.Issuer,
                 audience: config.Value.Audience,
                 claims: userClaims,
                 expires: DateTime.Now.AddHours(4),
                 signingCredentials: credentials
-                );
+            );
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
@@ -205,6 +205,219 @@ namespace ServerLibrary.Services.Implementations
             updatingRefreshToken.Token = refreshToken;
             await appDbContext.SaveChangesAsync();
             return new LoginResponse(true, "Token refreshed successfully", jwtToken, refreshToken);
+        }
+        public async Task<GeneralResponse> VerifyAsync(string email, string token)
+        {
+
+            var checkUser = await FindUserByEmail(email);
+            if (checkUser == null)
+            {
+                return new GeneralResponse(false, "Email không tồn tại, vui lòng đăng ký tài khoản !");
+            }
+            var verification = await appDbContext.EmailVerifications.FirstOrDefaultAsync(v => v.Email == email && v.Token == token && !v.IsVerified);
+
+
+            if (verification == null)
+                return new GeneralResponse(false, "Liên kết xác minh không hợp lệ hoặc đã hết hạn.");
+
+            if (verification.ExpiresAt < DateTime.UtcNow)
+                return new GeneralResponse(false, "Liên kết xác minh đã hết hạn.");
+
+            var user = await appDbContext.ApplicationUsers
+                .FirstOrDefaultAsync(u => u.Id == verification.UserId && u.IsActivateEmail == false);
+
+
+            if (user == null)
+                return new GeneralResponse(false, "Không tìm thấy người dùng hoặc đã được xác minh.");
+
+            user.AccountStatus = AccountStatus.Verified;
+            verification.IsVerified = true;
+            appDbContext.Update(verification);
+            await appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Đã xác minh email. Vui lòng đặt mật khẩu của bạn.");
+        }
+
+        public async Task<GeneralResponse> SetPasswordAsync(SetPasswordDTO newUser)
+        {
+
+            var isUserValid = await CheckVerifiedUser(newUser.Email) ?? false;
+            if (!isUserValid)
+            {
+                return new GeneralResponse(false, "Tài khoản chưa được xác minh!");
+            }
+            var user = await appDbContext.ApplicationUsers
+        .FirstOrDefaultAsync(u => u.Email == newUser.Email && u.IsActivateEmail == false);
+
+            if (user == null)
+                return new GeneralResponse(false, "Không tìm thấy người dùng hoặc đã kích hoạt.");
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
+            user.IsActivateEmail = true;
+            user.IsActive = true;
+            appDbContext.Update(user);
+            await appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Đã đặt mật khẩu và kích hoạt người dùng thành công!");
+        }
+
+        private async Task<bool?> CheckVerifiedUser(string email)
+        {
+            return await appDbContext.EmailVerifications.AnyAsync(u => u.Email == email && u.IsVerified == true);
+
+        }
+
+        public async Task<GeneralResponse> ResendVerificationAsync(string email)
+        {
+
+            var clientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL");
+            var user = await appDbContext.ApplicationUsers
+         .FirstOrDefaultAsync(u => u.Email == email && u.IsActivateEmail == false);
+
+            if (user == null)
+                return new GeneralResponse(false, "Người dùng không được tìm thấy hoặc đã được xác minh.");
+
+            var existingVerification = await appDbContext.EmailVerifications
+                .FirstOrDefaultAsync(v => v.UserId == user.Id && !v.IsVerified);
+
+            string token = Guid.NewGuid().ToString();
+            DateTime expiration = DateTime.UtcNow.AddHours(24);
+
+            if (existingVerification != null)
+            {
+                existingVerification.Token = token;
+                existingVerification.ExpiresAt = expiration;
+                existingVerification.IsVerified = false;
+                appDbContext.Update(existingVerification);
+            }
+            else
+            {
+                var emailVerification = new EmailVerification
+                {
+                    Email = email,
+                    Token = token,
+                    ExpiresAt = expiration,
+                    IsVerified = false,
+                    UserId = user.Id
+                };
+                await appDbContext.InsertIntoDb(emailVerification);
+            }
+
+            string verificationLink = $"{clientUrl}/vi/auth/activate-user?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
+
+            string emailBody = $@"
+         <h2>Xác thực Email - Gửi lại</h2>
+         <p>Xin chào {user.FullName},</p>
+        <p>Chúng tôi đã tạo một liên kết xác minh mới cho bạn. Vui lòng nhấn đường dẫn ở dưới xác thực email và tạo mật khẩu cho tài khoản:</p>
+        <p><a href='{verificationLink}'>Xác minh email</a></p>
+        <p>Liên kết này sẽ hết hạn sau 24 giờ. Nếu bạn không yêu cầu điều này, hãy bỏ qua email này.</p>
+        <p>Trân trọng,<br/>Ovie System Service</p>";
+            try
+            {
+                await emailService.SendEmailAsync(email, "Verify Your Email - Ovie System", emailBody);
+                await appDbContext.SaveChangesAsync();
+                return new GeneralResponse(true, "Liên kết xác minh mới được gửi tới email của bạn.");
+            }
+            catch (Exception ex)
+            {
+                return new GeneralResponse(false, $"Không gửi được email xác minh: {ex.Message}");
+            }
+        }
+
+
+        public async Task<GeneralResponse> CreateUnverifiedUserAsync(RegisterUserDTO user)
+        {
+            var role = Constants.Role.User;
+            var checkingUser = await FindUserByEmail(user.Email);
+            if (checkingUser != null) return new GeneralResponse(false, "Tài khoản đã tồn tại !");
+
+            var partner = await partnerService.FindById(user.PartnerId);
+            if (partner == null) return new GeneralResponse(false, "Không tìm thấy tổ chức");
+
+            var employee = await employeeService.FindByIdAsync(user.EmployeeId);
+            if (employee == null) return new GeneralResponse(false, "Không tìm thấy thông tin nhân viên");
+
+            var applicationUser = new ApplicationUser
+            {
+                Email = user.Email,
+                FullName = user.FullName,
+                Phone = user.Phone,
+                Avatar = user.Avatar,
+                Birthday = user.Birthday,
+                AccountStatus = AccountStatus.NotSendingVerification,
+                Password = null,
+                IsActive = false,
+                IsActivateEmail = false
+            };
+
+            var unverifiedUser = await appDbContext.InsertIntoDb(applicationUser);
+            var checkingRole = await CheckSystemRole(role);
+
+            await appDbContext.InsertIntoDb(new UserRole { Role = checkingRole, User = unverifiedUser });
+
+            await appDbContext.InsertIntoDb(new PartnerUser
+            {
+                User = unverifiedUser,
+                Partner = partner,
+                EmployeeId = employee.Id
+            });
+
+            return new GeneralResponse(true, "User created successfully");
+        }
+
+
+        public async Task<GeneralResponse> SendVerificationEmailAsync(ApplicationUser user)
+        {
+            var clientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL");
+            if (string.IsNullOrEmpty(clientUrl))
+                return new GeneralResponse(false, "Client URL is not configured");
+
+            string token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+            DateTime expiration = DateTime.UtcNow.AddMinutes(5);
+
+            var emailVerification = new EmailVerification
+            {
+                Email = user.Email,
+                Token = token,
+                ExpiresAt = expiration,
+                IsVerified = false,
+                UserId = user.Id
+            };
+            await appDbContext.InsertIntoDb(emailVerification);
+
+            user.AccountStatus = AccountStatus.WaitingVerification;
+            await appDbContext.UpdateDb(user);
+
+            string verificationLink = $"{clientUrl}/vi/auth/activate-user?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
+
+            string emailBody = await emailService.GetEmailTemplateAsync(user.FullName, verificationLink);
+            try
+            {
+                await emailService.SendEmailAsync(user.Email, "Xác minh email - Ovie Software", emailBody);
+                return new GeneralResponse(true, "Liên kết xác minh được gửi đến email của bạn. Vui lòng kiểm tra email");
+            }
+            catch (Exception ex)
+            {
+                user.AccountStatus = AccountStatus.NotSendingVerification;
+                await appDbContext.UpdateDb(user);
+                return new GeneralResponse(false, $"Lỗi khi gửi email: {ex.Message}");
+            }
+        }
+
+        public async Task<List<ApplicationUser?>> GetAllMembersAsync(Partner partner)
+        {
+            if (partner == null)
+            {
+                throw new ArgumentException($"Partner {nameof(partner)} is null.");
+            }
+
+            var users = await appDbContext.PartnerUsers
+                .Include(pu => pu.User)
+                .Where(pu => pu.Partner.Id == partner.Id)
+                .Select(pu => pu.User)
+                .ToListAsync();
+
+            return users;
         }
     }
 }

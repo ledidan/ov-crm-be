@@ -10,22 +10,15 @@ namespace Server.Controllers
     [ApiController]
     
     // [Authorize(Roles = "SysAdmin")]
-    public class SysAdminController(IPartnerService partnerService) : Controller
+    public class PartnerController(IPartnerService partnerService) : Controller
     {
-        [HttpPost("create-partner")]
+        [HttpPost("setup")]
         public async Task<IActionResult> CreatePartnerAsync(CreatePartner partner)
         {
             if (partner == null) return BadRequest("User is empty");
 
             var result = await partnerService.CreateAsync(partner);
             return Ok(result);
-        }
-        [Authorize(Roles = "SysAdmin")]
-        [HttpGet("get-partners")]
-        public async Task<List<Partner>> GetPartnersAsync()
-        {
-            var result = await partnerService.GetAsync();
-            return result;
         }
     }
 }

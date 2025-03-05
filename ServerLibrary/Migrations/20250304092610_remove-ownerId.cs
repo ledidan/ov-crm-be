@@ -5,24 +5,24 @@
 namespace ServerLibrary.Migrations
 {
     /// <inheritdoc />
-    public partial class Isalldayactivity : Migration
+    public partial class removeownerId : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "IsAllDay",
-                table: "Activities",
-                type: "tinyint(1)",
-                nullable: true);
+            migrationBuilder.DropColumn(
+                name: "OwnerId",
+                table: "Partners");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "IsAllDay",
-                table: "Activities");
+            migrationBuilder.AddColumn<int>(
+                name: "OwnerId",
+                table: "Partners",
+                type: "int",
+                nullable: true);
         }
     }
 }

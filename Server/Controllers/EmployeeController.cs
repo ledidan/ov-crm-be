@@ -29,9 +29,28 @@ namespace Server.Controllers
             var partner = await _partnerService.FindById(employeeDTO.PartnerId);
             if (partner == null)
             {
-                return BadRequest("Partner not found");
+                return BadRequest("Không tìm thấy tổ chức");
             }
             var result = await _employeeService.CreateAsync(employeeDTO);
+            if(!result.Flag) {
+                return BadRequest("Tạo nhân viên không thành công");
+            }
+            return Ok(result);
+        }
+
+        [HttpPost("createEmployAdmin")]
+        public async Task<IActionResult> CreateEmployAdmin(CreateEmployee employeeDTO)
+        {
+            if (employeeDTO == null) return BadRequest("Failed to create employee");
+            var partner = await _partnerService.FindById(employeeDTO.PartnerId);
+            if (partner == null)
+            {
+                return BadRequest("Không tìm thấy tổ chức");
+            }
+            var result = await _employeeService.CreateAsync(employeeDTO);
+            if(!result.Flag) {
+                return BadRequest("Tạo nhân viên không thành công");
+            }
             return Ok(result);
         }
 

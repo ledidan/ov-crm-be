@@ -4,6 +4,7 @@ using Data.DTOs;
 using Data.Entities;
 using Data.Enums;
 using Data.Responses;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
 using ServerLibrary.Helpers;
@@ -11,7 +12,7 @@ using ServerLibrary.Services.Interfaces;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class CustomerService : ICustomerService
+    public class CustomerService : BaseService, ICustomerService
     {
         private readonly AppDbContext _appDbContext;
         private readonly IMapper _mapper;
@@ -23,7 +24,9 @@ namespace ServerLibrary.Services.Implementations
         public CustomerService(AppDbContext appDbContext,
             IPartnerService partnerService,
             IContactService contactService,
-             IEmployeeService employeeService, IMapper mapper)
+             IEmployeeService employeeService, IMapper mapper,
+             IHttpContextAccessor httpContextAccessor
+             ) : base(appDbContext, httpContextAccessor)
         {
             _appDbContext = appDbContext;
             _partnerService = partnerService;
@@ -46,7 +49,7 @@ namespace ServerLibrary.Services.Implementations
 
             if (string.IsNullOrEmpty(customer.AccountNumber))
             {
-                customer.AccountNumber = await codeGenerator.GenerateNextCodeAsync<Customer>("KH", c => c.AccountNumber);
+                customer.AccountNumber = await codeGenerator.GenerateNextCodeAsync<Customer>("KH", c => c.AccountNumber, c => c.PartnerId == partner.Id);
             }
             var newCustomer = new Customer
             {
@@ -198,18 +201,25 @@ namespace ServerLibrary.Services.Implementations
         }
         public async Task<List<Customer?>> GetAllAsync(Employee employee, Partner partner)
         {
-
-            var employeeData = await _employeeService.FindByIdAsync(employee.Id);
-            if (employeeData == null)
-            {
-                throw new ArgumentException($"Employee with ID {employee.Id} does not exist.");
-            }
             var result = await _appDbContext.Customers
-       .Include(c => c.CustomerEmployees)
-       .Where(c => c.PartnerId == partner.Id
-                   && c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id))
-       .ToListAsync();
+   .Where(c => c.PartnerId == partner.Id)
+   .ToListAsync();
+            if (!IsOwner)
+            {
 
+                var employeeData = await _employeeService.FindByIdAsync(employee.Id);
+                if (employeeData == null)
+                {
+                    throw new ArgumentException($"Employee with ID {employee.Id} does not exist.");
+                }
+                result = await _appDbContext.Customers
+          .Include(c => c.CustomerEmployees)
+          .Where(c => c.PartnerId == partner.Id
+                      && c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id))
+          .ToListAsync();
+
+                return result.Any() ? result : new List<Customer>();
+            }
             return result.Any() ? result : new List<Customer>();
         }
 

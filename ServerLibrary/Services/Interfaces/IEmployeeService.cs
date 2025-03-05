@@ -7,10 +7,11 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IEmployeeService
     {
-        Task<GeneralResponse> CreateAsync(CreateEmployee employee);
+        Task<DataStringResponse> CreateAsync(CreateEmployee employee);
         Task<Employee?> FindByIdAsync(int id);
-        
-        Task<bool> EmployeeExists(int id);
+
+        Task<bool> EmployeeExists(int id, int partnerId);
+
         Task<GeneralResponse> UpdateAsync(Employee employee);
         Task<List<Employee>> GetAllAsync(int partnerId);
 

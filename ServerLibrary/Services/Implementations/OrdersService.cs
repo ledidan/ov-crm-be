@@ -9,15 +9,16 @@ using ServerLibrary.Services.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Data.DTOs;
+using Microsoft.AspNetCore.Http;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class OrdersService : IOrderService
+    public class OrdersService : BaseService, IOrderService
     {
-        private readonly IMapper _mapper;
         private readonly AppDbContext _appContext;
+        private readonly IMapper _mapper;
         private readonly IMongoCollection<OrderDetails> _ordersDetailsCollection;
-        public OrdersService(MongoDbContext dbContext, AppDbContext appContext, IMapper mapper)
+        public OrdersService(MongoDbContext dbContext, AppDbContext appContext, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(appContext, httpContextAccessor)
         {
             _ordersDetailsCollection = dbContext.OrderDetails;
             _appContext = appContext;
@@ -26,35 +27,48 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<List<OrderDTO>> GetAllOrdersAsync(Employee employee, Partner partner)
         {
+            if (employee == null || !IsOwner)
+            {
+                throw new ArgumentNullException(nameof(employee), "Vui lòng không để trống ID Employee.");
+            }
+            if (partner == null || !IsOwner)
+            {
+                throw new ArgumentNullException(nameof(partner), "Vui lòng không để trống đối tác.");
+            }
             try
             {
-                if (employee == null)
+                IQueryable<Order> query = _appContext.Orders
+                    .Where(o => o.Partner == partner)
+                    .AsNoTracking();
+                if (!IsOwner)
                 {
-                    throw new ArgumentNullException(nameof(employee), "Vui lòng không để trống ID Employee.");
+                    query = query.Where(o =>
+                        o.OwnerId == employee.Id ||
+                        o.OrderEmployees.Any(oe => oe.EmployeeId == employee.Id))
+                        .Include(o => o.OrderEmployees); 
                 }
-                var orders = await _appContext.Orders
-                      .Where(o =>
-                          o.Partner == partner && o.OwnerId == employee.Id ||
-                          o.OrderEmployees.Any(oe => oe.EmployeeId == employee.Id))
-                          .Include(oce => oce.OrderEmployees)
-                      .ToListAsync();
 
-                if (!orders.Any())
-                {
-                    return new List<OrderDTO>();
-                }
-                var orderIds = orders.Select(o => o.Id.ToString()).ToList();
-                var orderDetailsDict = (await _ordersDetailsCollection
-                    .Find(d => orderIds.Contains(d.OrderId.ToString()))
-                    .ToListAsync())
+                var orders = await query.ToListAsync();
+                if (orders.Count == 0) return new List<OrderDTO>(); 
+
+                var orderIds = orders.Select(o => o.Id).Where(id => id != null).ToList(); 
+
+                // 🔹 Truy vấn OrderDetails từ MongoDB
+                var orderDetailsList = await _ordersDetailsCollection
+                    .Find(d => orderIds.Contains(d.OrderId.Value)) 
+                    .ToListAsync();
+
+            
+                var orderDetailsDict = orderDetailsList
                     .GroupBy(d => d.OrderId)
                     .ToDictionary(g => g.Key, g => g.ToList());
 
+                // 🔹 Ánh xạ sang DTO
                 var orderDtos = orders.Select(order =>
                 {
                     var dto = _mapper.Map<OrderDTO>(order);
-                    dto.OrderDetails = orderDetailsDict.ContainsKey(order.Id)
-                        ? orderDetailsDict[order.Id].Select(d => new OrderDetailDTO
+                    dto.OrderDetails = orderDetailsDict.TryGetValue(order.Id, out var details)
+                        ? details.Select(d => new OrderDetailDTO
                         {
                             Id = d.Id,
                             OrderId = d.OrderId,
@@ -82,11 +96,16 @@ namespace ServerLibrary.Services.Implementations
 
                 return orderDtos;
             }
+            catch (ArgumentNullException ex)
+            {
+                throw new ArgumentException($"Lỗi tham số đầu vào: {ex.Message}", ex);
+            }
             catch (Exception ex)
             {
-                throw new Exception($"Failed to retrieve orders: {ex.Message}");
+                throw new Exception($"Lỗi khi lấy thông tin đơn hàng: {ex.Message}", ex);
             }
         }
+
 
         public async Task<OrderDTO> GetOrderByIdAsync(int id, Employee employee, Partner partner)
         {
@@ -140,7 +159,7 @@ namespace ServerLibrary.Services.Implementations
             }
             catch (Exception ex)
             {
-                throw new Exception($"Failed to retrieve order: {ex.Message}");
+                throw new Exception($"Lỗi khi lấy thông tin đơn hàng: {ex.Message}");
             }
         }
 
@@ -152,7 +171,7 @@ namespace ServerLibrary.Services.Implementations
             {
                 if (orderDto == null)
                 {
-                    return new GeneralResponse(false, "Invalid order.");
+                    return new GeneralResponse(false, "Đơn hàng không hợp lệ.");
                 }
                 if (orderDto.OrderDetails == null)
                 {
@@ -191,12 +210,12 @@ namespace ServerLibrary.Services.Implementations
                 await _ordersDetailsCollection.InsertManyAsync(orderDetails);
 
                 await transaction.CommitAsync();
-                return new GeneralResponse(true, $"Order created successfully. Order ID: {order.Id}");
+                return new GeneralResponse(true, $"Tạo đơn hàng thành công. Order ID: {order.Id}");
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return new GeneralResponse(false, $"Failed to create order: {ex.Message}");
+                return new GeneralResponse(false, $"Lỗi khi lấy thông tin đơn hàng: {ex.Message}");
             }
         }
         public async Task<GeneralResponse?> UpdateOrderAsync(int id, OrderDTO orderDTO,
@@ -212,7 +231,7 @@ namespace ServerLibrary.Services.Implementations
 
                 if (existingOrder == null)
                 {
-                    return new GeneralResponse(false, "Order not found.");
+                    return new GeneralResponse(false, "Không tìm thấy đơn hàng");
                 }
 
                 _mapper.Map(orderDTO, existingOrder);
@@ -310,12 +329,12 @@ namespace ServerLibrary.Services.Implementations
 
 
                 await transaction.CommitAsync();
-                return new GeneralResponse(true, "Order updated successfully.");
+                return new GeneralResponse(true, "Cập nhật đơn hàng thành công");
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return new GeneralResponse(false, $"Failed to update order: {ex.Message}");
+                return new GeneralResponse(false, $"Lỗi khi lấy thông tin đơn hàng: {ex.Message}");
             }
         }
 
@@ -365,12 +384,12 @@ namespace ServerLibrary.Services.Implementations
             {
                 if (string.IsNullOrWhiteSpace(ids))
                 {
-                    return new GeneralResponse(false, "Order IDs cannot be null or empty.");
+                    return new GeneralResponse(false, "Mã hàng đơn không được để trống.");
                 }
 
                 if (employee == null)
                 {
-                    return new GeneralResponse(false, "Employee cannot be null.");
+                    return new GeneralResponse(false, "Không tìm thấy nhân viên.");
                 }
 
                 var idList = ids.Split(',')
@@ -381,7 +400,7 @@ namespace ServerLibrary.Services.Implementations
 
                 if (!idList.Any())
                 {
-                    return new GeneralResponse(false, "No valid order IDs provided.");
+                    return new GeneralResponse(false, "Mã đơn hàng không hợp lệ.");
                 }
 
                 var ordersToDelete = await _appContext.Orders
@@ -390,7 +409,7 @@ namespace ServerLibrary.Services.Implementations
 
                 if (!ordersToDelete.Any())
                 {
-                    throw new KeyNotFoundException("No orders found for deletion.");
+                    throw new KeyNotFoundException("Không đơn hàng nào được xoá.");
                 }
 
                 var orderIdStrings = ordersToDelete.Select(o => o.Id.ToString()).ToList();
@@ -400,11 +419,11 @@ namespace ServerLibrary.Services.Implementations
                 _appContext.Orders.RemoveRange(ordersToDelete);
                 await _appContext.SaveChangesAsync();
 
-                return new GeneralResponse(true, "Remove orders successfully");
+                return new GeneralResponse(true, "Xoá đơn hàng thành công");
             }
             catch (Exception ex)
             {
-                throw new Exception($"Failed to delete orders: {ex.Message}");
+                throw new Exception($"Lỗi khi tạo đơn hàng: {ex.Message}");
             }
         }
 
