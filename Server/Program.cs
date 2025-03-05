@@ -165,6 +165,7 @@ var clientUrls = new List<string>
     "http://localhost:3000"
 };
 var prodClientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL");
+Console.WriteLine($"The boss is listening on {prodClientUrl}");
 if (!string.IsNullOrEmpty(prodClientUrl))
 {
     clientUrls.Add(prodClientUrl);
