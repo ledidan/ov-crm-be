@@ -7,6 +7,7 @@ WORKDIR /app
 # Copy only the project files to leverage caching
 COPY BeCRM.sln .
 COPY Data/Data.csproj Data/
+COPY Server.Tests/Server.Tests.csproj Server.Tests/
 COPY Server/Server.csproj Server/
 COPY ServerLibrary/ServerLibrary.csproj ServerLibrary/
 
