@@ -96,24 +96,24 @@ builder.Services.AddScoped(sp =>
     return new MongoDbContext(mongoClient, mongoSettings.DatabaseName);
 });
 
-// var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
-    $"Server={Environment.GetEnvironmentVariable("DB_HOST")};" +
-    $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
-    $"User={Environment.GetEnvironmentVariable("DB_USER")};" +
-    $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
-    $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
-    "SslMode=Required;";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
+//     $"Server={Environment.GetEnvironmentVariable("DB_HOST")};" +
+//     $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
+//     $"User={Environment.GetEnvironmentVariable("DB_USER")};" +
+//     $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
+//     $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
+//     "SslMode=Required;";
 // if (!string.IsNullOrEmpty(connectionString))
 // {
-// }
-// var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+// }// var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+
 Console.WriteLine($"Connection: {connectionString}");
 //** Mysql database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(connectionString,
-        new MySqlServerVersion(new Version(8, 0, 30)),
+        new MySqlServerVersion(new Version(8, 0, 30)), 
         mysqlOptions => mysqlOptions.EnableRetryOnFailure()
     );
 });

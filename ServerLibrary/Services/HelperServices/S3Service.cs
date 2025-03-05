@@ -14,10 +14,11 @@ namespace ServerLibrary.Services
 
         public S3Service(IConfiguration configuration)
         {
-            var accessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY");
-            var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_KEY");
-            var region = Environment.GetEnvironmentVariable("AWS_REGION");
-            _bucketName = Environment.GetEnvironmentVariable("AWS_BUCKET");
+            _bucketName = configuration["AWS:BucketName"];
+            var accessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY") ?? configuration["AWS:AccessKey"];
+            var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_KEY") ?? configuration["AWS:SecretKey"];
+            var region = Environment.GetEnvironmentVariable("AWS_REGION") ?? "ap-southeast-1";
+            _bucketName = Environment.GetEnvironmentVariable("AWS_BUCKET") ?? "5p-technologies";
 
             if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(region) || string.IsNullOrEmpty(_bucketName))
             {
