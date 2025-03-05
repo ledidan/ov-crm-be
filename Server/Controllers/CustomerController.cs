@@ -58,10 +58,6 @@ namespace Server.Controllers
                 var resultDTO = result.Select(x => x.ToCustomerDTO()).ToList();
                 return Ok(resultDTO);
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
             catch (Exception)
             {
                 return StatusCode(500, new { Message = "Please check employeeId and partnerId correctly.Try again later." });

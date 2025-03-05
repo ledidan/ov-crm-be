@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Data.DTOs
 {
-    public class Register
+    public class RegisterUserDTO
     {
         [DataType(DataType.EmailAddress)]
         [EmailAddress]
@@ -12,13 +12,11 @@ namespace Data.DTOs
         [Required]
         public required string FullName { get; set; }
 
-        [DataType(DataType.Password)]
-        public string? Password { get; set; }
+        public string? Phone { get; set; }
 
-        [DataType(DataType.Password)]
-        [Compare(nameof(Password))]
-        [Required]
-        public required string ConfirmPassword { get; set; }
+        public string? Avatar { get; set; }
+
+        public DateTime? Birthday { get; set; }
         [Required]
         public int PartnerId { get; set; }
         public int EmployeeId { get; set; }

@@ -5,33 +5,70 @@ using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
 using ServerLibrary.Services.Interfaces;
 using System.Security.Claims;
-
+using Microsoft.Extensions.Logging;
 namespace ServerLibrary.Services.Implementations
 {
-    public class PartnerService(AppDbContext appDbContext) : IPartnerService
+    public class PartnerService : IPartnerService
     {
-        public async Task<GeneralResponse> CreateAsync(CreatePartner partner)
-        {
-            var checkingPartner = await FindPartnerByShortName(partner.ShortName);
-            if (checkingPartner != null) return new GeneralResponse(false, "Partner existing");
+        private readonly AppDbContext appDbContext;
+        private readonly ILogger<PartnerService> logger;
+        private readonly IJobGroupService _jobGroupService;
 
-            await appDbContext.InsertIntoDb(new Partner()
+        public PartnerService(AppDbContext _appDbContext, IJobGroupService jobGroupService, ILogger<PartnerService> logger)
+        {
+            appDbContext = _appDbContext;
+            _jobGroupService = jobGroupService;
+            logger = logger;
+        }
+        public async Task<DataObjectResponse> CreateAsync(CreatePartner partner)
+        {
+            var partnerExist = await FindPartnerByEmail(partner.EmailContact);
+            if (partnerExist != null)
+            {
+                logger?.LogWarning("Attempt to create partner with existing email: {Email}");
+                return new DataObjectResponse(false, "Email tạo doanh nghiệp đã tồn tại, vui lòng thử email khác.", null);
+            }
+            var newPartner = new Partner
             {
                 ShortName = partner.ShortName,
                 Name = partner.Name,
                 TaxIdentificationNumber = partner.TaxIdentificationNumber,
                 LogoUrl = partner.LogoUrl,
                 EmailContact = partner.EmailContact,
+                TotalEmployees = partner.TotalEmployees,
+                IsOrganization = partner.IsOrganization,
+                OwnerFullName = partner.OwnerFullName,
                 PhoneNumber = partner.PhoneNumber,
-                OwnerId = partner.OwnerId
-            });
-            return new GeneralResponse(true, "Partner created");
+            };
+            try
+            {
+                await appDbContext.InsertIntoDb(newPartner);
+                // await Task.WhenAll(
+                //  _jobGroupService.CreateDefaultJobPosition(newPartner),
+                // _jobGroupService.CreateDefaultJobTitle(newPartner)
+                // );
+
+                logger?.LogInformation("Partner {Name} created successfully with ID: {Id}", newPartner.Name, newPartner.Id);
+                return new DataObjectResponse(true, "Tạo doanh nghiệp thành công", newPartner);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Failed to create partner with email: {Email}", null);
+                return new DataObjectResponse(false, "Đã xảy ra lỗi khi tạo doanh nghiệp", null);
+            }
         }
 
         private async Task<Partner?> FindPartnerByShortName(string shortName)
         {
             return await appDbContext.Partners.FirstOrDefaultAsync(_ => _.ShortName == shortName);
         }
+
+        private async Task<Partner?> FindPartnerByEmail(string email)
+        {
+            return await appDbContext.Partners.FirstOrDefaultAsync(_ => _.EmailContact == email);
+        }
+
+
 
         public async Task<Partner?> FindById(int id)
         {
@@ -59,6 +96,25 @@ namespace ServerLibrary.Services.Implementations
                 ex.ToString();
             }
             return default(Partner);
+        }
+
+        public async Task<bool?> CheckClaimByOwner(ClaimsIdentity? claimsIdentity)
+        {
+            try
+            {
+                var isOwner = claimsIdentity?.FindFirst("Owner")?.Value;
+                if (isOwner == null) return false;
+                if (isOwner == "true")
+                {
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ex.ToString();
+            }
+            return false;
         }
     }
 }

@@ -9,9 +9,14 @@ namespace Data.DTOs
         public string? ShortName { get; set; }
         public string? Name { get; set; }
         public string? TaxIdentificationNumber { get; set; }
+
+        public string? TotalEmployees { get; set; }
+
+        public bool? IsOrganization { get; set; }
+        public string? OwnerFullName { get; set; }
+
         public string? LogoUrl { get; set; }
         public string? EmailContact { get; set; }
         public string? PhoneNumber { get; set; }
-        public int? OwnerId { get; set; }
     }
 }

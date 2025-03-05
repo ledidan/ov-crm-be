@@ -2,6 +2,7 @@
 
 
 
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerLibrary.Services.Interfaces;
@@ -10,14 +11,15 @@ namespace Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AdminController : ControllerBase
+    [Authorize]
+    public class AccountController : ControllerBase
     {
-        private readonly IEmployeeService _employeeService;
+        private readonly IAccountService _accountService;
         private readonly IPartnerService _partnerService;
 
-        public AdminController(IEmployeeService employeeService, IPartnerService partnerService)
+        public AccountController(IAccountService accountService, IPartnerService partnerService)
         {
-            _employeeService = employeeService;
+            _accountService = accountService;
             _partnerService = partnerService;
         }
 

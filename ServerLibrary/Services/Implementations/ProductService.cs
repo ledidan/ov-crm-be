@@ -3,7 +3,6 @@ using Data.DTOs;
 using Data.Entities;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
-using Mysqlx.Crud;
 using ServerLibrary.Data;
 using ServerLibrary.Services.Interfaces;
 
@@ -19,7 +18,7 @@ namespace ServerLibrary.Services.Implementations
             {
                 //check Code Product existing
                 var productChecking = await FindCodeByPartner(product.ProductCode, partner.Id);
-                if (productChecking != null) return new GeneralResponse(false, "Code product existing");
+                if (productChecking != null) return new GeneralResponse(false, "Mã hàng hoá đã tồn tại");
 
                 var productCategory = await appDbContext.ProductCategories
                     .FirstOrDefaultAsync(pc => pc.Id == product.ProductCategoryId);
@@ -34,7 +33,7 @@ namespace ServerLibrary.Services.Implementations
                     Avatar = product.Avatar ?? "",
                     ConversionRate = product.ConversionRate ?? 0,
                     ConversionUnit = product.ConversionUnit ?? "",
-                    CreatedBy = employee.Fullname,
+                    CreatedBy = employee.FullName,
                     Description = product.Description ?? "",
                     Equation = product.Equation ?? "",
                     Inactive = product.Inactive ?? false,
@@ -85,7 +84,7 @@ namespace ServerLibrary.Services.Implementations
                     StartDate = DateTime.Now
                 });
 
-                return new GeneralResponse(true, "Product created");
+                return new GeneralResponse(true, "Đã tạo sản phẩm thành công");
             }
             catch
             {

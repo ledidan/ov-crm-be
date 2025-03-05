@@ -58,6 +58,7 @@ namespace ServerLibrary.Data
                  new SystemRole { Id = 2, Name = Constants.Role.Admin },
                  new SystemRole { Id = 3, Name = Constants.Role.SysAdmin }
              );
+
             builder.Entity<ContactEmployees>()
         .Property(ce => ce.AccessLevel)
         .HasConversion<int>();
@@ -200,6 +201,8 @@ namespace ServerLibrary.Data
         public DbSet<ContactEmployees> ContactEmployees { get; set; }
         public DbSet<OrderEmployees> OrderEmployees { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+
+        public DbSet<EmailVerification> EmailVerifications { get; set; }
         public DbSet<SystemRole> SystemRoles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<RefreshTokenInfo> RefreshTokenInfos { get; set; }
@@ -220,5 +223,11 @@ namespace ServerLibrary.Data
 
         public DbSet<ProductInventory> ProductInventories { get; set; }
         public DbSet<ProductPrice> ProductPrices { get; set; }
+
+        public DbSet<CompanyJobPosition> CompanyJobPositions { get; set; }
+        public DbSet<JobPositionGroup> JobPositionGroups { get; set; }
+
+        public DbSet<JobTitleGroup> JobTitleGroups { get; set; }
+
     }
 }

@@ -16,11 +16,11 @@ namespace ServerLibrary.Helpers
         {
             _dbContext = dbContext;
         }
-        public async Task<string> GenerateNextCodeAsync<T>(string prefix, Expression<Func<T, string>> codeSelector) where T : class
+        public async Task<string> GenerateNextCodeAsync<T>(string prefix, Expression<Func<T, string>> codeSelector,  Expression<Func<T, bool>> filter) where T : class
         {
             var dbSet = _dbContext.Set<T>();
             
-            var latestEntity = await dbSet
+            var latestEntity = await dbSet.Where(filter)
         .OrderByDescending(codeSelector)
         .FirstOrDefaultAsync();
 
