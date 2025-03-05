@@ -25,8 +25,8 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddLogging(logging =>
 {
-    logging.AddConsole();     
-    logging.AddDebug();       
+    logging.AddConsole();
+    logging.AddDebug();
 });
 // Add services to the container.
 builder.Services.AddControllers()
@@ -72,11 +72,13 @@ builder.Services.AddSwaggerGen(options =>
 //     builder.Configuration.GetSection("MongoDBSettings"));
 builder.Services.Configure<MongoDBSettings>(options =>
 {
-    options.ConnectionString = Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING") ??
-                               builder.Configuration.GetValue<string>("MongoDBSettings:ConnectionString");
+    options.ConnectionString = builder.Configuration.GetValue<string>("MongoDBSettings:ConnectionString")
+     ?? Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING");
 
-    options.DatabaseName = Environment.GetEnvironmentVariable("MONGODB_DATABASE") ??
-                           builder.Configuration.GetValue<string>("MongoDBSettings:DatabaseName");
+
+    options.DatabaseName = builder.Configuration.GetValue<string>("MongoDBSettings:DatabaseName") 
+    ?? Environment.GetEnvironmentVariable("MONGODB_DATABASE");
+
 });
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
@@ -96,14 +98,14 @@ builder.Services.AddScoped(sp =>
     return new MongoDbContext(mongoClient, mongoSettings.DatabaseName);
 });
 
-var connectionString_1 = builder.Configuration.GetConnectionString("DefaultConnection");
-var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
-    $"Server={Environment.GetEnvironmentVariable("DB_HOST")};" +
-    $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
-    $"User={Environment.GetEnvironmentVariable("DB_USER")};" +
-    $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
-    $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
-    "SslMode=Required;" ?? connectionString_1;
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
+//     $"Server={Environment.GetEnvironmentVariable("DB_HOST")};" +
+//     $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
+//     $"User={Environment.GetEnvironmentVariable("DB_USER")};" +
+//     $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
+//     $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
+//     "SslMode=Required;" ?? connectionString_1;
 
 
 Console.WriteLine($"Connection: {connectionString}");
@@ -111,7 +113,7 @@ Console.WriteLine($"Connection: {connectionString}");
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(connectionString,
-        new MySqlServerVersion(new Version(8, 0, 30)), 
+        new MySqlServerVersion(new Version(8, 0, 30)),
         mysqlOptions => mysqlOptions.EnableRetryOnFailure()
     );
 });
