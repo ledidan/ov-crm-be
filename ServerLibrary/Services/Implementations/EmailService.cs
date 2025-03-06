@@ -31,11 +31,11 @@ namespace ServerLibrary.Services.Implementations
             await smtpClient.DisconnectAsync(true);
         }
 
-        public async Task<string> GetEmailTemplateAsync(string fullName, string verificationLink)
+        public async Task<string> GetEmailTemplateAsync(string fullName, string verificationLink, string templateName)
         {
             string projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName;
             string templateFolder = Path.Combine(projectRoot, "ServerLibrary", "Templates");
-            string templatePath = Path.Combine(templateFolder, "EmailVerificationTemplate.cshtml");
+            string templatePath = Path.Combine(templateFolder, templateName);
 
             if (!Directory.Exists(templateFolder))
             {
@@ -46,7 +46,6 @@ namespace ServerLibrary.Services.Implementations
                 throw new FileNotFoundException($"Template file not found: {templatePath}");
             }
             Console.WriteLine($"projectRoot {projectRoot}");
-
             var engine = new RazorLightEngineBuilder()
                 .UseFileSystemProject(templateFolder)
                 .UseMemoryCachingProvider()
@@ -59,7 +58,7 @@ namespace ServerLibrary.Services.Implementations
             engine.Handler.Options.AdditionalMetadataReferences.Add(
     Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(typeof(EmailTemplateModel).Assembly.Location)
 );
-            string emailBody = await engine.CompileRenderAsync<EmailTemplateModel>("EmailVerificationTemplate.cshtml", model);
+            string emailBody = await engine.CompileRenderAsync<EmailTemplateModel>(templateName, model);
             return emailBody;
         }
 

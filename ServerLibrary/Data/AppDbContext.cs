@@ -202,6 +202,8 @@ namespace ServerLibrary.Data
         public DbSet<OrderEmployees> OrderEmployees { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 
+
+        public DbSet<PasswordResetTokens> PasswordResetTokens { get; set; }
         public DbSet<EmailVerification> EmailVerifications { get; set; }
         public DbSet<SystemRole> SystemRoles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
