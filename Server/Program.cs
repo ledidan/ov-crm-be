@@ -177,8 +177,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("OVIE_CLIENT", policyBuilder =>
     {
-        policyBuilder.SetIsOriginAllowed(_ => true);
-        // policyBuilder.WithOrigins(clientUrls.ToArray());
+        policyBuilder.WithOrigins("http://localhost:3000", "https://app.ovie.vn");
         policyBuilder.AllowAnyHeader();
         policyBuilder.AllowAnyMethod();
         policyBuilder.AllowCredentials();
@@ -187,6 +186,7 @@ builder.Services.AddCors(options =>
 Console.WriteLine($"CORS allowed origins: {string.Join(", ", clientUrls)}");
 
 builder.Services.AddAuthorization();
+builder.Services.AddAuthentication();
 
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
@@ -198,10 +198,10 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 // }
-app.UseCors("OVIE_CLIENT");
 
-// app.UseHttpsRedirection();
 // **  Enable Authentication & Authorization
+app.UseHttpsRedirection();
+app.UseCors("OVIE_CLIENT");
 app.UseAuthentication();
 app.UseAuthorization();
 
