@@ -166,7 +166,7 @@ var clientUrls = new List<string>
     "http://localhost:3000"
 };
 var prodClientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL");
-Console.WriteLine($"The boss is listening on {prodClientUrl}");
+
 if (!string.IsNullOrEmpty(prodClientUrl))
 {
     clientUrls.Add(prodClientUrl);
@@ -177,12 +177,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("OVIE_CLIENT", policyBuilder =>
     {
-        policyBuilder.WithOrigins(clientUrls.ToArray());
+        policyBuilder.SetIsOriginAllowed(_ => true);
+        // policyBuilder.WithOrigins(clientUrls.ToArray());
         policyBuilder.AllowAnyHeader();
         policyBuilder.AllowAnyMethod();
         policyBuilder.AllowCredentials();
     });
 });
+Console.WriteLine($"CORS allowed origins: {string.Join(", ", clientUrls)}");
 
 builder.Services.AddAuthorization();
 
