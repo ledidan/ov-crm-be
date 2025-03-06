@@ -72,6 +72,29 @@ namespace Server.Controllers
             return Ok(new { Flag = result.Flag, Message = result.Message });
         }
 
+        [HttpPost("request-reset-password")]
+        public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequestDto request)
+        {
+            if (string.IsNullOrEmpty(request.Email) && string.IsNullOrEmpty(request.PhoneNumber))
+                return BadRequest(new { message = "Email hoặc số điện thoại là bắt buộc" });
+
+            string token = await userService.GeneratePasswordResetTokenAsync(request.Email, request.PhoneNumber);
+            if (token == null)
+                return NotFound(new { message = "Không tìm thấy tài khoản" });
+
+            // TODO: Gửi email hoặc SMS chứa token (chưa tích hợp)
+            return Ok(new { message = "Token đã được gửi", token });
+        }
+
+        [HttpPost("reset-new-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO request)
+        {
+            bool result = await userService.ResetPasswordAsync(request);
+            if (!result)
+                return BadRequest(new { message = "Token không hợp lệ hoặc đã sử dụng" });
+
+            return Ok(new { message = "Mật khẩu đã được cập nhật thành công" });
+        }
 
         [HttpGet("activate-user")]
         public async Task<IActionResult> Verify([FromQuery] string email, [FromQuery] string token)
@@ -86,6 +109,15 @@ namespace Server.Controllers
             return BadRequest(response);
         }
 
+        [HttpGet("validate-reset-token")]
+        public async Task<IActionResult> ValidateResetToken([FromQuery] ValidateTokenDto request)
+        {
+            bool isValid = await userService.IsValidResetTokenAsync(request.Email, request.PhoneNumber, request.Token);
+            if (!isValid)
+                return BadRequest(new { message = "Token không hợp lệ hoặc đã sử dụng" });
+
+            return Ok(new { message = "Token hợp lệ" });
+        }
 
         [HttpPost("send-email-verification")]
         public async Task<IActionResult> SendVerificationEmail([FromBody] EmailRequest request)

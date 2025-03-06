@@ -40,7 +40,7 @@ namespace Server.Controllers
 
             return Ok(result);
         }
-
+        [Authorize]
         [HttpGet("get-all")]
         public async Task<IActionResult> GetAllContactAsync()
         {
@@ -60,7 +60,7 @@ namespace Server.Controllers
                 return StatusCode(500, new { Message = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau." });
             }
         }
-
+        [Authorize]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetContactByIdAsync([FromRoute] int id)
         {
@@ -81,11 +81,11 @@ namespace Server.Controllers
 
             return Ok(contact.ToContactDTO());
         }
-
+        [Authorize]
         [HttpPatch("{id:int}")]
 
         public async Task<IActionResult> UpdateFieldContact(int id,
-        [FromBody] UpdateContactDTO updateContact)
+                [FromBody] UpdateContactDTO updateContact)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -112,6 +112,7 @@ namespace Server.Controllers
             return Ok(new { Flag = result.Flag, Message = result.Message });
 
         }
+        [Authorize]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateContactAsync([FromRoute] int id,
     [FromBody] UpdateContactDTO newUpdate
@@ -129,7 +130,7 @@ namespace Server.Controllers
 
             return Ok(contact);
         }
-
+        [Authorize]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> RemoveContactAsync([FromRoute] int id)
         {
@@ -144,6 +145,7 @@ namespace Server.Controllers
             var contactResult = await _contactService.DeleteIdAsync(id, employee, partner);
             return Ok(contactResult);
         }
+        [Authorize]
         [HttpDelete("bulk-delete")]
         public async Task<IActionResult> DeleteMultipleContacts([FromQuery] string ids)
         {
@@ -161,6 +163,7 @@ namespace Server.Controllers
 
             return Ok(response);
         }
+        [Authorize]
         [HttpGet("{id:int}/all-order")]
         public async Task<IActionResult> GetAllOrdersByContact(int id)
         {
@@ -181,6 +184,7 @@ namespace Server.Controllers
             }
             return BadRequest("Failed to get order");
         }
+        [Authorize]
         [HttpGet("{id:int}/all-invoice")]
         public async Task<IActionResult> GetAllInvoicesByContact(int id)
         {

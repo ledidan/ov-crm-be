@@ -22,15 +22,16 @@ namespace Server.Tests
             var verificationLink = "https://example.com/verify";
             // var expectedHtml = $"<h2>Xác thực Email</h2><p>{fullName}</p><a href='{verificationLink}'>Verify</a>";
             var expectedHtml = $"<p>Xin chào @Model.FullName,</p>";
+            var templateName = "GetEmailTemplateAsync.cshtml";
             // Act
             _emailServiceMock
-                .Setup(service => service.GetEmailTemplateAsync(fullName, verificationLink))
+                .Setup(service => service.GetEmailTemplateAsync(fullName, verificationLink, templateName))
                 .ReturnsAsync(expectedHtml);
 
             var emailService = _emailServiceMock.Object;
 
             // Act
-            var emailBody = await emailService.GetEmailTemplateAsync(fullName, verificationLink);
+            var emailBody = await emailService.GetEmailTemplateAsync(fullName, verificationLink, templateName);
 
             // Assert
             Assert.Contains(fullName, emailBody);

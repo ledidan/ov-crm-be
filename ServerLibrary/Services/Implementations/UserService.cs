@@ -208,7 +208,6 @@ namespace ServerLibrary.Services.Implementations
         }
         public async Task<GeneralResponse> VerifyAsync(string email, string token)
         {
-
             var checkUser = await FindUserByEmail(email);
             if (checkUser == null)
             {
@@ -389,8 +388,8 @@ namespace ServerLibrary.Services.Implementations
             await appDbContext.UpdateDb(user);
 
             string verificationLink = $"{clientUrl}/vi/auth/activate-user?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
-
-            string emailBody = await emailService.GetEmailTemplateAsync(user.FullName, verificationLink);
+            string templateName = "EmailVerificationTemplate.cshtml";
+            string emailBody = await emailService.GetEmailTemplateAsync(user.FullName, verificationLink, templateName);
             try
             {
                 await emailService.SendEmailAsync(user.Email, "Xác minh email - Ovie Software", emailBody);
@@ -418,6 +417,68 @@ namespace ServerLibrary.Services.Implementations
                 .ToListAsync();
 
             return users;
+        }
+        public async Task<bool> IsValidResetTokenAsync(string? email, string? phoneNumber, string token)
+        {
+            return await appDbContext.PasswordResetTokens
+                .AnyAsync(t => t.Email == email || t.PhoneNumber == phoneNumber && t.Token == token && !t.IsUsed);
+        }
+        public async Task<bool> ResetPasswordAsync(ResetPasswordDTO request)
+        {
+            var resetToken = await appDbContext.PasswordResetTokens
+        .FirstOrDefaultAsync(t => t.Email == request.Email && t.Token == request.Token && !t.IsUsed);
+
+            if (resetToken == null)
+                return false;
+
+            var user = await appDbContext.ApplicationUsers.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user == null) return false;
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+
+            appDbContext.PasswordResetTokens.Remove(resetToken);
+            await appDbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<string> GeneratePasswordResetTokenAsync(string? email, string? phoneNumber = null)
+        {
+            var clientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL");
+            // Kiểm tra user có tồn tại không
+            var user = await appDbContext.ApplicationUsers
+                .FirstOrDefaultAsync(u => u.Email == email || u.Phone == phoneNumber);
+            if (user == null) return null;
+
+            var existingToken = await appDbContext.PasswordResetTokens
+                .FirstOrDefaultAsync(t => t.Email == email || t.PhoneNumber == phoneNumber);
+            if (existingToken != null)
+            {
+                appDbContext.PasswordResetTokens.Remove(existingToken);
+                await appDbContext.SaveChangesAsync();
+            }
+            string token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+            var resetToken = new PasswordResetTokens
+            {
+                Email = email,
+                PhoneNumber = phoneNumber,
+                Token = token,
+                IsUsed = false
+            };
+            string verificationLink = $"{clientUrl}/vi/auth/reset-password?" +
+                 $"email={Uri.EscapeDataString(user.Email ?? "")}" +
+                 $"&phoneNumber={Uri.EscapeDataString(user.Phone ?? "")}" +
+                 $"&token={Uri.EscapeDataString(token)}";
+                 
+            string templateName = "ResetPasswordTemplate.cshtml";
+
+            string emailBody = await emailService.GetEmailTemplateAsync(user.FullName, verificationLink, templateName);
+
+            await emailService.SendEmailAsync(user.Email, "Xác minh email - Ovie Software", emailBody);
+
+            await appDbContext.PasswordResetTokens.AddAsync(resetToken);
+            await appDbContext.SaveChangesAsync();
+            return token;
         }
     }
 }

@@ -25,6 +25,12 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<List<ApplicationUser?>> GetAllMembersAsync(Partner partner);
 
+        Task<bool> ResetPasswordAsync(ResetPasswordDTO request);
+
+        Task<string> GeneratePasswordResetTokenAsync(string? email, string? phoneNumber = null);
+
+        Task<bool> IsValidResetTokenAsync(string? email, string? phoneNumber, string token);
+
     }
 
 }
