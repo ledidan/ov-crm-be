@@ -200,7 +200,6 @@ app.UseSwaggerUI();
 // }
 
 // **  Enable Authentication & Authorization
-app.UseHttpsRedirection();
 app.UseCors("OVIE_CLIENT");
 app.UseAuthentication();
 app.UseAuthorization();
