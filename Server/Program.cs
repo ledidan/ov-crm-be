@@ -76,7 +76,7 @@ builder.Services.Configure<MongoDBSettings>(options =>
      ?? Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING");
 
 
-    options.DatabaseName = builder.Configuration.GetValue<string>("MongoDBSettings:DatabaseName") 
+    options.DatabaseName = builder.Configuration.GetValue<string>("MongoDBSettings:DatabaseName")
     ?? Environment.GetEnvironmentVariable("MONGODB_DATABASE");
 
 });
@@ -139,9 +139,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<S3Service>();
 
 // authentication
-var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? builder.Configuration["JwtSection:Key"];
-var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? builder.Configuration["JwtSection:Issuer"];
-var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? builder.Configuration["JwtSection:Audience"];
+var jwtKey = builder.Configuration["JwtSection:Key"];
+var jwtIssuer = builder.Configuration["JwtSection:Issuer"];
+var jwtAudience = builder.Configuration["JwtSection:Audience"];
 
 builder.Services.AddAuthentication(options =>
 {
