@@ -16,9 +16,14 @@ namespace Data.DTOs
         [Required]
         public required string Password { get; set; }
 
+
+
         [DataType(DataType.Password)]
         [Compare(nameof(Password))]
         [Required]
         public required string ConfirmPassword { get; set; }
+
+        public int PartnerId { get; set; }
+        public int EmployeeId { get; set; }
     }
 }

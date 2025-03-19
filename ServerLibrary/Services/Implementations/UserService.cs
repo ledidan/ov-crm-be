@@ -152,6 +152,7 @@ namespace ServerLibrary.Services.Implementations
                 var partnerUser = await appDbContext.PartnerUsers
                     .Include(_ => _.Partner)
                     .FirstOrDefaultAsync(x => x.User.Id == applicationUser.Id);
+
                 userClaims.Add(new Claim("CompanyName", partnerUser.Partner.Name));
                 if (partnerUser == null) return string.Empty;
 
@@ -173,7 +174,7 @@ namespace ServerLibrary.Services.Implementations
                 issuer: config.Value.Issuer,
                 audience: config.Value.Audience,
                 claims: userClaims,
-                expires: DateTime.Now.AddHours(4),
+                expires: DateTime.Now.AddHours(24),
                 signingCredentials: credentials
             );
             return new JwtSecurityTokenHandler().WriteToken(token);
@@ -469,7 +470,7 @@ namespace ServerLibrary.Services.Implementations
                  $"email={Uri.EscapeDataString(user.Email ?? "")}" +
                  $"&phoneNumber={Uri.EscapeDataString(user.Phone ?? "")}" +
                  $"&token={Uri.EscapeDataString(token)}";
-                 
+
             string templateName = "ResetPasswordTemplate.cshtml";
 
             string emailBody = await emailService.GetEmailTemplateAsync(user.FullName, verificationLink, templateName);
@@ -479,6 +480,45 @@ namespace ServerLibrary.Services.Implementations
             await appDbContext.PasswordResetTokens.AddAsync(resetToken);
             await appDbContext.SaveChangesAsync();
             return token;
+        }
+
+        public async Task<GeneralResponse> CreateSysAdminAsync(RegisterSysAdmin user, string? role)
+        {
+            var checkingUser = await FindUserByEmail(user.Email);
+            if (checkingUser != null) return new GeneralResponse(false, "User already exists");
+            var checkingRole = await CheckSystemRole(role);
+            if (checkingRole == null) return new GeneralResponse(false, "Role not found");
+            Partner? partner = null;
+            Employee? employee = null;
+            if (role != Constants.Role.SysAdmin)
+            {
+                // Check Partner
+                partner = await partnerService.FindById(user.PartnerId);
+                if (partner == null) return new GeneralResponse(false, "Partner not found");
+
+                employee = await employeeService.FindByIdAsync(user.EmployeeId);
+                if (employee == null)
+                    return new GeneralResponse(false, "Employee not found");
+            }
+            var applicationUser = await appDbContext.InsertIntoDb(new ApplicationUser()
+            {
+                Email = user.Email,
+                FullName = user.FullName,
+                AccountStatus = AccountStatus.Verified,
+                Password = BCrypt.Net.BCrypt.HashPassword(user.Password),
+            });
+            await appDbContext.InsertIntoDb(new UserRole() { Role = checkingRole, User = applicationUser });
+
+            if (role != Constants.Role.SysAdmin)
+            {
+                await appDbContext.InsertIntoDb(new PartnerUser()
+                {
+                    User = applicationUser,
+                    Partner = partner,
+                    EmployeeId = user.EmployeeId
+                });
+            }
+            return new GeneralResponse(true, $"{role} created");
         }
     }
 }

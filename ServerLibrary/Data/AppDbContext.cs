@@ -192,17 +192,111 @@ namespace ServerLibrary.Data
             {
                 j.HasKey(ce => new { ce.OrderId, ce.EmployeeId, ce.PartnerId });
             });
+
+            builder.Entity<Order>()
+        .HasMany(c => c.Invoices)
+        .WithMany(e => e.Orders)
+        .UsingEntity<InvoiceOrders>(
+            j => j
+                .HasOne(ce => ce.Invoice)
+                .WithMany(e => e.InvoiceOrders)
+                .HasForeignKey(ce => ce.InvoiceId)
+                .OnDelete(DeleteBehavior.Restrict),
+            j => j
+                .HasOne(ce => ce.Order)
+                .WithMany(c => c.InvoiceOrders)
+                .HasForeignKey(ce => ce.OrderId)
+                .OnDelete(DeleteBehavior.Cascade),
+            j =>
+            {
+                j.HasKey(ce => new { ce.OrderId, ce.InvoiceId, ce.PartnerId });
+            });
+            builder.Entity<Order>()
+        .HasMany(c => c.Contacts)
+        .WithMany(e => e.Orders)
+        .UsingEntity<OrderContacts>(
+            j => j
+                .HasOne(ce => ce.Contact)
+                .WithMany(e => e.OrderContacts)
+                .HasForeignKey(ce => ce.ContactId)
+                .OnDelete(DeleteBehavior.Restrict),
+            j => j
+                .HasOne(ce => ce.Order)
+                .WithMany(c => c.OrderContacts)
+                .HasForeignKey(ce => ce.OrderId)
+                .OnDelete(DeleteBehavior.Cascade),
+            j =>
+            {
+                j.HasKey(ce => new { ce.OrderId, ce.ContactId, ce.PartnerId });
+            });
+
+            builder.Entity<Customer>()
+        .HasMany(c => c.Contacts)
+        .WithMany(e => e.Customers)
+        .UsingEntity<CustomerContacts>(
+            j => j
+                .HasOne(ce => ce.Contact)
+                .WithMany(e => e.CustomerContacts)
+                .HasForeignKey(ce => ce.ContactId)
+                .OnDelete(DeleteBehavior.Restrict),
+            j => j
+                .HasOne(ce => ce.Customer)
+                .WithMany(c => c.CustomerContacts)
+                .HasForeignKey(ce => ce.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade),
+            j =>
+            {
+                j.HasKey(ce => new { ce.CustomerId, ce.ContactId, ce.PartnerId });
+            });
+            builder.Entity<Customer>()
+        .HasMany(c => c.Orders)
+        .WithMany(e => e.Customers)
+        .UsingEntity<CustomerOrders>(
+            j => j
+                .HasOne(ce => ce.Order)
+                .WithMany(e => e.CustomerOrders)
+                .HasForeignKey(ce => ce.OrderId)
+                .OnDelete(DeleteBehavior.Restrict),
+            j => j
+                .HasOne(ce => ce.Customer)
+                .WithMany(c => c.CustomerOrders)
+                .HasForeignKey(ce => ce.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade),
+            j =>
+            {
+                j.HasKey(ce => new { ce.CustomerId, ce.OrderId, ce.PartnerId });
+            });
+
+            builder.Entity<Appointment>()
+        .HasOne(a => a.Activity)
+        .WithOne(a => a.Appointment)
+        .HasForeignKey<Appointment>(a => a.ActivityId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Mission>()
+                .HasOne(m => m.Activity)
+                .WithOne(a => a.Mission)
+                .HasForeignKey<Mission>(m => m.ActivityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Call>()
+                .HasOne(c => c.Activity)
+                .WithOne(a => a.Call)
+                .HasForeignKey<Call>(c => c.ActivityId)
+                .OnDelete(DeleteBehavior.Cascade);
             base.OnModelCreating(builder);
 
         }
         public DbSet<InvoiceEmployees> InvoiceEmployees { get; set; }
+        public DbSet<CustomerContacts> CustomerContacts { get; set; }
+        public DbSet<CustomerOrders> CustomerOrders { get; set; }
         public DbSet<CustomerEmployees> CustomerEmployees { get; set; }
         public DbSet<ProductEmployees> ProductEmployees { get; set; }
         public DbSet<ContactEmployees> ContactEmployees { get; set; }
         public DbSet<OrderEmployees> OrderEmployees { get; set; }
+        public DbSet<InvoiceOrders> InvoiceOrders { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
-
-
+        public DbSet<OrderContacts> OrderContacts { get; set; }
         public DbSet<PasswordResetTokens> PasswordResetTokens { get; set; }
         public DbSet<EmailVerification> EmailVerifications { get; set; }
         public DbSet<SystemRole> SystemRoles { get; set; }
@@ -213,6 +307,9 @@ namespace ServerLibrary.Data
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Customer> Customers { get; set; }
 
+        public DbSet<Appointment> Appointments { get; set; }
+        public DbSet<Mission> Missions { get; set; }
+        public DbSet<Call> Calls { get; set; }
         public DbSet<Contact> Contacts { get; set; }
 
         public DbSet<Invoice> Invoices { get; set; }

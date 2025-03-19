@@ -71,11 +71,14 @@ namespace Data.Entities
         public Employee Employee { get; set; }
         public Partner Partner { get; set; }
         public List<Contact> Contacts { get; set; } = new List<Contact>();
-
+        public List<Activity> Activities { get; set; } = new List<Activity>();
+        public List<Invoice> Invoices { get; set; } = new List<Invoice>();
         public List<Employee> Employees { get; set; } = new List<Employee>();
-
         public List<Order> Orders { get; set; } = new List<Order>();
         public ICollection<CustomerEmployees> CustomerEmployees { get; set; } = new List<CustomerEmployees>();
+        public ICollection<CustomerContacts> CustomerContacts { get; set; } = new List<CustomerContacts>();
+        public ICollection<CustomerOrders> CustomerOrders { get; set; } = new List<CustomerOrders>();
+
 
     }
 }

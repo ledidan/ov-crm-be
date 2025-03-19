@@ -9,7 +9,7 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IContactService
     {
-        Task<GeneralResponse> CreateAsync(CreateContact contact, Employee employee, Partner partner);
+        Task<DataStringResponse> CreateAsync(CreateContact contact, Employee employee, Partner partner);
 
         Task<Contact?> GetByIdAsync(int id, Employee employee, Partner partner);
 
@@ -23,7 +23,7 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<GeneralResponse?> DeleteIdAsync(int id, Employee employee, Partner partner);
 
-        Task<List<ContactOrderDTO?>> GetAllOrdersByContactAsync(int contactId, Employee employee, Partner partner);
+        Task<List<OptionalOrderDTO?>> GetAllOrdersByContactAsync(int contactId, Employee employee, Partner partner);
 
         Task<List<ContactInvoiceDTO?>> GetAllInvoicesByContactAsync(int contactId, Employee employee, Partner partner);
     }

@@ -97,15 +97,22 @@ namespace Data.Entities
         public decimal? ReturnedSummary { get; set; }
 
         public decimal? RevenueAccountingAmount { get; set; }
-        public int? InvoiceId { get; set; }
-        public Invoice? Invoice { get; set; }
         public DateTime? RevenueRecognitionDate { get; set; }
         public int? CustomerId { get; set; }
+        public int? OwnerTaskExecuteId { get; set; }
         public int? ContactId { get; set; }
         public string? ContactName { get; set; }
+        public List<Contact> Contacts { get; set; } = new List<Contact>();
+        public List<Activity> Activities { get; set; } = new List<Activity>();
         public List<Employee> Employees { get; set; } = new List<Employee>();
-        public virtual required Partner Partner { get; set; }
+        public List<Customer> Customers { get; set; } = new List<Customer>();
+        public List<Invoice> Invoices   { get; set; } = new List<Invoice>();
+        public required Partner Partner { get; set; }
         public ICollection<OrderEmployees> OrderEmployees { get; set; } = new List<OrderEmployees>();
+        public ICollection<OrderContacts> OrderContacts { get; set; } = new List<OrderContacts>();
+        public ICollection<CustomerOrders> CustomerOrders { get; set; } = new List<CustomerOrders>();
+
+           public ICollection<InvoiceOrders> InvoiceOrders { get; set; } = new List<InvoiceOrders>();
 
     }
 }

@@ -27,18 +27,17 @@ namespace Server.Controllers
         }
 
 
-        [HttpGet("get-all")]
+        [HttpGet("activities")]
 
         public async Task<IActionResult> GetAllActivities()
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
-            var employee = await _employeeService.FindByClaim(identity);
             if (partner == null)
                 return BadRequest("Model is empty");
             try
             {
-                var result = await _activityService.GetAllActivityAsync(employee, partner);
+                var result = await _activityService.GetAllActivityAsync(partner);
                 var resultDTO = result.ToList();
                 return Ok(resultDTO);
             }
@@ -52,8 +51,8 @@ namespace Server.Controllers
             }
         }
 
-        [HttpPost("create-appointment")]
-        public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentDTO dto)
+        [HttpPost("appointment")]
+        public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentRequestDTO request)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -72,15 +71,45 @@ namespace Server.Controllers
                 return NotFound("Employee not found");
             }
 
-            var response = await _activityService.CreateAppointmentAsync(dto, employee, partner);
+            var response = await _activityService.CreateAppointmentAsync(request.Activity, request.Appointment, partner);
+            if (response != null)
+            {
+                return Ok(response);
+            }
+            return BadRequest("Tạo lịch hẹn không thành công");
+        }
+        [HttpPost("call")]
+        public async Task<IActionResult> CreateCall([FromBody] CreateCallRequestDTO request)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (partner == null)
+            {
+                return NotFound("Partner not found");
+            }
+
+            if (employee == null)
+            {
+                return NotFound("Employee not found");
+            }
+
+            var response = await _activityService.CreateCallAsync(request.Activity, request.Call, partner);
+
             if (response.Flag)
             {
                 return Ok(response);
             }
             return BadRequest(response.Message);
         }
-        [HttpPost("create-call")]
-        public async Task<IActionResult> CreateCall([FromBody] CreateCallDTO dto)
+
+        [HttpPost("mission")]
+        public async Task<IActionResult> CreateMission([FromBody] CreateMissionRequestDTO request)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -100,36 +129,7 @@ namespace Server.Controllers
                 return NotFound("Employee not found");
             }
 
-            var response = await _activityService.CreateCallAsync(dto, employee, partner);
-            if (response.Flag)
-            {
-                return Ok(response);
-            }
-            return BadRequest(response.Message);
-        }
-
-        [HttpPost("create-mission")]
-        public async Task<IActionResult> CreateMission([FromBody] CreateMissionDTO dto)
-        {
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            var partner = await _partnerService.FindByClaim(identity);
-            var employee = await _employeeService.FindByClaim(identity);
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            if (partner == null)
-            {
-                return NotFound("Partner not found");
-            }
-
-            if (employee == null)
-            {
-                return NotFound("Employee not found");
-            }
-
-            var response = await _activityService.CreateMissionAsync(dto, employee, partner);
+            var response = await _activityService.CreateMissionAsync(request.Activity, request.Mission, partner);
             if (response.Flag)
             {
                 return Ok(response);
@@ -142,46 +142,46 @@ namespace Server.Controllers
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
-            var employee = await _employeeService.FindByClaim(identity);
+            // var employee = await _employeeService.FindByClaim(identity);
             if (partner == null)
             {
-                return NotFound("Partner not found");
+                return NotFound("Không tìm thấy tổ chức");
             }
 
 
-            if (employee == null)
-            {
-                return NotFound("Employee not found");
-            }
+            // if (employee == null)
+            // {
+            //     return NotFound("Employee not found");
+            // }
 
-            var appointment = await _activityService.GetByIdAsync(id, employee, partner);
+            var appointment = await _activityService.GetByIdAsync(id, partner);
             if (appointment == null)
             {
                 return NotFound();
             }
             return Ok(appointment);
         }
-        [HttpPut("appointment/{id:int}")]
-        public async Task<IActionResult> UpdateAppointment(int id, [FromBody] UpdateAppointmentDTO updateAppointmentDTO)
+        [HttpPut("appointment")]
+        public async Task<IActionResult> UpdateAppointment([FromBody] UpdateRequestAppointmentDTO request)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
-            var employee = await _employeeService.FindByClaim(identity);
-
+            // var employee = await _employeeService.FindByClaim(identity);
             if (partner == null)
                 return NotFound("Không tìm thấy tổ chức");
-            if (employee == null)
-                return NotFound("Không tìm thấy nhân viên");
+            // if (employee == null)
+            //     return NotFound("Không tìm thấy nhân viên");
 
-            var result = await _activityService.UpdateAppointmentByIdAsync(id, updateAppointmentDTO, employee, partner);
+            var result = await _activityService.
+            UpdateAppointmentByIdAsync(request.Activity.Id, request.Activity, request.Appointment, partner);
             if (result == null || !result.Flag)
                 return BadRequest(result?.Message ?? "Cập nhật lịch hẹn thất bại");
 
             return Ok(result);
         }
 
-        [HttpPut("call/{id:int}")]
-        public async Task<IActionResult> UpdateCall(int id, [FromBody] UpdateCallDTO updateCallDTO)
+        [HttpPut("call")]
+        public async Task<IActionResult> UpdateCall([FromBody] UpdateRequestCallDTO request)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -192,15 +192,15 @@ namespace Server.Controllers
             if (employee == null)
                 return NotFound("Không tìm thấy nhân viên");
 
-            var result = await _activityService.UpdateCallByIdAsync(id, updateCallDTO, employee, partner);
+            var result = await _activityService.UpdateCallByIdAsync(request.Activity.Id, request.Activity, request.Call, partner);
             if (result == null || !result.Flag)
                 return BadRequest(result?.Message ?? "Cập nhật cuộc gọi thất bại");
 
             return Ok(result);
         }
 
-        [HttpPut("mission/{id:int}")]
-        public async Task<IActionResult> UpdateMission(int id, [FromBody] UpdateMissionDTO updateMissionDTO)
+        [HttpPut("mission")]
+        public async Task<IActionResult> UpdateMission([FromBody] UpdateRequestMissionDTO request)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -211,19 +211,33 @@ namespace Server.Controllers
             if (employee == null)
                 return NotFound("Không tìm thấy nhân viên");
 
-            var result = await _activityService.UpdateMissionByIdAsync(id, updateMissionDTO, employee, partner);
+            var result = await _activityService
+            .UpdateMissionByIdAsync(request.Activity.Id,
+            request.Activity, request.Mission, partner);
+
             if (result == null || !result.Flag)
                 return BadRequest(result?.Message ?? "Cập nhật nhiệm vụ thất bại");
 
             return Ok(result);
         }
-         [HttpDelete("bulk-delete")]
+
+        [HttpDelete("bulk-delete")]
         public async Task<IActionResult> DeleteBulkActivities([FromQuery] string ids)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
             var employee = await _employeeService.FindByClaim(identity);
             var response = await _activityService.DeleteBulkActivities(ids, employee, partner);
+            return Ok(response);
+        }
+
+        [HttpDelete("{id:int}/delete")]
+        public async Task<IActionResult> DeleteActivityById(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            var response = await _activityService.DeleteIdAsync(id, employee, partner);
             return Ok(response);
         }
     }

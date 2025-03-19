@@ -23,7 +23,7 @@ namespace Server.Controllers
             _partnerService = partnerService;
             _employeeService = employeeService;
         }
-        [HttpPost("create-contact")]
+        [HttpPost("create")]
         [Authorize(Roles = "User,Admin,SysAdmin")]
         public async Task<IActionResult> CreateContactAsync(CreateContact contact)
         {
@@ -41,7 +41,7 @@ namespace Server.Controllers
             return Ok(result);
         }
         [Authorize]
-        [HttpGet("get-all")]
+        [HttpGet("contacts")]
         public async Task<IActionResult> GetAllContactAsync()
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -164,7 +164,7 @@ namespace Server.Controllers
             return Ok(response);
         }
         [Authorize]
-        [HttpGet("{id:int}/all-order")]
+        [HttpGet("{id:int}/orders")]
         public async Task<IActionResult> GetAllOrdersByContact(int id)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -185,7 +185,7 @@ namespace Server.Controllers
             return BadRequest("Failed to get order");
         }
         [Authorize]
-        [HttpGet("{id:int}/all-invoice")]
+        [HttpGet("{id:int}/invoices")]
         public async Task<IActionResult> GetAllInvoicesByContact(int id)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;

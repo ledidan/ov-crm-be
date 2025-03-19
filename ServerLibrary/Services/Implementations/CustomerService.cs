@@ -1,6 +1,7 @@
 ﻿using System.Runtime.ConstrainedExecution;
 using AutoMapper;
 using Data.DTOs;
+using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Enums;
 using Data.Responses;
@@ -34,18 +35,58 @@ namespace ServerLibrary.Services.Implementations
             _employeeService = employeeService;
             _mapper = mapper;
         }
-        public async Task<GeneralResponse> CreateAsync(CreateCustomer customer, Employee employee, Partner partner)
+
+
+
+        public async Task<GeneralResponse?> BulkAddContactsIntoCustomer(List<int> contactIds, int customerId, Employee employee, Partner partner)
+        {
+            if (contactIds == null || !contactIds.Any())
+                return new GeneralResponse(false, "Danh sách liên hệ không được để trống!");
+
+            var customer = await GetCustomerByIdAsync(customerId, employee, partner);
+
+            if (customer == null)
+                return new GeneralResponse(false, "Không tìm thấy khách hàng!");
+
+            var contacts = await _appDbContext.Contacts
+                .Where(c => contactIds.Contains(c.Id) && c.PartnerId == partner.Id)
+                .ToListAsync();
+
+            if (!contacts.Any())
+                return new GeneralResponse(false, "Không tìm thấy liên hệ !");
+
+            var existingContactIds = customer.CustomerContacts.Select(oc => oc.ContactId).ToHashSet();
+            var newCustomerContacts = contacts
+                .Where(c => !existingContactIds.Contains(c.Id))
+                .Select(c => new CustomerContacts
+                {
+                    CustomerId = customer.Id,
+                    ContactId = c.Id,
+                    PartnerId = partner.Id
+                })
+                .ToList();
+
+            if (!newCustomerContacts.Any())
+                return new GeneralResponse(false, "Liên hệ đã liên kết với khách hàng !");
+
+            _appDbContext.CustomerContacts.AddRange(newCustomerContacts);
+            await _appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Thêm liên hệ vào thông tin khách hàng thành công!");
+        }
+
+        public async Task<DataStringResponse> CreateAsync(CreateCustomer customer, Employee employee, Partner partner)
         {
             var codeGenerator = new GenerateNextCode(_appDbContext);
 
-            if (customer == null) return new GeneralResponse(false, "Model is empty");
+            if (customer == null) return new DataStringResponse(false, "Thông tin khách hàng rỗng !");
 
             // Check partner
-            if (partner == null) return new GeneralResponse(false, "Partner not found");
+            if (partner == null) return new DataStringResponse(false, "Thông tin tổ chức không để trống !");
 
             // Check employee   
             if (employee == null)
-                return new GeneralResponse(false, "Employee not found");
+                return new DataStringResponse(false, "Không tìm thấy nhân viên");
 
             if (string.IsNullOrEmpty(customer.AccountNumber))
             {
@@ -125,7 +166,7 @@ namespace ServerLibrary.Services.Implementations
             });
 
             await _appDbContext.InsertIntoDb(newCustomer);
-            return new GeneralResponse(true, "Customer created");
+            return new DataStringResponse(true, "Tạo khách hàng thành công !", newCustomer.Id.ToString());
         }
 
 
@@ -139,7 +180,8 @@ namespace ServerLibrary.Services.Implementations
             {
                 return new GeneralResponse(false, "Customer not found ");
             }
-            var employeeExists = customer.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id && ce.AccessLevel == AccessLevel.ReadWrite);
+            var employeeExists = customer.CustomerEmployees
+            .Any(ce => ce.EmployeeId == employee.Id && ce.AccessLevel == AccessLevel.ReadWrite);
 
             if (!employeeExists)
             {
@@ -185,7 +227,8 @@ namespace ServerLibrary.Services.Implementations
 
             // Check if the employee has the required permission to delete each customer
             var unauthorizedCustomers = customers
-                .Where(c => !c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id && ce.AccessLevel == AccessLevel.ReadWrite))
+                .Where(c => !c.CustomerEmployees
+                .Any(ce => ce.EmployeeId == employee.Id && ce.AccessLevel == AccessLevel.ReadWrite))
                 .ToList();
 
             if (unauthorizedCustomers.Any())
@@ -199,6 +242,30 @@ namespace ServerLibrary.Services.Implementations
 
             return new GeneralResponse(true, "Customers deleted successfully");
         }
+
+        public async Task<List<Activity>> GetAllActivitiesByIdAsync(int id, Partner partner)
+        {
+            if (id == null)
+            {
+                throw new ArgumentException("ID Khách hàng không được để trống");
+            }
+
+            if (partner == null)
+            {
+                throw new ArgumentException("Thông tin tổ chức không được bỏ trống");
+            }
+
+            var result = await _appDbContext.Activities
+            .Where(c => c.CustomerId == id && partner.Id == partner.Id)
+            .ToListAsync();
+
+            if (result == null)
+            {
+                return new List<Activity>();
+            }
+            return result;
+        }
+
         public async Task<List<Customer?>> GetAllAsync(Employee employee, Partner partner)
         {
             var result = await _appDbContext.Customers
@@ -223,6 +290,110 @@ namespace ServerLibrary.Services.Implementations
             return result.Any() ? result : new List<Customer>();
         }
 
+        public async Task<List<ContactDTO>> GetAllContactAvailableByCustomer(int id, Partner partner)
+        {
+            if (id == null)
+            {
+                throw new ArgumentException("ID khách hàng không được để trống !");
+            }
+            if (partner == null)
+            {
+                throw new ArgumentException("Thông tin tổ chức không được bỏ trống");
+            }
+
+            var result = await _appDbContext.Contacts
+         .Where(c => !c.CustomerContacts.Any(cc => cc.CustomerId == id && cc.PartnerId == partner.Id))
+         .Select(c => new ContactDTO
+         {
+             Id = c.Id,
+             ContactCode = c.ContactCode,
+             ContactName = c.ContactName,
+             FullName = $"{c.LastName} {c.FirstName}",
+             SalutationID = c.SalutationID,
+             OfficeEmail = c.OfficeEmail,
+             TitleID = c.TitleID,
+             Mobile = c.Mobile,
+             Email = c.Email,
+         }).ToListAsync();
+            return result;
+        }
+
+        public async Task<List<ContactDTO>> GetAllContactsByIdAsync(int id, Partner partner)
+        {
+            if (id == null)
+            {
+                throw new ArgumentException("ID khách hàng không được để trống !");
+            }
+            if (partner == null)
+            {
+                throw new ArgumentException("Thông tin tổ chức không được bỏ trống");
+            }
+
+            var result = await _appDbContext.Contacts
+            .Where(c => c.CustomerContacts.Any(cc => cc.CustomerId == id && cc.PartnerId == partner.Id))
+            .Select(c => new ContactDTO
+            {
+                Id = c.Id,
+                ContactCode = c.ContactCode,
+                ContactName = c.ContactName,
+                FullName = $"{c.LastName} {c.FirstName}",
+                SalutationID = c.SalutationID,
+                OfficeEmail = c.OfficeEmail,
+                TitleID = c.TitleID,
+                Mobile = c.Mobile,
+                Email = c.Email,
+            }).ToListAsync();
+            return result;
+        }
+
+        public async Task<List<Invoice>> GetAllInvoicesByIdAsync(int id, Partner partner)
+        {
+            if (id == null)
+            {
+                throw new ArgumentException("ID khách hàng không được để trống !");
+            }
+            if (partner == null)
+            {
+                throw new ArgumentException("Thông tin tổ chức không được bỏ trống");
+            }
+
+            var result = await _appDbContext.Invoices
+          .Where(o => o.CustomerId == id && o.Partner.Id == partner.Id)
+          .ToListAsync();
+
+
+            if (result == null) return new List<Invoice>();
+            return result;
+        }
+
+        public async Task<List<OptionalOrderDTO>> GetAllOrdersByIdAsync(int id, Partner partner)
+        {
+            if (id == null)
+            {
+                throw new ArgumentException("ID khách hàng không được để trống !");
+            }
+            if (partner == null)
+            {
+                throw new ArgumentException("Thông tin tổ chức không được bỏ trống");
+            }
+
+            var orders = await _appDbContext.Orders
+            .Where(o => o.CustomerId == id && o.Partner.Id == partner.Id)
+            .ToListAsync();
+
+            if (!orders.Any())
+            {
+                return new List<OptionalOrderDTO>();
+            }
+            var orderDtos = orders.Select(order =>
+            {
+                var dto = _mapper.Map<OptionalOrderDTO>(order);
+                return dto;
+            }).ToList();
+
+            return orderDtos;
+        }
+
         public async Task<Customer?> GetCustomerByIdAsync(int id, Employee employee, Partner partner)
         {
             var customer = await _appDbContext.Customers
@@ -237,18 +408,62 @@ namespace ServerLibrary.Services.Implementations
             }
             return customer;
         }
-        public async Task<CustomerDTO?> UpdateAsync(int id, CustomerDTO updateDto, Employee employee, Partner partner)
+
+        public async Task<GeneralResponse?> RemoveContactFromCustomer(int id, int contactId, Partner partner)
         {
+
+            if (id == null)
+            {
+                return new GeneralResponse(false, "ID khách hàng không được để trống !");
+            }
+            if (contactId == null)
+            {
+                return new GeneralResponse(false, "Thông tin liên không được bỏ trống");
+            }
+            if (partner == null)
+            {
+                return new GeneralResponse(false, "Thông tin tổ chức không được bỏ trống");
+            }
+            var customerContact = await _appDbContext.CustomerContacts
+         .FirstOrDefaultAsync(cc => cc.CustomerId == id
+                                 && cc.ContactId == contactId
+                                 && cc.PartnerId == partner.Id);
+            if (customerContact == null)
+            {
+                return new GeneralResponse(false, "Không tìm thấy bản ghi cần xóa!");
+            }
+            _appDbContext.CustomerContacts.Remove(customerContact);
+
+            await _appDbContext.SaveChangesAsync();
+
+
+            return new GeneralResponse(true, "Xóa thành công!");
+
+        }
+
+
+        public async Task<GeneralResponse?> UpdateAsync(int id, CustomerDTO updateDto, Employee employee, Partner partner)
+        {
+            if (employee == null || partner == null)
+            {
+                return new GeneralResponse(false, "Không tìm thấy thông tin nhân viên hoặc tổ chức");
+            }
+            Console.WriteLine("Is checking customer existed in server");
             var existingCustomer = await _appDbContext.Customers
                             .Include(c => c.CustomerEmployees).AsNoTracking()
                             .FirstOrDefaultAsync(c =>
                                 c.Id == id &&
                                 c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id && ce.Employee.PartnerId == partner.Id));
             if (existingCustomer == null)
-                return null;
+                return new GeneralResponse(false, "Không tìm thấy thông tin khách hàng để cập nhật");
+            Console.WriteLine("Prepared to update existing customer");
             _mapper.Map(updateDto, existingCustomer);
             await _appDbContext.UpdateDb(existingCustomer);
-            return _mapper.Map<CustomerDTO>(existingCustomer);
+            System.Console.WriteLine("Successfully updated customer");
+
+            return new GeneralResponse(true, "Cập nhật thông tin khách hàng thành công.");
+
+
         }
 
         public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, CustomerDTO updateCustomer, Employee employee, Partner partner)

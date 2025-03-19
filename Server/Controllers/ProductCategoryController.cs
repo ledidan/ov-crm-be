@@ -37,7 +37,7 @@ namespace Server.Controllers
             return Ok(result);
         }
 
-        [HttpGet("get-all")]
+        [HttpGet("productCategories")]
         [Authorize(Roles = "User,Admin")]
         public async Task<List<AllProductCategoryDTO>> GetProductCategoriesAsync()
         {

@@ -29,178 +29,6 @@ namespace ServerLibrary.Services.Implementations
             _employeeService = employeeService;
         }
 
-        public async Task<GeneralResponse> CreateAppointmentAsync(CreateAppointmentDTO appointmentDTO, Employee employee, Partner partner)
-        {
-            var partnerData = await _partnerService.FindById(partner.Id);
-            if (partnerData == null)
-            {
-                return new GeneralResponse(false, "Không tìm thấy tổ chức");
-            }
-
-            if (employee != null)
-            {
-                var employeeData = await _employeeService.FindByIdAsync(employee.Id);
-                if (employeeData == null)
-                {
-                    return new GeneralResponse(false, "Không tìm thấy nhân viên");
-                }
-            }
-            else
-            {
-                return new GeneralResponse(false, "ID Nhân viên không được để trống");
-            }
-
-            await _appDbContext.InsertIntoDb(new Activity()
-            {
-                TagID = appointmentDTO.TagID,
-                TagColor = appointmentDTO.TagColor,
-                IsDeleted = appointmentDTO.IsDeleted,
-                ActivityName = appointmentDTO.ActivityName,
-                ActivityCategory = appointmentDTO.ActivityCategory,
-                DueDate = appointmentDTO.DueDate,
-                StatusID = appointmentDTO.StatusID,
-                PriorityID = appointmentDTO.PriorityID,
-                IsSendNotificationEmail = appointmentDTO.IsSendNotificationEmail,
-                IsRepeat = appointmentDTO.IsRepeat,
-                ModuleType = ActivityModuleType.Appointment.ToString(),
-                IsReminder = appointmentDTO.IsReminder,
-                Description = appointmentDTO.Description,
-                EventStart = appointmentDTO.EventStart,
-                EventEnd = appointmentDTO.EventEnd,
-                Place = appointmentDTO.Place,
-                Duplicate = appointmentDTO.Duplicate,
-                SendEmail = appointmentDTO.SendEmail,
-                SearchTagID = appointmentDTO.SearchTagID,
-                IsPublic = appointmentDTO.IsPublic,
-                IsAllDay = appointmentDTO.IsAllDay,
-                Lat = appointmentDTO.Lat,
-                Long = appointmentDTO.Long,
-                IsOpen = appointmentDTO.IsOpen,
-                Distance = appointmentDTO.Distance,
-                CustomerId = appointmentDTO.CustomerId,
-                TaskOwnerId = appointmentDTO.TaskOwnerId,
-                ModifiedBy = appointmentDTO.ModifiedBy,
-                ContactId = appointmentDTO.ContactId,
-                RelatedUsersID = appointmentDTO.RelatedUsersID,
-                PartnerId = partner.Id,
-            });
-            return new GeneralResponse(true, "Tạo lịch hẹn thành công");
-        }
-
-        public async Task<GeneralResponse> CreateCallAsync(CreateCallDTO callDTO, Employee employee, Partner partner)
-        {
-            // Validate that the partner exists.
-            var partnerData = await _partnerService.FindById(partner.Id);
-            if (partnerData == null)
-            {
-                return new GeneralResponse(false, "Không tìm thấy tổ chức");
-            }
-
-            // Validate that the employee exists.
-            if (employee == null)
-            {
-                return new GeneralResponse(false, "ID Nhân viên không được để trống");
-            }
-            var employeeData = await _employeeService.FindByIdAsync(employee.Id);
-            if (employeeData == null)
-            {
-                return new GeneralResponse(false, "Không tìm thấy nhân viên");
-            }
-
-            // Map properties from CreateCallDTO to a new call entity (CallDTO).
-            // Adjust the mapping as needed if your domain entity differs.
-            var newCall = new Activity
-            {
-                TagID = callDTO.TagID,
-                TagColor = callDTO.TagColor,
-                IsDeleted = callDTO.IsDeleted,
-                DueDate = callDTO.DueDate,
-                StatusID = callDTO.StatusID,
-                PriorityID = callDTO.PriorityID,
-                CallStart = callDTO.CallStart,
-                CallDuration = callDTO.CallDuration,
-                Description = callDTO.Description,
-                ActivityName = callDTO.ActivityName,
-                CallName = callDTO.ActivityName,
-                ModuleType = ActivityModuleType.Call.ToString(),
-                CallGoalID = callDTO.CallGoalID,
-                CallTypeID = callDTO.CallTypeID,
-                CallDone = callDTO.CallDone,
-                CallResult = callDTO.CallResult,
-                EventStart = callDTO.CallStart,
-                EventEnd = callDTO.CallEnd,
-                Duplicate = callDTO.Duplicate,
-                SendEmail = callDTO.SendEmail,
-                CallID = callDTO.CallID,
-                CallRecord = callDTO.CallRecord,
-                CallEnd = callDTO.CallEnd,
-                CallResultID = callDTO.CallResultID,
-                PhoneNumber = callDTO.PhoneNumber,
-                CustomerId = callDTO.CustomerId,
-                TaskOwnerId = callDTO.TaskOwnerId,
-                ContactId = callDTO.ContactId,
-                RelatedUsersID = callDTO.RelatedUsersID,
-                ModifiedBy = employee.Id,
-                PartnerId = partner.Id,
-            };
-
-            // Persist the new call using the repository.
-            await _appDbContext.AddAsync(newCall);
-            await _appDbContext.SaveChangesAsync();
-
-            return new GeneralResponse(true, "Tạo cuộc gọi thành công");
-        }
-
-        public async Task<GeneralResponse> CreateMissionAsync(CreateMissionDTO missionDTO, Employee employee, Partner partner)
-        {
-            var partnerData = await _partnerService.FindById(partner.Id);
-            if (partnerData == null)
-            {
-                return new GeneralResponse(false, "Không tìm thấy tổ chức");
-            }
-
-            if (employee == null)
-            {
-                return new GeneralResponse(false, "ID Nhân viên không được để trống");
-            }
-            var employeeData = await _employeeService.FindByIdAsync(employee.Id);
-            if (employeeData == null)
-            {
-                return new GeneralResponse(false, "Không tìm thấy nhân viên");
-            }
-
-            var newMission = new Activity
-            {
-                TagID = missionDTO.TagID,
-                TagColor = missionDTO.TagColor,
-                IsDeleted = missionDTO.IsDeleted,
-                ActivityName = missionDTO.ActivityName,
-                MissionName = missionDTO.ActivityName,
-                MissionTypeID = missionDTO.MissionTypeID,
-                DueDate = missionDTO.DueDate,
-                StatusID = missionDTO.StatusID,
-                ModuleType = ActivityModuleType.Mission.ToString(),
-                PriorityID = missionDTO.PriorityID,
-                IsRepeat = missionDTO.IsRepeat,
-                IsReminder = missionDTO.IsReminder,
-                Description = missionDTO.Description,
-                Duplicate = missionDTO.Duplicate,
-                SendEmail = missionDTO.SendEmail,
-                IsPublic = missionDTO.IsPublic,
-                CustomerId = missionDTO.CustomerId,
-                TaskOwnerId = missionDTO.TaskOwnerId,
-                ModifiedBy = missionDTO.ModifiedBy,
-                ContactId = missionDTO.ContactId,
-                RelatedUsersID = missionDTO.RelatedUsersID,
-                PartnerId = partner.Id
-            };
-
-            await _appDbContext.AddAsync(newMission);
-            await _appDbContext.SaveChangesAsync();
-
-            return new GeneralResponse(true, "Tạo nhiệm vụ thành công");
-        }
-
         public async Task<GeneralResponse?> DeleteBulkActivities(string ids, Employee employee, Partner partner)
         {
             if (string.IsNullOrWhiteSpace(ids))
@@ -227,15 +55,15 @@ namespace ServerLibrary.Services.Implementations
             {
                 return new GeneralResponse(false, "Không tìm thấy hoạt động");
             }
-        
-            var unauthorizedActivities = activities
-                .Where(a => a.TaskOwnerId != employee.Id)
-                .ToList();
 
-            if (unauthorizedActivities.Any())
-            {
-                return new GeneralResponse(false, "Bạn không có quyền xóa một số hoạt động");
-            }
+            // var unauthorizedActivities = activities
+            //     .Where(a => a.TaskOwnerId != employee.Id)
+            //     .ToList();
+
+            // if (unauthorizedActivities.Any())
+            // {
+            //     return new GeneralResponse(false, "Bạn không có quyền xóa một số hoạt động");
+            // }
 
             _appDbContext.Activities.RemoveRange(activities);
             await _appDbContext.SaveChangesAsync();
@@ -243,22 +71,54 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Xóa hoạt động thành công");
         }
 
-        public Task<GeneralResponse?> DeleteIdAsync(int id, Employee employee, Partner partner)
+        public async Task<GeneralResponse?> DeleteIdAsync(int id, Employee employee, Partner partner)
         {
-            throw new NotImplementedException();
+            if (id == null)
+            {
+                return new GeneralResponse(false, "Không có hoạt động nào được cung cấp để xóa");
+            }
+
+            var activity = await _appDbContext.Activities
+                .FirstOrDefaultAsync(a => a.Id == id && a.PartnerId == partner.Id);
+
+            if (activity == null)
+            {
+                return new GeneralResponse(false, "Không tìm thấy hoạt động");
+            }
+
+            // var unauthorizedActivities = activities
+            //     .Where(a => a.TaskOwnerId != employee.Id)
+            //     .ToList();
+
+            // if (unauthorizedActivities.Any())
+            // {
+            //     return new GeneralResponse(false, "Bạn không có quyền xóa một số hoạt động");
+            // }
+
+            _appDbContext.Activities.Remove(activity);
+            await _appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Xóa hoạt động thành công");
         }
 
-        public async Task<List<Activity>> GetAllActivityAsync(Employee employee, Partner partner)
+        public async Task<List<Activity>> GetAllActivityAsync(Partner partner)
         {
+            if (partner == null)
+            {
+                throw new ArgumentNullException("Partner không được null.");
+            }
             try
             {
                 var activities = await _appDbContext.Activities
-                                  .Where(a =>
-                                      a.PartnerId == partner.Id && a.TaskOwnerId == employee.Id)
-                                  .ToListAsync();
-
+             .Include(a => a.Appointment)
+             .Include(a => a.Mission)
+             .Include(a => a.Call)
+             .Where(a => a.PartnerId == partner.Id &&
+                         (a.Appointment != null || a.Mission != null || a.Call != null))
+             .ToListAsync();
 
                 return activities.Any() ? activities : new List<Activity>();
+
             }
             catch (Exception ex)
             {
@@ -266,56 +126,89 @@ namespace ServerLibrary.Services.Implementations
             }
         }
 
-        public async Task<Activity?> GetByIdAsync(int id, Employee employee, Partner partner)
+        public async Task<ActivityResponseDTO?> GetByIdAsync(int id, Partner partner)
         {
-            if (employee == null || partner == null)
+            if (partner == null || await _partnerService.FindById(partner.Id) == null)
             {
                 return null;
             }
 
-            var partnerData = await _partnerService.FindById(partner.Id);
-            if (partnerData == null)
+            var activity = await _appDbContext.Activities
+                .Include(a => a.Appointment)
+                .Include(a => a.Call)
+                .Include(a => a.Mission)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (activity == null)
             {
                 return null;
             }
 
-            var employeeData = await _employeeService.FindByIdAsync(employee.Id);
-            if (employeeData == null)
+            return new ActivityResponseDTO
             {
-                return null;
-            }
-
-            var activity = await _appDbContext.Activities.FirstOrDefaultAsync(c => c.Id == id
-            && c.TaskOwnerId == employeeData.Id
-            && c.PartnerId == partnerData.Id);
-
-            return activity;
+                Activity = _mapper.Map<ActivityDTO>(activity),
+                Appointment = activity.Appointment != null ? _mapper.Map<AppointmentDTO>(activity.Appointment) : null,
+                Call = activity.Call != null ? _mapper.Map<CallDTO>(activity.Call) : null,
+                Mission = activity.Mission != null ? _mapper.Map<MissionDTO>(activity.Mission) : null
+            };
         }
 
-        public Task<GeneralResponse?> UpdateActivityIdAsync(int id, UpdateActivityDTO updateActivityDTO, Employee employee, Partner partner)
+        public async Task<GeneralResponse?> UpdateActivityIdAsync(int id, UpdateActivityDTO dto, Partner partner)
         {
-            throw new NotImplementedException();
+            var activity = await _appDbContext.Activities.FindAsync(id);
+            if (activity == null) return new GeneralResponse(false, "Không tìm thấy hoạt động");
+            if (partner == null)
+            {
+                return new GeneralResponse(false, "Partner không được null.");
+            }
+            if (partner.Id != activity.PartnerId)
+            {
+                return new GeneralResponse(false, $"Bạn không có quyền cập nhật hoạt động này");
+            }
+
+            activity.ActivityName = dto.ActivityName ?? activity.ActivityName;
+            activity.ActivityCategory = dto.ActivityCategory ?? activity.ActivityCategory;
+            activity.DueDate = dto.DueDate ?? activity.DueDate;
+            activity.StatusID = dto.StatusID ?? activity.StatusID;
+            activity.PriorityID = dto.PriorityID ?? activity.PriorityID;
+            activity.IsSendNotificationEmail = dto.IsSendNotificationEmail ?? activity.IsSendNotificationEmail;
+            activity.IsRepeat = dto.IsRepeat ?? activity.IsRepeat;
+            activity.IsReminder = dto.IsReminder ?? activity.IsReminder;
+            activity.Description = dto.Description ?? activity.Description;
+            activity.ModuleType = dto.ModuleType ?? activity.ModuleType;
+            activity.RemindID = dto.RemindID ?? activity.RemindID;
+            activity.EventStart = dto.EventStart ?? activity.EventStart;
+            activity.EventEnd = dto.EventEnd;
+            activity.Place = dto.Place ?? activity.Place;
+            activity.Duplicate = dto.Duplicate ?? activity.Duplicate;
+            activity.SendEmail = dto.SendEmail ?? activity.SendEmail;
+            activity.IsPublic = dto.IsPublic ?? activity.IsPublic;
+            activity.IsOpen = dto.IsPublic ?? activity.IsOpen;
+            activity.IsAllDay = dto.IsAllDay ?? activity.IsAllDay;
+            activity.PhoneNumber = dto.PhoneNumber ?? activity.PhoneNumber;
+            activity.OfficeEmail = dto.OfficeEmail ?? activity.OfficeEmail;
+            activity.CustomerId = dto.CustomerId ?? activity.CustomerId;
+            activity.ContactId = dto.ContactId ?? activity.ContactId;
+            activity.TaskOwnerId = dto.TaskOwnerId ?? activity.TaskOwnerId;
+            activity.OrderId = dto.OrderId ?? activity.OrderId;
+            activity.InvoiceId = dto.InvoiceId ?? activity.InvoiceId;
+            activity.RelatedUsersID = dto.RelatedUsersID ?? activity.RelatedUsersID;
+
+            await _appDbContext.SaveChangesAsync();
+            return new GeneralResponse(true, "Đã cập nhật hành động");
         }
 
-        public async Task<GeneralResponse?> UpdateAppointmentByIdAsync(int id, UpdateAppointmentDTO updateAppointmentDTO, Employee employee, Partner partner)
+        public async Task<GeneralResponse?> UpdateAppointmentByIdAsync(int activityId, UpdateActivityDTO activityDto,
+         UpdateAppointmentDTO updateAppointmentDTO, Partner partner)
         {
-            if (employee == null || partner == null)
-                return new GeneralResponse(false, "Thông tin nhân viên hoặc tổ chức không được cung cấp");
+            var activityResponse = await UpdateActivityIdAsync(activityId, activityDto, partner);
+            if (!activityResponse.Flag) return activityResponse;
 
-            var partnerData = await _partnerService.FindById(partner.Id);
-            if (partnerData == null)
-                return new GeneralResponse(false, "Không tìm thấy tổ chức");
+            var appointment = await _appDbContext.Appointments.FirstOrDefaultAsync(a => a.ActivityId == activityId);
+            appointment.IsAllDay = updateAppointmentDTO.IsAllDay;
 
-            var employeeData = await _employeeService.FindByIdAsync(employee.Id);
-            if (employeeData == null)
-                return new GeneralResponse(false, "Không tìm thấy nhân viên");
-
-            var appointment = await _appDbContext.Activities.FirstOrDefaultAsync(a => a.Id == id);
             if (appointment == null)
-                return new GeneralResponse(false, "Không tìm thấy lịch hẹn");
-
-            if (appointment.PartnerId != partner.Id || appointment.TaskOwnerId != employee.Id)
-                return new GeneralResponse(false, "Bạn không có quyền cập nhật lịch hẹn này");
+                return new GeneralResponse(false, "Không tìm thấy lịch hẹn trong của hoạt động");
 
             _mapper.Map(updateAppointmentDTO, appointment);
             await _appDbContext.SaveChangesAsync();
@@ -323,25 +216,15 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Cập nhật lịch hẹn thành công");
         }
 
-        public async Task<GeneralResponse?> UpdateCallByIdAsync(int id, UpdateCallDTO updateCallDTO, Employee employee, Partner partner)
+        public async Task<GeneralResponse?> UpdateCallByIdAsync(int activityId, UpdateActivityDTO activityDto,
+         UpdateCallDTO updateCallDTO, Partner partner)
         {
-            if (employee == null || partner == null)
-                return new GeneralResponse(false, "Thông tin nhân viên hoặc tổ chức không được cung cấp");
+            var activityResponse = await UpdateActivityIdAsync(activityId, activityDto, partner);
+            if (!activityResponse.Flag) return activityResponse;
 
-            var partnerData = await _partnerService.FindById(partner.Id);
-            if (partnerData == null)
-                return new GeneralResponse(false, "Không tìm thấy tổ chức");
-
-            var employeeData = await _employeeService.FindByIdAsync(employee.Id);
-            if (employeeData == null)
-                return new GeneralResponse(false, "Không tìm thấy nhân viên");
-
-            var call = await _appDbContext.Activities.FirstOrDefaultAsync(c => c.Id == id);
+            var call = await _appDbContext.Calls.FirstOrDefaultAsync(c => c.ActivityId == activityId);
             if (call == null)
-                return new GeneralResponse(false, "Không tìm thấy cuộc gọi");
-
-            if (call.PartnerId != partner.Id || call.TaskOwnerId != employee.Id)
-                return new GeneralResponse(false, "Bạn không có quyền cập nhật cuộc gọi này");
+                return new GeneralResponse(false, "Không tìm thấy cuộc gọi của hoạt động");
 
             _mapper.Map(updateCallDTO, call);
             await _appDbContext.SaveChangesAsync();
@@ -349,25 +232,15 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Cập nhật cuộc gọi thành công");
         }
 
-        public async Task<GeneralResponse?> UpdateMissionByIdAsync(int id, UpdateMissionDTO updateMissionDTO, Employee employee, Partner partner)
+        public async Task<GeneralResponse?> UpdateMissionByIdAsync(int activityId, UpdateActivityDTO activityDto,
+        UpdateMissionDTO updateMissionDTO, Partner partner)
         {
-            if (employee == null || partner == null)
-                return new GeneralResponse(false, "Thông tin nhân viên hoặc tổ chức không được cung cấp");
+            var activityResponse = await UpdateActivityIdAsync(activityId, activityDto, partner);
+            if (!activityResponse.Flag) return activityResponse;
 
-            var partnerData = await _partnerService.FindById(partner.Id);
-            if (partnerData == null)
-                return new GeneralResponse(false, "Không tìm thấy tổ chức");
-
-            var employeeData = await _employeeService.FindByIdAsync(employee.Id);
-            if (employeeData == null)
-                return new GeneralResponse(false, "Không tìm thấy nhân viên");
-
-            var mission = await _appDbContext.Activities.FirstOrDefaultAsync(m => m.Id == id);
+            var mission = await _appDbContext.Missions.FirstOrDefaultAsync(m => m.ActivityId == activityId);
             if (mission == null)
-                return new GeneralResponse(false, "Không tìm thấy nhiệm vụ");
-
-            if (mission.PartnerId != partner.Id || mission.TaskOwnerId != employee.Id)
-                return new GeneralResponse(false, "Bạn không có quyền cập nhật nhiệm vụ này");
+                return new GeneralResponse(false, "Không tìm thấy nhiệm vụ của hoạt động");
 
             _mapper.Map(updateMissionDTO, mission);
             await _appDbContext.SaveChangesAsync();
@@ -375,10 +248,104 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Cập nhật nhiệm vụ thành công");
         }
 
-        public Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateActivityDTO updateActivityDTO, Employee employee, Partner partner)
+        public async Task<ActivityDTO> CreateActivityAsync(CreateActivityDTO dto, string ModuleType, Partner partner)
         {
-            throw new NotImplementedException();
+            var activity = new Activity
+            {
+                ActivityName = dto.ActivityName,
+                ActivityCategory = dto.ActivityCategory,
+                DueDate = dto.DueDate,
+                StatusID = dto.StatusID,
+                PriorityID = dto.PriorityID,
+                IsSendNotificationEmail = dto.IsSendNotificationEmail,
+                IsRepeat = dto.IsRepeat,
+                IsReminder = dto.IsReminder,
+                Description = dto.Description,
+                ModuleType = ModuleType,
+                RemindID = dto.RemindID,
+                EventStart = dto.EventStart,
+                EventEnd = dto.EventEnd,
+                Place = dto.Place,
+                Duplicate = dto.Duplicate,
+                SendEmail = dto.SendEmail,
+                IsPublic = dto.IsPublic,
+                IsOpen = dto.IsPublic,
+                IsAllDay = dto.IsAllDay,
+                PhoneNumber = dto.PhoneNumber,
+                OfficeEmail = dto.OfficeEmail,
+                CustomerId = dto.CustomerId,
+                ContactId = dto.ContactId,
+                TaskOwnerId = dto.TaskOwnerId,
+                OrderId = dto.OrderId,
+                InvoiceId = dto.InvoiceId,
+                RelatedUsersID = dto.OrderId,
+                PartnerId = partner.Id
+            };
+            await _appDbContext.InsertIntoDb(activity);
+
+            return new ActivityDTO { Id = activity.Id, ActivityName = activity.ActivityName };
         }
 
+        public async Task<GeneralResponse> CreateAppointmentAsync(CreateActivityDTO activityDto, CreateAppointmentDTO appointmentDto, Partner partner)
+        {
+            var ModuleType = ActivityModuleType.Appointment.ToString();
+            var createdActivity = await CreateActivityAsync(activityDto, ModuleType, partner);
+
+            var appointment = new Appointment
+            {
+                ActivityId = createdActivity.Id,
+                IsAllDay = appointmentDto.IsAllDay
+            };
+
+            await _appDbContext.Appointments.AddAsync(appointment);
+            await _appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Tạo lịch hẹn thành công");
+        }
+
+        public async Task<GeneralResponse> CreateMissionAsync(CreateActivityDTO activityDto, CreateMissionDTO mission, Partner partner)
+        {
+            var ModuleType = ActivityModuleType.Mission.ToString();
+            var createdActivity = await CreateActivityAsync(activityDto, ModuleType, partner);
+
+            var Mission = new Mission
+            {
+                ActivityId = createdActivity.Id,
+                MissionName = createdActivity.ActivityName,
+                MissionTypeID = mission.MissionTypeID
+            };
+            await _appDbContext.Missions.AddAsync(Mission);
+            await _appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Tạo nhiệm vụ thành công");
+        }
+
+        public async Task<GeneralResponse> CreateCallAsync(CreateActivityDTO activityDto, CreateCallDTO callDTO, Partner partner)
+        {
+            var ModuleType = ActivityModuleType.Call.ToString();
+            var createdActivity = await CreateActivityAsync(activityDto, ModuleType, partner);
+
+            var Call = new Call
+            {
+                ActivityId = createdActivity.Id,
+                CallStart = callDTO.CallStart,
+                CallDuration = callDTO.CallDuration,
+                CallName = createdActivity.ActivityName,
+                CallGoalID = callDTO.CallGoalID,
+                CallTypeID = callDTO.CallTypeID,
+                CallDone = callDTO.CallDone,
+                CallResult = callDTO.CallResult,
+                CallID = callDTO.CallID,
+                CallRecord = callDTO.CallRecord,
+                CallEnd = callDTO.CallEnd,
+                CallResultID = callDTO.CallResultID,
+                PhoneNumber = callDTO.PhoneNumber,
+
+            };
+            await _appDbContext.Calls.AddAsync(Call);
+            await _appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Tạo cuộc gọi thành công");
+        }
     }
 }
