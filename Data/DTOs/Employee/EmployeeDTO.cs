@@ -11,7 +11,7 @@ namespace Data.DTOs
         public required string FullName { get; set; }
         public string? PhoneNumber { get; set; }
         public string? Gender { get; set; }
-        public DateTime DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
         public string? Email { get; set; }
         public string? Address { get; set; }
         public string? OfficePhone { get; set; }
@@ -20,7 +20,7 @@ namespace Data.DTOs
         public int? JobPositionGroupId { get; set; }
         public int? JobTitleGroupId { get; set; }
         public JobStatus JobStatus { get; set; }
-        public DateTime SignedContractDate { get; set; }
+        public DateTime? SignedContractDate { get; set; }
         public DateTime? SignedProbationaryContract { get; set; }
         public DateTime? Resignation { get; set; }
         public int PartnerId { get; set; }

@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Data.DTOs;
+using Data.Entities;
 using Data.Interceptor;
 
 namespace Data.DTOs
 {
     public class OrderDTO
-    {   
+    {
         public int Id { get; set; }
         // [Required]
         public required string SaleOrderNo { get; set; } = string.Empty;
@@ -142,12 +143,12 @@ namespace Data.DTOs
         [JsonConverter(typeof(NullableIntConverter))]
         public int? ContactId { get; set; }
         public string? ContactName { get; set; }
-
+        public int? OwnerTaskExecuteId { get; set; }
         public int? OwnerId { get; set; }
 
         public int? PartnerId { get; set; }
 
-        [Required(ErrorMessage = "Hàng hoá không được để trống")]
+        [Required(ErrorMessage = "Thông tin hàng hoá không được để trống")]
         public required List<OrderDetailDTO> OrderDetails { get; set; } = new List<OrderDetailDTO>();
     }
 }

@@ -7,14 +7,16 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IEmployeeService
     {
-        Task<DataStringResponse> CreateAsync(CreateEmployee employee);
+        Task<DataStringResponse> CreateEmployeeAdminAsync(CreateEmployee employee);
+        Task<DataStringResponse> CreateEmployeeAsync(CreateEmployee employee, Partner partner);
         Task<Employee?> FindByIdAsync(int id);
 
         Task<bool> EmployeeExists(int id, int partnerId);
 
         Task<GeneralResponse> UpdateAsync(Employee employee);
-        Task<List<Employee>> GetAllAsync(int partnerId);
+        Task<List<Employee>> GetAllAsync(Partner partner);
 
         Task<Employee?> FindByClaim(ClaimsIdentity? claimsIdentity);
+
     }
 }

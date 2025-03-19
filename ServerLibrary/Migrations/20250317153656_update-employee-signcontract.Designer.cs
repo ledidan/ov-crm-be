@@ -12,8 +12,8 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250305155413_update-pwrt")]
-    partial class updatepwrt
+    [Migration("20250317153656_update-employee-signcontract")]
+    partial class updateemployeesigncontract
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,19 +25,34 @@ namespace ServerLibrary.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("ContactCustomer", b =>
+            modelBuilder.Entity("ActivityCustomer", b =>
                 {
-                    b.Property<int>("ContactsId")
+                    b.Property<int>("ActivitiesId")
                         .HasColumnType("int");
 
                     b.Property<int>("CustomersId")
                         .HasColumnType("int");
 
-                    b.HasKey("ContactsId", "CustomersId");
+                    b.HasKey("ActivitiesId", "CustomersId");
 
                     b.HasIndex("CustomersId");
 
-                    b.ToTable("ContactCustomer");
+                    b.ToTable("ActivityCustomer");
+                });
+
+            modelBuilder.Entity("ActivityOrder", b =>
+                {
+                    b.Property<int>("ActivitiesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrdersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ActivitiesId", "OrdersId");
+
+                    b.HasIndex("OrdersId");
+
+                    b.ToTable("ActivityOrder");
                 });
 
             modelBuilder.Entity("Data.Entities.Activity", b =>
@@ -48,73 +63,10 @@ namespace ServerLibrary.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AccountNumber")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("AccountTel")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("ActivityCategory")
                         .HasColumnType("longtext");
 
                     b.Property<string>("ActivityName")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("BatteryStatus")
-                        .HasColumnType("longtext");
-
-                    b.Property<bool?>("CallDone")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int?>("CallDuration")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("CallEnd")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("CallGoalID")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("CallID")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("CallName")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("CallRecord")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("CallResult")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("CallResultID")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("CallStart")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("CallTypeID")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("CheckInAddress")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("CheckInTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("CheckInType")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("CheckOutAddress")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("CheckOutPlace")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("CheckOutTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("CheckinPlace")
                         .HasColumnType("longtext");
 
                     b.Property<int?>("ContactId")
@@ -129,29 +81,11 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
-                    b.Property<double?>("Distance")
-                        .HasColumnType("double");
-
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime(6)");
 
                     b.Property<bool?>("Duplicate")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("EndTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("EventCalendarID")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("EventCheckinComment")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("EventCheckinTime")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("EventEnd")
                         .HasColumnType("datetime(6)");
@@ -159,19 +93,13 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime?>("EventStart")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int?>("InvoiceId")
+                        .HasColumnType("int");
+
                     b.Property<bool?>("IsAllDay")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<bool?>("IsCheckOutImages")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool?>("IsCorrectRoute")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<bool?>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool?>("IsFakeGPS")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool?>("IsOpen")
@@ -189,24 +117,6 @@ namespace ServerLibrary.Migrations
                     b.Property<bool?>("IsSendNotificationEmail")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<bool?>("IsStartActivity")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Journey")
-                        .HasColumnType("longtext");
-
-                    b.Property<double?>("Lat")
-                        .HasColumnType("double");
-
-                    b.Property<double?>("Long")
-                        .HasColumnType("double");
-
-                    b.Property<string>("MissionName")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("MissionTypeID")
-                        .HasColumnType("longtext");
-
                     b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
 
@@ -218,6 +128,9 @@ namespace ServerLibrary.Migrations
 
                     b.Property<string>("OfficeEmail")
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
 
                     b.Property<int>("PartnerId")
                         .HasColumnType("int");
@@ -231,35 +144,14 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("PriorityID")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("ProviderName")
-                        .HasColumnType("longtext");
-
                     b.Property<int?>("RelatedUsersID")
                         .HasColumnType("int");
 
                     b.Property<string>("RemindID")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("RouteAddress")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("RoutingResultID")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("RoutingTypeID")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("RoutingTypeIDText")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("SearchTagID")
-                        .HasColumnType("longtext");
-
                     b.Property<bool?>("SendEmail")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<DateTime?>("StartTime")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("StatusID")
                         .HasColumnType("longtext");
@@ -272,12 +164,6 @@ namespace ServerLibrary.Migrations
 
                     b.Property<int?>("TaskOwnerId")
                         .HasColumnType("int");
-
-                    b.Property<double?>("TravelDistance")
-                        .HasColumnType("double");
-
-                    b.Property<string>("WorkDuration")
-                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -354,6 +240,83 @@ namespace ServerLibrary.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ApplicationUsers");
+                });
+
+            modelBuilder.Entity("Data.Entities.Appointment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActivityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("IsAllDay")
+                        .HasColumnType("tinyint(1)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId")
+                        .IsUnique();
+
+                    b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("Data.Entities.Call", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActivityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("CallDone")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("CallDuration")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CallEnd")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CallGoalID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CallID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CallName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CallRecord")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CallResult")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CallResultID")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("CallStart")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CallTypeID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId")
+                        .IsUnique();
+
+                    b.ToTable("Calls");
                 });
 
             modelBuilder.Entity("Data.Entities.CompanyJobPosition", b =>
@@ -730,6 +693,26 @@ namespace ServerLibrary.Migrations
                     b.ToTable("Customers");
                 });
 
+            modelBuilder.Entity("Data.Entities.CustomerContacts", b =>
+                {
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ContactId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CustomerId", "ContactId", "PartnerId");
+
+                    b.HasIndex("ContactId");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("CustomerContacts");
+                });
+
             modelBuilder.Entity("Data.Entities.CustomerEmployees", b =>
                 {
                     b.Property<int>("CustomerId")
@@ -751,6 +734,26 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("PartnerId");
 
                     b.ToTable("CustomerEmployees");
+                });
+
+            modelBuilder.Entity("Data.Entities.CustomerOrders", b =>
+                {
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CustomerId", "OrderId", "PartnerId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("CustomerOrders");
                 });
 
             modelBuilder.Entity("Data.Entities.EmailVerification", b =>
@@ -803,13 +806,14 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<DateTime>("DateOfBirth")
+                    b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Email")
                         .HasColumnType("longtext");
 
                     b.Property<string>("EmployeeCode")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("FullName")
@@ -845,7 +849,7 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime?>("Resignation")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<DateTime>("SignedContractDate")
+                    b.Property<DateTime?>("SignedContractDate")
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("SignedProbationaryContract")
@@ -868,6 +872,9 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ActivityId")
+                        .HasColumnType("int");
 
                     b.Property<decimal?>("AmountSummary")
                         .HasColumnType("decimal(65,30)");
@@ -929,7 +936,13 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime>("ModifiedDate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("OwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OwnerTaskExecuteId")
                         .HasColumnType("int");
 
                     b.Property<int>("PartnerId")
@@ -970,6 +983,10 @@ namespace ServerLibrary.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ActivityId");
+
+                    b.HasIndex("CustomerId");
+
                     b.HasIndex("PartnerId");
 
                     b.ToTable("Invoices");
@@ -996,6 +1013,26 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("PartnerId");
 
                     b.ToTable("InvoiceEmployees");
+                });
+
+            modelBuilder.Entity("Data.Entities.InvoiceOrders", b =>
+                {
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InvoiceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("OrderId", "InvoiceId", "PartnerId");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("InvoiceOrders");
                 });
 
             modelBuilder.Entity("Data.Entities.JobPositionGroup", b =>
@@ -1048,6 +1085,31 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("PartnerId");
 
                     b.ToTable("JobTitleGroups");
+                });
+
+            modelBuilder.Entity("Data.Entities.Mission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActivityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MissionName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("MissionTypeID")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId")
+                        .IsUnique();
+
+                    b.ToTable("Missions");
                 });
 
             modelBuilder.Entity("Data.Entities.Order", b =>
@@ -1127,9 +1189,6 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime?>("InvoiceDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int?>("InvoiceId")
-                        .HasColumnType("int");
-
                     b.Property<string>("InvoiceReceivingEmail")
                         .HasColumnType("longtext");
 
@@ -1176,6 +1235,9 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("OwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OwnerTaskExecuteId")
                         .HasColumnType("int");
 
                     b.Property<decimal?>("PaidAmountSummary")
@@ -1285,15 +1347,29 @@ namespace ServerLibrary.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContactId");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("InvoiceId");
-
                     b.HasIndex("PartnerId");
 
                     b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("Data.Entities.OrderContacts", b =>
+                {
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ContactId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("OrderId", "ContactId", "PartnerId");
+
+                    b.HasIndex("ContactId");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("OrderContacts");
                 });
 
             modelBuilder.Entity("Data.Entities.OrderEmployees", b =>
@@ -1832,17 +1908,32 @@ namespace ServerLibrary.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("ContactCustomer", b =>
+            modelBuilder.Entity("ActivityCustomer", b =>
                 {
-                    b.HasOne("Data.Entities.Contact", null)
+                    b.HasOne("Data.Entities.Activity", null)
                         .WithMany()
-                        .HasForeignKey("ContactsId")
+                        .HasForeignKey("ActivitiesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Data.Entities.Customer", null)
                         .WithMany()
                         .HasForeignKey("CustomersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ActivityOrder", b =>
+                {
+                    b.HasOne("Data.Entities.Activity", null)
+                        .WithMany()
+                        .HasForeignKey("ActivitiesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrdersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -1872,6 +1963,28 @@ namespace ServerLibrary.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("Partner");
+                });
+
+            modelBuilder.Entity("Data.Entities.Appointment", b =>
+                {
+                    b.HasOne("Data.Entities.Activity", "Activity")
+                        .WithOne("Appointment")
+                        .HasForeignKey("Data.Entities.Appointment", "ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Activity");
+                });
+
+            modelBuilder.Entity("Data.Entities.Call", b =>
+                {
+                    b.HasOne("Data.Entities.Activity", "Activity")
+                        .WithOne("Call")
+                        .HasForeignKey("Data.Entities.Call", "ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Activity");
                 });
 
             modelBuilder.Entity("Data.Entities.CompanyJobPosition", b =>
@@ -1932,6 +2045,33 @@ namespace ServerLibrary.Migrations
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("Data.Entities.CustomerContacts", b =>
+                {
+                    b.HasOne("Data.Entities.Contact", "Contact")
+                        .WithMany("CustomerContacts")
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Customer", "Customer")
+                        .WithMany("CustomerContacts")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany("CustomerContacts")
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Contact");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Partner");
+                });
+
             modelBuilder.Entity("Data.Entities.CustomerEmployees", b =>
                 {
                     b.HasOne("Data.Entities.Customer", "Customer")
@@ -1959,6 +2099,33 @@ namespace ServerLibrary.Migrations
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("Data.Entities.CustomerOrders", b =>
+                {
+                    b.HasOne("Data.Entities.Customer", "Customer")
+                        .WithMany("CustomerOrders")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Order", "Order")
+                        .WithMany("CustomerOrders")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany("CustomerOrders")
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Partner");
+                });
+
             modelBuilder.Entity("Data.Entities.Employee", b =>
                 {
                     b.HasOne("Data.Entities.Partner", "Partner")
@@ -1972,6 +2139,14 @@ namespace ServerLibrary.Migrations
 
             modelBuilder.Entity("Data.Entities.Invoice", b =>
                 {
+                    b.HasOne("Data.Entities.Activity", null)
+                        .WithMany("Invoices")
+                        .HasForeignKey("ActivityId");
+
+                    b.HasOne("Data.Entities.Customer", null)
+                        .WithMany("Invoices")
+                        .HasForeignKey("CustomerId");
+
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
                         .HasForeignKey("PartnerId")
@@ -2008,6 +2183,33 @@ namespace ServerLibrary.Migrations
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("Data.Entities.InvoiceOrders", b =>
+                {
+                    b.HasOne("Data.Entities.Invoice", "Invoice")
+                        .WithMany("InvoiceOrders")
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Order", "Order")
+                        .WithMany("InvoiceOrders")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Invoice");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Partner");
+                });
+
             modelBuilder.Entity("Data.Entities.JobPositionGroup", b =>
                 {
                     b.HasOne("Data.Entities.Partner", "Partner")
@@ -2026,27 +2228,51 @@ namespace ServerLibrary.Migrations
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("Data.Entities.Mission", b =>
+                {
+                    b.HasOne("Data.Entities.Activity", "Activity")
+                        .WithOne("Mission")
+                        .HasForeignKey("Data.Entities.Mission", "ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Activity");
+                });
+
             modelBuilder.Entity("Data.Entities.Order", b =>
                 {
-                    b.HasOne("Data.Entities.Contact", null)
-                        .WithMany("Orders")
-                        .HasForeignKey("ContactId");
-
-                    b.HasOne("Data.Entities.Customer", null)
-                        .WithMany("Orders")
-                        .HasForeignKey("CustomerId");
-
-                    b.HasOne("Data.Entities.Invoice", "Invoice")
-                        .WithMany("Orders")
-                        .HasForeignKey("InvoiceId");
-
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
                         .HasForeignKey("PartnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Invoice");
+                    b.Navigation("Partner");
+                });
+
+            modelBuilder.Entity("Data.Entities.OrderContacts", b =>
+                {
+                    b.HasOne("Data.Entities.Contact", "Contact")
+                        .WithMany("OrderContacts")
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Order", "Order")
+                        .WithMany("OrderContacts")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany("OrderContacts")
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Contact");
+
+                    b.Navigation("Order");
 
                     b.Navigation("Partner");
                 });
@@ -2203,20 +2429,34 @@ namespace ServerLibrary.Migrations
             modelBuilder.Entity("Data.Entities.Activity", b =>
                 {
                     b.Navigation("ActivityEmployees");
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Call");
+
+                    b.Navigation("Invoices");
+
+                    b.Navigation("Mission");
                 });
 
             modelBuilder.Entity("Data.Entities.Contact", b =>
                 {
                     b.Navigation("ContactEmployees");
 
-                    b.Navigation("Orders");
+                    b.Navigation("CustomerContacts");
+
+                    b.Navigation("OrderContacts");
                 });
 
             modelBuilder.Entity("Data.Entities.Customer", b =>
                 {
+                    b.Navigation("CustomerContacts");
+
                     b.Navigation("CustomerEmployees");
 
-                    b.Navigation("Orders");
+                    b.Navigation("CustomerOrders");
+
+                    b.Navigation("Invoices");
                 });
 
             modelBuilder.Entity("Data.Entities.Employee", b =>
@@ -2238,11 +2478,17 @@ namespace ServerLibrary.Migrations
                 {
                     b.Navigation("InvoiceEmployees");
 
-                    b.Navigation("Orders");
+                    b.Navigation("InvoiceOrders");
                 });
 
             modelBuilder.Entity("Data.Entities.Order", b =>
                 {
+                    b.Navigation("CustomerOrders");
+
+                    b.Navigation("InvoiceOrders");
+
+                    b.Navigation("OrderContacts");
+
                     b.Navigation("OrderEmployees");
                 });
 
@@ -2252,13 +2498,19 @@ namespace ServerLibrary.Migrations
 
                     b.Navigation("ContactEmployees");
 
+                    b.Navigation("CustomerContacts");
+
                     b.Navigation("CustomerEmployees");
+
+                    b.Navigation("CustomerOrders");
 
                     b.Navigation("InvoiceEmployees");
 
                     b.Navigation("JobPositionGroup");
 
                     b.Navigation("JobTitleGroup");
+
+                    b.Navigation("OrderContacts");
 
                     b.Navigation("ProductEmployees");
                 });

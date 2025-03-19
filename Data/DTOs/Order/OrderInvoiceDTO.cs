@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Data.DTOs;
+using Data.Entities;
 using Data.Interceptor;
 
 namespace Data.DTOs
 {
-    public class ContactOrderDTO
-    {   
+    public class OrderInvoiceDTO
+    {
         public int Id { get; set; }
         // [Required]
         public required string SaleOrderNo { get; set; } = string.Empty;
@@ -140,11 +141,6 @@ namespace Data.DTOs
         [JsonConverter(typeof(NullableIntConverter))]
         public int? CustomerId { get; set; }
         [JsonConverter(typeof(NullableIntConverter))]
-        public int? ContactId { get; set; }
-        public string? ContactName { get; set; }
-
-        public int? OwnerId { get; set; }
-
-        public int? PartnerId { get; set; }
+        public int? OwnerTaskExecuteId { get; set; }
     }
 }

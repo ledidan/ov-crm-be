@@ -26,25 +26,21 @@ namespace Server.Controllers
             _employeeService = employeeService;
         }
 
-        [HttpPost("create-customer")]
+        [HttpPost("create")]
         public async Task<IActionResult> CreateCustomerAsync(CreateCustomer customer)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
             var employee = await _employeeService.FindByClaim(identity);
-            if (customer == null)
-                return BadRequest("Model is empty");
-
             // Call the service to create the contact
             var result = await _customerService.CreateAsync(customer, employee, partner);
-
             if (!result.Flag)
                 return BadRequest(result.Message);
 
             return Ok(result);
         }
 
-        [HttpGet("get-all")]
+        [HttpGet("customers")]
         public async Task<IActionResult> GetAllAsync()
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -92,11 +88,11 @@ namespace Server.Controllers
 
             var customer = await _customerService.UpdateAsync(id, updateCustomer, employee, partner);
 
-            if (customer == null)
+            if (!customer.Flag)
             {
-                return BadRequest(new { flag = false, message = "Invalid customer data provided." });
+                return BadRequest(customer.Message);
             }
-            return Ok(new { flag = true, message = "Customer updated successfully.", data = customer });
+            return Ok(customer);
 
         }
 
@@ -149,6 +145,154 @@ namespace Server.Controllers
             }
 
             return Ok(response);
+        }
+
+        [HttpPost("{id:int}/contacts")]
+        public async Task<IActionResult> BulkAddContactsIntoCustomer([FromRoute] int id, [FromBody] List<int> contactIds)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            if (id == null || contactIds == null || !contactIds.Any())
+                return BadRequest("Danh sách liên hệ không được để trống!");
+
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+
+            if (partner == null)
+                return NotFound("Không tìm thấy tổ chức!");
+
+            var response = await _customerService.BulkAddContactsIntoCustomer(contactIds, id, employee, partner);
+            if (response == null || !response.Flag)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+
+        [HttpGet("{id:int}/contacts-linked")]
+        public async Task<IActionResult> GetAllContactsByIdAsync(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            if (id == null)
+                return BadRequest("ID khách hàng không được để trống!");
+
+            var partner = await _partnerService.FindByClaim(identity);
+
+            if (partner == null)
+                return NotFound("Không tìm thấy tổ chức!");
+
+            var response = await _customerService.GetAllContactsByIdAsync(id, partner);
+            if (response == null)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+
+        [HttpGet("{id:int}/contacts-available")]
+        public async Task<IActionResult> GetAllContactsAvailableByIdAsync(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+
+            var partner = await _partnerService.FindByClaim(identity);
+
+            if (id == null)
+                return BadRequest("ID khách hàng không được để trống!");
+
+            if (partner == null)
+                return NotFound("Không tìm thấy tổ chức!");
+
+            var response = await _customerService.GetAllContactAvailableByCustomer(id, partner);
+            if (response == null)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+
+        [HttpGet("{id:int}/activities")]
+
+        public async Task<IActionResult> GetAllActivitiesByIdAsync(int id)
+        {
+
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            if (id == null)
+                return BadRequest("Danh sách liên hệ không được để trống!");
+
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+
+            if (partner == null)
+                return NotFound("Không tìm thấy tổ chức!");
+
+            var response = await _customerService.GetAllActivitiesByIdAsync(id, partner);
+
+            if (response == null)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+        [HttpGet("{id:int}/orders")]
+
+        public async Task<IActionResult> GetAllOrdersByIdAsync(int id)
+        {
+
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            if (id == null)
+                return BadRequest("Danh sách liên hệ không được để trống!");
+
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+
+            if (partner == null)
+                return NotFound("Không tìm thấy tổ chức!");
+
+            var response = await _customerService.GetAllOrdersByIdAsync(id, partner);
+
+            if (response == null)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+        [HttpGet("{id:int}/invoices")]
+
+        public async Task<IActionResult> GetAllInvoicesByIdAsync(int id)
+        {
+
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            if (id == null)
+                return BadRequest("Danh sách liên hệ không được để trống!");
+
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+
+            if (partner == null)
+                return NotFound("Không tìm thấy tổ chức!");
+
+            var response = await _customerService.GetAllInvoicesByIdAsync(id, partner);
+
+            if (response == null)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+
+
+        [HttpDelete("{id:int}/contact")]
+        public async Task<IActionResult> RemoveContactFromCustomer(int id, [FromBody] int contactId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            if (id == null)
+                return BadRequest("Danh sách liên hệ không được để trống!");
+
+            var partner = await _partnerService.FindByClaim(identity);
+
+            if (partner == null)
+                return NotFound("Không tìm thấy tổ chức!");
+
+            var response = await _customerService.RemoveContactFromCustomer(id, contactId, partner);
+
+            if (response.Flag == false)
+                return BadRequest(response.Message);
+
+            return Ok(response);
+
         }
     }
 }

@@ -7,10 +7,10 @@ namespace Data.DTOs.Contact
     public class UpdateContactDTO
     {
         public string? ContactCode { get; set; } = string.Empty;
-        [Required]
+        [Required(ErrorMessage = "Tên liên hệ không được để trống !")]
         public string? ContactName { get; set; }
+        [Required(ErrorMessage = "Tên không được để trống !")]
         public string? FirstName { get; set; } = string.Empty;
-        [Required]
         public string? LastName { get; set; }
         public string? Email { get; set; }
         public string? Phone { get; set; }

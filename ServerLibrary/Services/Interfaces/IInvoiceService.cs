@@ -16,6 +16,9 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<GeneralResponse?> UpdateFieldIdAsync(int id, InvoiceDTO invoiceDTO, Employee employee, Partner partner);
 
+        Task<List<OrderInvoiceDTO>> GetOrdersByInvoiceIdAsync(int invoiceId, Partner partner);
+        Task<List<Activity>> GetAllActivitiesByIdAsync(int id, Employee employee, Partner partner);
+
         Task<GeneralResponse?> DeleteBulkInvoicesAsync(string ids, Employee employee, Partner partner);
 
         Task<GeneralResponse?> BulkUpdateInvoicesAsync(List<int> invoiceIds, int? ContactId, int? CustomerId,

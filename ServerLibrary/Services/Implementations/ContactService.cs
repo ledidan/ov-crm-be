@@ -32,28 +32,29 @@ namespace ServerLibrary.Services.Implementations
             _mapper = mapper;
         }
 
-        public async Task<GeneralResponse> CreateAsync(CreateContact contact, Employee employee, Partner partner)
+        public async Task<DataStringResponse> CreateAsync(CreateContact contact, Employee employee, Partner partner)
         {
             var codeGenerator = new GenerateNextCode(_appDbContext);
             if (contact == null)
-                return new GeneralResponse(false, "Model is empty");
+                return new DataStringResponse(false, "Thông tin liên hệ rỗng !");
 
             var partnerData = await _partnerService.FindById(partner.Id);
             if (partnerData == null)
-                return new GeneralResponse(false, "Partner not found");
+                return new DataStringResponse(false, "Thông tin tổ chức không để trống !");
             if (employee != null)
             {
                 var employeeData = await _employeeService.FindByIdAsync(employee.Id);
                 if (employeeData == null)
-                    return new GeneralResponse(false, "Employee not found");
+                    return new DataStringResponse(false, "Không tìm thấy nhân viên");
             }
             else
             {
-                return new GeneralResponse(false, "EmployeeId is required");
+                return new DataStringResponse(false, "ID Nhân viên không có !");
             }
             if (string.IsNullOrEmpty(contact.ContactCode))
             {
-                contact.ContactCode = await codeGenerator.GenerateNextCodeAsync<Contact>("LH", c => c.ContactCode, c => c.PartnerId == c.PartnerId);
+                contact.ContactCode = await codeGenerator
+                .GenerateNextCodeAsync<Contact>("LH", c => c.ContactCode, c => c.PartnerId == c.PartnerId);
             }
             var newContact = new Contact()
             {
@@ -102,9 +103,10 @@ namespace ServerLibrary.Services.Implementations
             }
         }
             };
+
             await _appDbContext.InsertIntoDb(newContact);
 
-            return new GeneralResponse(true, "Contact created successfully");
+            return new DataStringResponse(true, "Tạo liên hệ thành công !", newContact.Id.ToString());
         }
 
         public Task<GeneralResponse?> DeleteAsync(int id, int employeeId)
@@ -130,7 +132,7 @@ namespace ServerLibrary.Services.Implementations
         .FirstOrDefaultAsync(c => c.Id == id && c.EmployeeId == employee.Id && c.PartnerId == partner.Id);
             var updatedContact = updateContact.FromUpdateContactDTO();
             if (existingContact == null)
-                return new GeneralResponse(false, "Contact not found");
+                return new GeneralResponse(false, "Không tìm thấy ID liên hệ để cập nhất");
 
             if (string.IsNullOrEmpty(updateContact.ContactCode))
             {
@@ -167,7 +169,7 @@ namespace ServerLibrary.Services.Implementations
             existingContact.EmailOptOut = updateContact.EmailOptOut;
             existingContact.PhoneOptOut = updateContact.PhoneOptOut;
             await _appDbContext.UpdateDb(existingContact);
-            return new GeneralResponse(true, "Contact updated successfully");
+            return new GeneralResponse(true, "Cập nhật liên hệ thành công.");
         }
 
 
@@ -180,7 +182,7 @@ namespace ServerLibrary.Services.Implementations
 
             if (existingContact == null)
             {
-                return new GeneralResponse(false, "Contact not found");
+                return new GeneralResponse(false, "Không tìm thấy ID liên hệ để cập nhất");
             }
 
             foreach (var prop in typeof(UpdateContactDTO).GetProperties())
@@ -198,7 +200,7 @@ namespace ServerLibrary.Services.Implementations
                 await _appDbContext.SaveChangesAsync();
 
             }
-            return new GeneralResponse(true, "Contact updated successfully");
+            return new GeneralResponse(true, "Cập nhật liên hệ thành công");
         }
 
         public async Task<GeneralResponse?> DeleteIdAsync(int id, Employee employee, Partner partner)
@@ -294,7 +296,7 @@ namespace ServerLibrary.Services.Implementations
         }
 
 
-        public async Task<List<ContactOrderDTO?>> GetAllOrdersByContactAsync(int contactId, Employee employee, Partner partner)
+        public async Task<List<OptionalOrderDTO?>> GetAllOrdersByContactAsync(int contactId, Employee employee, Partner partner)
         {
             try
             {
@@ -311,11 +313,11 @@ namespace ServerLibrary.Services.Implementations
 
                 if (!orders.Any())
                 {
-                    return new List<ContactOrderDTO>();
+                    return new List<OptionalOrderDTO>();
                 }
                 var orderDtos = orders.Select(order =>
                 {
-                    var dto = _mapper.Map<ContactOrderDTO>(order);
+                    var dto = _mapper.Map<OptionalOrderDTO>(order);
                     return dto;
                 }).ToList();
 

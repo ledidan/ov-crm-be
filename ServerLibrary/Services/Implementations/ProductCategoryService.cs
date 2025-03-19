@@ -37,7 +37,7 @@ namespace ServerLibrary.Services.Implementations
                 Partner = partner
             });
 
-            return new GeneralResponse(true, "Product Category created");
+            return new GeneralResponse(true, "Tạo loại hàng hoá thành công");
         }
         public async Task<List<AllProductCategoryDTO>> GetAllAsync(Employee employee, Partner partner)
         {
@@ -104,7 +104,8 @@ namespace ServerLibrary.Services.Implementations
 
             if (existingCategory == null)
             {
-                return new GeneralResponse(false, "Product category not found or does not belong to the specified partner.");
+                return new 
+                GeneralResponse(false, "Không tìm thấy danh mục sản phẩm hoặc danh mục này không thuộc về tổ chức đã chỉ định.");
             }
 
             // !!Optional: Prevent duplicate category names within the same partner
@@ -119,7 +120,7 @@ namespace ServerLibrary.Services.Implementations
             {
                 if (productCategory.ParentProductCategoryID == id)
                 {
-                    return new GeneralResponse(false, "A category cannot be its own parent.");
+                    return new GeneralResponse(false, "Một danh mục không thể là danh mục cha của chính nó.");
                 }
 
                 var parentCategory = await appDbContext.ProductCategories
@@ -127,7 +128,7 @@ namespace ServerLibrary.Services.Implementations
 
                 if (parentCategory == null || parentCategory.InActive == false)
                 {
-                    return new GeneralResponse(false, "The specified parent category does not exist or is inactive.");
+                    return new GeneralResponse(false, "Danh mục cha được chỉ định không tồn tại hoặc không hoạt động.");
                 }
             }
             existingCategory.Avatar = productCategory.Avatar;
@@ -140,7 +141,7 @@ namespace ServerLibrary.Services.Implementations
 
             await appDbContext.UpdateDb(existingCategory);
 
-            return new GeneralResponse(true, "Product category updated successfully.");
+            return new GeneralResponse(true, "Đã cập nhật danh mục sản phẩm thành công.");
         }
 
 

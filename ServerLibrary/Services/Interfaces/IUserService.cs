@@ -6,6 +6,7 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IUserService
     {
+        Task<GeneralResponse> CreateSysAdminAsync(RegisterSysAdmin user, string? role);
         Task<GeneralResponse> CreateUnverifiedAdminAsync(RegisterAdmin user);
         Task<LoginResponse> SignInAsync(Login user);
         Task<LoginResponse> RefreshTokenAsync(RefreshToken token);

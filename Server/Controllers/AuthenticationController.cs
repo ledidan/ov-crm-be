@@ -151,7 +151,7 @@ namespace Server.Controllers
         {
             var response = await userService.ResendVerificationAsync(request.Email);
             if (response.Flag) return Ok(response);
-            return BadRequest(response);
+            return BadRequest(response.Message);
         }
 
         [HttpGet("Member/get-all")]

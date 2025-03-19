@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Data.Entities
+﻿namespace Data.Entities
 {
     public class Partner : BaseEntity
     {
@@ -22,6 +20,10 @@ namespace Data.Entities
         public ICollection<InvoiceEmployees> InvoiceEmployees { get; set; } = new List<InvoiceEmployees>();
         public ICollection<ActivityEmployees> ActivityEmployees { get; set; } = new List<ActivityEmployees>();
         public ICollection<ProductEmployees> ProductEmployees { get; set; } = new List<ProductEmployees>();
+        public ICollection<OrderContacts> OrderContacts { get; set; } = new List<OrderContacts>();
+        public ICollection<CustomerContacts> CustomerContacts { get; set; } = new List<CustomerContacts>();
+        public ICollection<CustomerOrders> CustomerOrders { get; set; } = new List<CustomerOrders>();
+
 
     }
 }

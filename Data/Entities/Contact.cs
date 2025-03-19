@@ -1,6 +1,4 @@
 
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Data.Entities
 {
     public class Contact : BaseEntity
@@ -44,5 +42,8 @@ namespace Data.Entities
 
         public List<Order> Orders { get; set; } = new List<Order>();
         public ICollection<ContactEmployees> ContactEmployees { get; set; } = new List<ContactEmployees>();
+
+        public ICollection<OrderContacts> OrderContacts { get; set; } = new List<OrderContacts>();
+        public ICollection<CustomerContacts> CustomerContacts { get; set; } = new List<CustomerContacts>();
     }
 }

@@ -53,6 +53,8 @@ namespace Data.DTOs
         public int? CustomerId { get; set; }
         [JsonConverter(typeof(NullableIntConverter))]
         public int? EmployeeId { get; set; }
+
+        public int? OwnerTaskExecuteId { get; set; }
         public int PartnerId { get; set; }
         public List<int>? Orders { get; set; }
         [Required]

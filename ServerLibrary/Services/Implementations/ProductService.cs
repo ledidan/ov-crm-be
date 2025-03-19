@@ -4,6 +4,7 @@ using Data.Entities;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
+using ServerLibrary.Helpers;
 using ServerLibrary.Services.Interfaces;
 
 namespace ServerLibrary.Services.Implementations
@@ -16,13 +17,17 @@ namespace ServerLibrary.Services.Implementations
         {
             try
             {
+                var codeGenerator = new GenerateNextCode(appDbContext);
                 //check Code Product existing
                 var productChecking = await FindCodeByPartner(product.ProductCode, partner.Id);
                 if (productChecking != null) return new GeneralResponse(false, "Mã hàng hoá đã tồn tại");
 
                 var productCategory = await appDbContext.ProductCategories
                     .FirstOrDefaultAsync(pc => pc.Id == product.ProductCategoryId);
-
+                if (string.IsNullOrEmpty(product.ProductCode))
+                {
+                    product.ProductCode = await codeGenerator.GenerateNextCodeAsync<Product>("HH", c => c.ProductCode, c => c.Partner.Id == partner.Id);
+                }
                 var productCreating = new Product()
                 {
                     ProductCode = product.ProductCode,
@@ -112,24 +117,28 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<GeneralResponse> UpdateAsync(int id, UpdateProductDTO product, Partner partner)
         {
+            var codeGenerator = new GenerateNextCode(appDbContext);
             // Check if product exists
-            if (partner == null) return new GeneralResponse(false, "Invalid partner");
+            if (partner == null) return new GeneralResponse(false, "Thông tin tổ chức không hợp lệ !");
             var existingProduct = await appDbContext.Products
         .Where(p => p.Id == id && p.Partner.Id == partner.Id)
-
         .FirstOrDefaultAsync();
-            if (existingProduct == null) return new GeneralResponse(false, "Product not found");
+        
+            if (existingProduct == null) return new GeneralResponse(false, "Không tim thấy hàng hoá");
 
             //check Code Product
-
             var productChecking = await FindCodeByPartner(product.ProductCode, partner.Id);
             if (productChecking != null && productChecking.Id != id)
-                return new GeneralResponse(false, "Product code already exists");
+                return new GeneralResponse(false, "Mã hàng hoá đã tồn tại !");
 
             _mapper.Map(product, existingProduct);
 
+            if (string.IsNullOrEmpty(existingProduct.ProductCode))
+            {
+                existingProduct.ProductCode = await codeGenerator.GenerateNextCodeAsync<Product>("HH", c => c.ProductCode, c => c.Partner.Id == partner.Id);
+            }
             await appDbContext.UpdateDb(existingProduct);
-            return new GeneralResponse(true, "Product updated successfully");
+            return new GeneralResponse(true, "Cập nhật hàng hoá thành công.");
         }
         public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateProductDTO product, Employee employee, Partner partner)
         {
@@ -150,7 +159,6 @@ namespace ServerLibrary.Services.Implementations
 
             // Overwrite all fields from DTO to entity
             _mapper.Map(product, existingProduct);
-
             // Mark entity as modified
             appDbContext.Entry(existingProduct).State = EntityState.Modified;
 

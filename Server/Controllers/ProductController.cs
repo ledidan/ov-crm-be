@@ -16,7 +16,7 @@ namespace Server.Controllers
         IProductService productService,
         IEmployeeService employeeService) : ControllerBase
     {
-        [HttpGet("get-all")]
+        [HttpGet("products")]
         [Authorize(Roles = "User,Admin")]
         public async Task<List<ProductDTO>> GetProductsAsync()
         {

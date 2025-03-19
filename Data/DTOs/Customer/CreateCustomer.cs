@@ -68,10 +68,8 @@ namespace Data.DTOs
         public bool IsOldCustomer { get; set; } = false;
         public bool IsDistributor { get; set; } = false;
 
-        [Required]
         public int PartnerId { get; set; }
 
-        [Required]
         public int? EmployeeId { get; set; }
     }
 }

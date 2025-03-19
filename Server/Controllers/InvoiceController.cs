@@ -26,7 +26,7 @@ namespace Server.Controllers
             _employeeService = employeeService;
         }
 
-        [HttpGet("get-all")]
+        [HttpGet("invoices")]
         public async Task<IActionResult> GetAllInvoiceAsync()
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -149,6 +149,36 @@ namespace Server.Controllers
             }
 
             return Ok(response);
+        }
+
+        [HttpGet("{id:int}/orders")]
+        public async Task<IActionResult> GetOrdersInvoice(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            // var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+            {
+                return BadRequest("No invoice IDs provided.");
+            }
+            var orders = await _invoiceService.GetOrdersByInvoiceIdAsync(id, partner);
+            return Ok(orders);
+        }
+
+
+        [HttpGet("{id:int}/activities")]
+        public async Task<IActionResult> GetAllActivitiesByOrderIdAsync(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+            {
+                return BadRequest("No invoice IDs provided.");
+            }
+            var activities = await _invoiceService.GetAllActivitiesByIdAsync(id, employee, partner);
+            return Ok(activities);
+
         }
     }
 }

@@ -22,6 +22,13 @@ namespace Server.Controllers
             _accountService = accountService;
             _partnerService = partnerService;
         }
-
+        [HttpGet("users")]
+        public async Task<IActionResult> GetMergedEmployeeUserData()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var data = await _accountService.GetMergedEmployeeUserDataAsync(partner);
+            return Ok(data);
+        }
     }
 }

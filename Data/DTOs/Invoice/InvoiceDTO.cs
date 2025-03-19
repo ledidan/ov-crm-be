@@ -46,6 +46,7 @@ namespace Data.DTOs
         public string? RecipientName { get; set; }
         public string? RecipientPhone { get; set; }
         public string? RecipientEmail { get; set; }
+        public int? OwnerTaskExecuteId { get; set; }
         public int OwnerId { get; set; }
         [JsonConverter(typeof(NullableIntConverter))]
         public int? BuyerId { get; set; }
