@@ -23,8 +23,15 @@ FROM base AS build
 COPY . .
 
 # Publish the Server project
-RUN dotnet publish Server/Server.csproj -c Release -o /publish
+RUN dotnet publish Server/Server.csproj -c Release -o /publish 
 
+
+# Ensure Templates folder is copied correctly
+RUN mkdir -p /app/ServerLibrary/Templates
+COPY ServerLibrary/Templates /app/ServerLibrary/Templates
+
+# Debugging: Check if Templates folder exists
+RUN ls -la /app/ServerLibrary/Templates
 # ------------------------------------------
 # 3) Runtime Stage
 # ------------------------------------------
@@ -33,7 +40,8 @@ WORKDIR /app
 
 # Copy the published output from the build stage
 COPY --from=build /publish .
-
+# Copy the Templates folder again to make sure it's available at runtime
+COPY --from=build /app/ServerLibrary/Templates /app/ServerLibrary/Templates
 # Expose port 5000 for HTTP
 EXPOSE 5000
 ENV ASPNETCORE_URLS=http://+:5000

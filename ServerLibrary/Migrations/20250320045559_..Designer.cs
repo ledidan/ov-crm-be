@@ -12,8 +12,8 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250317153656_update-employee-signcontract")]
-    partial class updateemployeesigncontract
+    [Migration("20250320045559_.")]
+    partial class _
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1619,6 +1619,9 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("SearchTagID")
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("int");
+
                     b.Property<string>("TagColor")
                         .HasColumnType("longtext");
 
@@ -1666,6 +1669,8 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("PartnerId");
 
                     b.HasIndex("ProductCategoryId");
+
+                    b.HasIndex("SupplierId");
 
                     b.HasIndex(new[] { "ProductCode", "PartnerId" }, "Unique_ProductCode_PartnerId")
                         .IsUnique();
@@ -1760,27 +1765,62 @@ namespace ServerLibrary.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("BatchNumber")
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateDispatched")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateReceived")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("ExpirationDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("InventoryValue")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<int>("MinimumStockLevel")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("ModifiedDate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int>("OrderQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductCode")
+                        .HasColumnType("longtext");
+
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<double>("PurchasePrice")
-                        .HasColumnType("double");
+                    b.Property<string>("ProductName")
+                        .HasColumnType("longtext");
 
-                    b.Property<int>("QuantitySold")
+                    b.Property<int?>("QuantityInStock")
                         .HasColumnType("int");
 
-                    b.Property<int>("TotalQuantity")
+                    b.Property<int?>("StockStatus")
                         .HasColumnType("int");
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UnitOfMeasure")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("WarehouseLocation")
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("SupplierId");
 
                     b.ToTable("ProductInventories");
                 });
@@ -1844,6 +1884,35 @@ namespace ServerLibrary.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("RefreshTokenInfos");
+                });
+
+            modelBuilder.Entity("Data.Entities.Supplier", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ContactInfo")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("SupplierName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Suppliers");
                 });
 
             modelBuilder.Entity("Data.Entities.SystemRole", b =>
@@ -2335,9 +2404,16 @@ namespace ServerLibrary.Migrations
                         .WithMany()
                         .HasForeignKey("ProductCategoryId");
 
+                    b.HasOne("Data.Entities.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Partner");
 
                     b.Navigation("ProductCategory");
+
+                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("Data.Entities.ProductCategory", b =>
@@ -2388,12 +2464,19 @@ namespace ServerLibrary.Migrations
             modelBuilder.Entity("Data.Entities.ProductInventory", b =>
                 {
                     b.HasOne("Data.Entities.Product", "Product")
-                        .WithMany()
+                        .WithMany("ProductInventories")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Data.Entities.Supplier", "Supplier")
+                        .WithMany("ProductInventories")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Product");
+
+                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("Data.Entities.ProductPrice", b =>
@@ -2518,11 +2601,18 @@ namespace ServerLibrary.Migrations
             modelBuilder.Entity("Data.Entities.Product", b =>
                 {
                     b.Navigation("ProductEmployees");
+
+                    b.Navigation("ProductInventories");
                 });
 
             modelBuilder.Entity("Data.Entities.ProductCategory", b =>
                 {
                     b.Navigation("SubCategories");
+                });
+
+            modelBuilder.Entity("Data.Entities.Supplier", b =>
+                {
+                    b.Navigation("ProductInventories");
                 });
 #pragma warning restore 612, 618
         }

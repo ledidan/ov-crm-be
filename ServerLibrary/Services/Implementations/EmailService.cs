@@ -33,9 +33,20 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<string> GetEmailTemplateAsync(string fullName, string verificationLink, string templateName)
         {
-            string projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName;
+            string projectRoot;
+            if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")
+            {
+                projectRoot = "/app";
+            }
+            else
+            {
+                projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName;
+            }
             string templateFolder = Path.Combine(projectRoot, "ServerLibrary", "Templates");
             string templatePath = Path.Combine(templateFolder, templateName);
+
+            Console.WriteLine($"Template Folder: {templateFolder}");
+            Console.WriteLine($"Template Path: {templatePath}");
 
             if (!Directory.Exists(templateFolder))
             {
