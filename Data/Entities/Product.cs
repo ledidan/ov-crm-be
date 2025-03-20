@@ -52,10 +52,13 @@ namespace Data.Entities
         public string? WarrantyDescription { get; set; }
         public string? WarrantyPeriod { get; set; }
         public string? WarrantyPeriodTypeID { get; set; }
+        public int? SupplierId { get; set; }
         public int? OwnerID { get; set; }
         public ProductCategory? ProductCategory { get; set; }
         public List<Employee> Employees { get; set; } = new List<Employee>();
         public ICollection<ProductEmployees> ProductEmployees { get; set; } = new List<ProductEmployees>();
+        public virtual ICollection<ProductInventory> ProductInventories { get; set; } = new List<ProductInventory>();
+        public virtual Supplier? Supplier { get; set; } // Liên kết với Supplier
         public virtual required Partner Partner { get; set; }
     }
 }

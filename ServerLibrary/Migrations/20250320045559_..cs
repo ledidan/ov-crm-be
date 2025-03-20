@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ServerLibrary.Migrations
 {
     /// <inheritdoc />
-    public partial class updateonetooneactivity : Migration
+    public partial class _ : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -65,6 +65,7 @@ namespace ServerLibrary.Migrations
                     ModifiedBy = table.Column<int>(type: "int", nullable: true),
                     ContactId = table.Column<int>(type: "int", nullable: true),
                     OrderId = table.Column<int>(type: "int", nullable: true),
+                    InvoiceId = table.Column<int>(type: "int", nullable: true),
                     RelatedUsersID = table.Column<int>(type: "int", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
@@ -201,6 +202,27 @@ namespace ServerLibrary.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Suppliers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    SupplierName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ContactInfo = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Address = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Suppliers", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "SystemRoles",
                 columns: table => new
                 {
@@ -222,9 +244,7 @@ namespace ServerLibrary.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     IsAllDay = table.Column<bool>(type: "tinyint(1)", nullable: true),
-                    ActivityId = table.Column<int>(type: "int", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    ActivityId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -264,9 +284,7 @@ namespace ServerLibrary.Migrations
                     CallResultID = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     PhoneNumber = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
@@ -290,9 +308,7 @@ namespace ServerLibrary.Migrations
                     MissionName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     MissionTypeID = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
@@ -545,13 +561,13 @@ namespace ServerLibrary.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    EmployeeCode = table.Column<string>(type: "longtext", nullable: true)
+                    EmployeeCode = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     FullName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Gender = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateOfBirth = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    DateOfBirth = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     PhoneNumber = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Email = table.Column<string>(type: "longtext", nullable: true)
@@ -567,7 +583,7 @@ namespace ServerLibrary.Migrations
                     JobStatus = table.Column<int>(type: "int", nullable: false),
                     SignedProbationaryContract = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     Resignation = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    SignedContractDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    SignedContractDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     PartnerId = table.Column<int>(type: "int", nullable: false),
                     JobPositionGroupId = table.Column<int>(type: "int", nullable: true),
                     JobTitleGroupId = table.Column<int>(type: "int", nullable: true),
@@ -740,6 +756,7 @@ namespace ServerLibrary.Migrations
                     RevenueAccountingAmount = table.Column<decimal>(type: "decimal(65,30)", nullable: true),
                     RevenueRecognitionDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     CustomerId = table.Column<int>(type: "int", nullable: true),
+                    OwnerTaskExecuteId = table.Column<int>(type: "int", nullable: true),
                     ContactId = table.Column<int>(type: "int", nullable: true),
                     ContactName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -971,16 +988,23 @@ namespace ServerLibrary.Migrations
                     RecipientEmail = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     OwnerId = table.Column<int>(type: "int", nullable: true),
+                    OwnerTaskExecuteId = table.Column<int>(type: "int", nullable: true),
                     CustomerId = table.Column<int>(type: "int", nullable: true),
                     BuyerId = table.Column<int>(type: "int", nullable: true),
                     OrderId = table.Column<int>(type: "int", nullable: true),
                     PartnerId = table.Column<int>(type: "int", nullable: false),
+                    ActivityId = table.Column<int>(type: "int", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Invoices", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Invoices_Activities_ActivityId",
+                        column: x => x.ActivityId,
+                        principalTable: "Activities",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Invoices_Customers_CustomerId",
                         column: x => x.CustomerId,
@@ -1291,6 +1315,7 @@ namespace ServerLibrary.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     WarrantyPeriodTypeID = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    SupplierId = table.Column<int>(type: "int", nullable: true),
                     OwnerID = table.Column<int>(type: "int", nullable: true),
                     ProductCategoryId = table.Column<int>(type: "int", nullable: true),
                     PartnerId = table.Column<int>(type: "int", nullable: false),
@@ -1311,6 +1336,12 @@ namespace ServerLibrary.Migrations
                         column: x => x.ProductCategoryId,
                         principalTable: "ProductCategories",
                         principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Products_Suppliers_SupplierId",
+                        column: x => x.SupplierId,
+                        principalTable: "Suppliers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -1348,25 +1379,32 @@ namespace ServerLibrary.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "InvoiceOrder",
+                name: "InvoiceOrders",
                 columns: table => new
                 {
-                    InvoicesId = table.Column<int>(type: "int", nullable: false),
-                    OrdersId = table.Column<int>(type: "int", nullable: false)
+                    InvoiceId = table.Column<int>(type: "int", nullable: false),
+                    OrderId = table.Column<int>(type: "int", nullable: false),
+                    PartnerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_InvoiceOrder", x => new { x.InvoicesId, x.OrdersId });
+                    table.PrimaryKey("PK_InvoiceOrders", x => new { x.OrderId, x.InvoiceId, x.PartnerId });
                     table.ForeignKey(
-                        name: "FK_InvoiceOrder_Invoices_InvoicesId",
-                        column: x => x.InvoicesId,
+                        name: "FK_InvoiceOrders_Invoices_InvoiceId",
+                        column: x => x.InvoiceId,
                         principalTable: "Invoices",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_InvoiceOrders_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_InvoiceOrder_Orders_OrdersId",
-                        column: x => x.OrdersId,
-                        principalTable: "Orders",
+                        name: "FK_InvoiceOrders_Partners_PartnerId",
+                        column: x => x.PartnerId,
+                        principalTable: "Partners",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -1412,9 +1450,25 @@ namespace ServerLibrary.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     ProductId = table.Column<int>(type: "int", nullable: false),
-                    PurchasePrice = table.Column<double>(type: "double", nullable: false),
-                    TotalQuantity = table.Column<int>(type: "int", nullable: false),
-                    QuantitySold = table.Column<int>(type: "int", nullable: false),
+                    ProductCode = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ProductName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    QuantityInStock = table.Column<int>(type: "int", nullable: true),
+                    UnitOfMeasure = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    WarehouseLocation = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    InventoryValue = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    DateReceived = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DateDispatched = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    StockStatus = table.Column<int>(type: "int", nullable: true),
+                    BatchNumber = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ExpirationDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    OrderQuantity = table.Column<int>(type: "int", nullable: false),
+                    MinimumStockLevel = table.Column<int>(type: "int", nullable: false),
+                    SupplierId = table.Column<int>(type: "int", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
@@ -1427,6 +1481,12 @@ namespace ServerLibrary.Migrations
                         principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProductInventories_Suppliers_SupplierId",
+                        column: x => x.SupplierId,
+                        principalTable: "Suppliers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -1569,9 +1629,19 @@ namespace ServerLibrary.Migrations
                 column: "PartnerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_InvoiceOrder_OrdersId",
-                table: "InvoiceOrder",
-                column: "OrdersId");
+                name: "IX_InvoiceOrders_InvoiceId",
+                table: "InvoiceOrders",
+                column: "InvoiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InvoiceOrders_PartnerId",
+                table: "InvoiceOrders",
+                column: "PartnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Invoices_ActivityId",
+                table: "Invoices",
+                column: "ActivityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Invoices_CustomerId",
@@ -1660,6 +1730,11 @@ namespace ServerLibrary.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProductInventories_SupplierId",
+                table: "ProductInventories",
+                column: "SupplierId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProductPrices_ProductId",
                 table: "ProductPrices",
                 column: "ProductId");
@@ -1673,6 +1748,11 @@ namespace ServerLibrary.Migrations
                 name: "IX_Products_ProductCategoryId",
                 table: "Products",
                 column: "ProductCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_SupplierId",
+                table: "Products",
+                column: "SupplierId");
 
             migrationBuilder.CreateIndex(
                 name: "Unique_ProductCode_PartnerId",
@@ -1731,7 +1811,7 @@ namespace ServerLibrary.Migrations
                 name: "InvoiceEmployees");
 
             migrationBuilder.DropTable(
-                name: "InvoiceOrder");
+                name: "InvoiceOrders");
 
             migrationBuilder.DropTable(
                 name: "JobPositionGroups");
@@ -1773,9 +1853,6 @@ namespace ServerLibrary.Migrations
                 name: "Invoices");
 
             migrationBuilder.DropTable(
-                name: "Activities");
-
-            migrationBuilder.DropTable(
                 name: "Contacts");
 
             migrationBuilder.DropTable(
@@ -1794,10 +1871,16 @@ namespace ServerLibrary.Migrations
                 name: "SystemRoles");
 
             migrationBuilder.DropTable(
+                name: "Activities");
+
+            migrationBuilder.DropTable(
                 name: "Customers");
 
             migrationBuilder.DropTable(
                 name: "ProductCategories");
+
+            migrationBuilder.DropTable(
+                name: "Suppliers");
 
             migrationBuilder.DropTable(
                 name: "Partners");

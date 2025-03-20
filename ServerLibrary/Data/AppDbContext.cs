@@ -284,6 +284,27 @@ namespace ServerLibrary.Data
                 .WithOne(a => a.Call)
                 .HasForeignKey<Call>(c => c.ActivityId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+
+            builder.Entity<ProductInventory>()
+            .HasOne(i => i.Product)
+            .WithMany(p => p.ProductInventories)
+            .HasForeignKey(i => i.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            // Cấu hình mối quan hệ Inventory - Supplier
+            builder.Entity<ProductInventory>()
+                .HasOne(i => i.Supplier)
+                .WithMany(s => s.ProductInventories)
+                .HasForeignKey(i => i.SupplierId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Cấu hình mối quan hệ Product - Supplier
+            builder.Entity<Product>()
+                .HasOne(p => p.Supplier)
+                .WithMany()
+                .HasForeignKey(p => p.SupplierId)
+                .OnDelete(DeleteBehavior.SetNull);
             base.OnModelCreating(builder);
 
         }
@@ -327,6 +348,8 @@ namespace ServerLibrary.Data
         public DbSet<JobPositionGroup> JobPositionGroups { get; set; }
 
         public DbSet<JobTitleGroup> JobTitleGroups { get; set; }
+
+        public DbSet<Supplier> Suppliers { get; set; }
 
     }
 }
