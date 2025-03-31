@@ -89,15 +89,15 @@ namespace Server.Controllers
             var partner = await _partnerService.FindByClaim(identity);
             var employee = await _employeeService.FindByClaim(identity);
             if (invoiceDTO == null)
-                return BadRequest(new { message = "Invalid request data" });
+                return BadRequest(new { message = "Dữ liệu không đúng định dạng" });
 
             if (employee == null || partner == null)
-                return Unauthorized(new { message = "Unauthorized access" });
+                return Unauthorized(new { message = "Bạn không có quyền truy cập vào hoá đơn này" });
 
             var result = await _invoiceService.UpdateFieldIdAsync(id, invoiceDTO, employee, partner);
 
             if (result == null || !result.Flag)
-                return NotFound(new { message = result?.Message ?? "Invoice not found" });
+                return NotFound(new { message = result?.Message ?? "Không tìm thấy hoá đơn" });
 
             return Ok(new { Flag = result.Flag, Message = result.Message });
         }
@@ -178,7 +178,42 @@ namespace Server.Controllers
             }
             var activities = await _invoiceService.GetAllActivitiesByIdAsync(id, employee, partner);
             return Ok(activities);
+        }
 
+        [HttpDelete("{id:int}/order")]
+        public async Task<IActionResult> RemoveOrderFromInvoice(int id, [FromBody] int orderId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+            {
+                return BadRequest("Không tìm thấy hoá đơn");
+            }
+            var result = await _invoiceService.RemoveOrderFromInvoiceAsync(id, orderId, employee, partner);
+            if (result.Flag == true)
+            {
+                return Ok(result);
+            }
+            return BadRequest("Đã xảy ra lỗi trong khi xoá đơn hàng khỏi hoá đơn");
+        }
+
+        [HttpDelete("{id:int}/activity")]
+        public async Task<IActionResult> RemoveActivityFromInvoice(int id, [FromBody] int activityId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+            {
+                return BadRequest("Không tìm thấy hoá đơn");
+            }
+            var result = await _invoiceService.RemoveActivityFromInvoiceAsync(id, activityId, employee, partner);
+            if (result.Flag == true)
+            {
+                return Ok(result);
+            }
+            return BadRequest("Đã xảy ra lỗi trong khi xoá hoạt động khỏi hoá đơn");
         }
     }
 }

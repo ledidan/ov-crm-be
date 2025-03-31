@@ -110,7 +110,6 @@ namespace Data.Entities
         public required Partner Partner { get; set; }
         public ICollection<OrderEmployees> OrderEmployees { get; set; } = new List<OrderEmployees>();
         public ICollection<OrderContacts> OrderContacts { get; set; } = new List<OrderContacts>();
-        public ICollection<CustomerOrders> CustomerOrders { get; set; } = new List<CustomerOrders>();
 
            public ICollection<InvoiceOrders> InvoiceOrders { get; set; } = new List<InvoiceOrders>();
 

@@ -248,5 +248,59 @@ namespace Server.Controllers
             return Ok(response);
 
         }
+
+        [HttpPut("{id:int}/customer/unassign")]
+        public async Task<IActionResult> UnassignCustomerFromOrder(int id, [FromBody] int customerId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+            {
+                return BadRequest("Không tìm thấy đơn hàng");
+            }
+            var response = await _ordersService.UnassignCustomerFromOrder(id, customerId, employee, partner);
+            if (response == null || !response.Flag)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);
+        }
+
+        [HttpPut("{id:int}/activity/unassign")]
+        public async Task<IActionResult> UnassignActivityFromOrder(int id, [FromBody] int activityId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+            {
+                return BadRequest("Không tìm thấy đơn hàng");
+            }
+            var response = await _ordersService.UnassignActivityFromOrder(id, activityId, partner);
+            if (response == null || !response.Flag)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);
+        }
+
+        [HttpDelete("{id:int}/contact")]
+        public async Task<IActionResult> RemoveContactFromOrder(int id, [FromBody] int contactId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+            {
+                return BadRequest("Không tìm thấy đơn hàng");
+            }
+            var response = await _ordersService.RemoveContactFromOrder(id, contactId, employee, partner);
+            if (response == null || !response.Flag)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);
+        }
     }
 }

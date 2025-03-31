@@ -26,5 +26,17 @@ namespace ServerLibrary.Services.Interfaces
         Task<List<OptionalOrderDTO?>> GetAllOrdersByContactAsync(int contactId, Employee employee, Partner partner);
 
         Task<List<ContactInvoiceDTO?>> GetAllInvoicesByContactAsync(int contactId, Employee employee, Partner partner);
+
+        Task<List<ActivityDTO?>> GetAllActivitiesByContactAsync(int contactId, Employee employee, Partner partner);
+
+        //** Contacts 
+        Task<GeneralResponse?> UnassignInvoiceFromContactAsync(int id, int invoiceId, Employee employee, Partner partner);
+
+        Task<GeneralResponse?> AssignContactToOrderAsync(int id, AssignOrderRequest request, Employee employee, Partner partner);
+
+        Task<GeneralResponse?> UnassignContactToOrderAsync(int id, AssignOrderRequest request, Employee employee, Partner partner);
+
+
+        Task<GeneralResponse?> UnassignActivityFromContactAsync(int id, int activityId, Employee employee, Partner partner);
     }
 }

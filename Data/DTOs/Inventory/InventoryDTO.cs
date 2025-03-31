@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+
+
+using Data.Entities;
 using Data.Enums;
 
-namespace Data.Entities
+namespace Data.DTOs
 {
-
-    public class ProductInventory : BaseEntity
+    public class InventoryDTO
     {
         public int Id { get; set; } // Khóa chính cho Inventory
 
@@ -38,12 +39,11 @@ namespace Data.Entities
 
         public int MinimumStockLevel { get; set; } // Ngưỡng tồn kho tối thiểu (Minimum Stock Level)
 
-        public virtual Product Product { get; set; } // Navigation property tới Product
+        public string? SupplierName { get; set; }
 
-        public required Partner Partner { get; set; }
-        // Liên kết với Supplier
-        public int? SupplierId { get; set; } // Nhà cung cấp (Supplier) - Nullable nếu không bắt buộc
+        public string? PartnerName { get; set; }
+        public int PartnerId { get; set; }
+        public int? SupplierId { get; set; } 
 
-        public virtual Supplier Supplier { get; set; } // Navigation property tới Supplier
     }
 }

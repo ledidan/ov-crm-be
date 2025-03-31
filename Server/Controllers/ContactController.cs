@@ -198,6 +198,90 @@ namespace Server.Controllers
             }
             return BadRequest("Lỗi khi lấy dữ liệu hoá đơn");
         }
+
+
+        [HttpPut("{id:int}/orders/assign")]
+        public async Task<IActionResult> AssignContactToOrder(int id, [FromBody] AssignOrderRequest request)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (employee == null || partner == null)
+            {
+                return BadRequest("Invalid employeeId or partnerId provided.");
+            }
+            var result = await _contactService.AssignContactToOrderAsync(id, request, employee, partner);
+            if (!result.Flag)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result);
+        }
+        [HttpPut("{id:int}/orders/unassign")]
+        public async Task<IActionResult> UnassignContactToOrder(int id, [FromBody] AssignOrderRequest request)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (employee == null || partner == null)
+            {
+                return BadRequest("Invalid employeeId or partnerId provided.");
+            }
+            var result = await _contactService.UnassignContactToOrderAsync(id, request, employee, partner);
+            if (!result.Flag)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result);
+        }
+        [HttpPut("{id:int}/invoice/unassign")]
+        public async Task<IActionResult> UnassignInvoiceFromContact(int id, [FromBody] int invoiceId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (employee == null || partner == null)
+            {
+                return BadRequest("Invalid employeeId or partnerId provided.");
+            }
+            var result = await _contactService.UnassignInvoiceFromContactAsync(id, invoiceId, employee, partner);
+            if (!result.Flag)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result);
+        }
+        [HttpGet("{id:int}/activities")]
+        public async Task<IActionResult> GetAllActivitiesByContact(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (employee == null || partner == null)
+            {
+                return BadRequest("Invalid employeeId or partnerId provided.");
+            }
+            var result = await _contactService.GetAllActivitiesByContactAsync(id, employee, partner);
+            return Ok(result);
+        }
+
+        [HttpPut("{id:int}/activity/unassign")]
+        public async Task<IActionResult> UnassignActivityFromContact(int id, [FromBody] int activityId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (employee == null || partner == null)
+            {
+                return BadRequest("Invalid employeeId or partnerId provided.");
+            }
+            var result = await _contactService.UnassignActivityFromContactAsync(id, activityId, employee, partner);
+            if (!result.Flag)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result);
+        }
     }
 }
 

@@ -248,24 +248,7 @@ namespace ServerLibrary.Data
             {
                 j.HasKey(ce => new { ce.CustomerId, ce.ContactId, ce.PartnerId });
             });
-            builder.Entity<Customer>()
-        .HasMany(c => c.Orders)
-        .WithMany(e => e.Customers)
-        .UsingEntity<CustomerOrders>(
-            j => j
-                .HasOne(ce => ce.Order)
-                .WithMany(e => e.CustomerOrders)
-                .HasForeignKey(ce => ce.OrderId)
-                .OnDelete(DeleteBehavior.Restrict),
-            j => j
-                .HasOne(ce => ce.Customer)
-                .WithMany(c => c.CustomerOrders)
-                .HasForeignKey(ce => ce.CustomerId)
-                .OnDelete(DeleteBehavior.Cascade),
-            j =>
-            {
-                j.HasKey(ce => new { ce.CustomerId, ce.OrderId, ce.PartnerId });
-            });
+      
 
             builder.Entity<Appointment>()
         .HasOne(a => a.Activity)
@@ -310,7 +293,6 @@ namespace ServerLibrary.Data
         }
         public DbSet<InvoiceEmployees> InvoiceEmployees { get; set; }
         public DbSet<CustomerContacts> CustomerContacts { get; set; }
-        public DbSet<CustomerOrders> CustomerOrders { get; set; }
         public DbSet<CustomerEmployees> CustomerEmployees { get; set; }
         public DbSet<ProductEmployees> ProductEmployees { get; set; }
         public DbSet<ContactEmployees> ContactEmployees { get; set; }
