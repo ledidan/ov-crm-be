@@ -135,6 +135,7 @@ builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IJobGroupService, JobGroupService>();
+builder.Services.AddScoped<IProductInventoryService, ProductInventoryService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<S3Service>();
 

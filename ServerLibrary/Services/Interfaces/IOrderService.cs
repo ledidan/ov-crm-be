@@ -21,7 +21,7 @@ namespace ServerLibrary.Services.Interfaces
         Task<GeneralResponse?> DeleteBulkOrdersAsync(string ids, Employee employee, Partner partner);
 
 
-        Task<GeneralResponse> RemoveInvoiceFromIdAsync(int id, Employee employee, Partner partner);
+        Task<GeneralResponse?> RemoveInvoiceFromIdAsync(int id, Employee employee, Partner partner);
 
 
         Task<GeneralResponse?> BulkAddContactsIntoOrder(List<int> ContactIds, int OrderId, Employee employee, Partner Partner);
@@ -34,6 +34,17 @@ namespace ServerLibrary.Services.Interfaces
 
 
         Task<List<InvoiceDTO>> GetAllInvoicesAsync(int id, Employee employee, Partner partner);
-        // Task<GeneralResponse?> RemoveOrderAsync(int orderId, int employeeId);
+
+        //** Unassign Customer from Order
+        Task<GeneralResponse?> UnassignCustomerFromOrder(int id, int customerId, Employee employee, Partner partner);
+
+        //** Unassign Activity from Order
+        Task<GeneralResponse?> UnassignActivityFromOrder(int id, int activityId, Partner partner);
+
+        //** Remove Contact from Order
+        Task<GeneralResponse?> RemoveContactFromOrder(int id, int contactId, Employee employee, Partner partner);
+
+
     }
+
 }

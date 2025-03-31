@@ -77,8 +77,6 @@ namespace Data.Entities
         public List<Order> Orders { get; set; } = new List<Order>();
         public ICollection<CustomerEmployees> CustomerEmployees { get; set; } = new List<CustomerEmployees>();
         public ICollection<CustomerContacts> CustomerContacts { get; set; } = new List<CustomerContacts>();
-        public ICollection<CustomerOrders> CustomerOrders { get; set; } = new List<CustomerOrders>();
-
 
     }
 }

@@ -10,7 +10,7 @@ namespace ServerLibrary.Services.Interfaces
         Task<DataStringResponse> CreateAsync(CreateCustomer customer, Employee employee, Partner partner);
         Task<GeneralResponse?> UpdateAsync(int id, CustomerDTO updateCustomer, Employee employee, Partner partner);
 
-        Task<GeneralResponse?> UpdateFieldIdAsync(int id, CustomerDTO updateCustomer, Employee employee, Partner partner);
+        Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateCustomerDTO updateCustomer, Employee employee, Partner partner);
         Task<List<Customer?>> GetAllAsync(Employee employee, Partner partner);
         Task<GeneralResponse?> DeleteBulkCustomers(string ids, Employee employee, Partner partner);
         Task<Customer?> GetCustomerByIdAsync(int id, Employee employee, Partner partner);
@@ -22,6 +22,15 @@ namespace ServerLibrary.Services.Interfaces
         Task<GeneralResponse?> BulkAddContactsIntoCustomer(List<int> contactIds, int customerId, Employee employee, Partner partner);
 
         Task<GeneralResponse?> RemoveContactFromCustomer(int id, int contactId, Partner partner);
+
+
+        Task<GeneralResponse?> UnassignActivityFromCustomer(int id, int activityId, Partner partner);
+
+        Task<GeneralResponse?> UnassignOrderFromCustomer(int id, int orderId, Partner partner);
+
+        Task<GeneralResponse?> UnassignInvoiceFromCustomer(int id, int invoiceId, Partner partner);
+
+        
         //  ** Bulk Get Customer Relationship
 
         Task<List<ContactDTO>> GetAllContactsByIdAsync(int id, Partner partner);

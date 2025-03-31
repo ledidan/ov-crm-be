@@ -217,7 +217,7 @@ namespace ServerLibrary.Services.Implementations
                 Quantity = detailDto.Quantity,
                 AmountSummary = detailDto.AmountSummary,
             }).ToList();
-            
+
             // có orders mới chạy code
             if (orderDetails.Any())
             {
@@ -492,96 +492,117 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateOrderDTO orderDTO, Employee employee, Partner partner)
         {
+            var strategy = _appContext.Database.CreateExecutionStrategy();
 
-            using var transaction = await _appContext.Database.BeginTransactionAsync();
-            try
+            return await strategy.ExecuteAsync(async () =>
             {
-                if (orderDTO == null || id <= 0)
+                await using var transaction = await _appContext.Database.BeginTransactionAsync();
+                try
                 {
-                    return new GeneralResponse(false, "Invalid order data provided.");
-                }
-
-                Order? existingOrder = await _appContext.Orders
-                    .Include(c => c.OrderEmployees)
-                    .FirstOrDefaultAsync(o => o.Id == id
-                        && (o.OwnerId == employee.Id || o.OrderEmployees.Any(oe => oe.EmployeeId == employee.Id && oe.AccessLevel == AccessLevel.Write))
-                        && o.Partner == partner);
-
-                if (existingOrder == null)
-                {
-                    return new GeneralResponse(false, "Order not found.");
-                }
-
-                _mapper.Map(orderDTO, existingOrder);
-
-                existingOrder.OwnerId = employee.Id;
-                existingOrder.Partner = partner;
-
-                _appContext.Orders.Update(existingOrder);
-                await _appContext.SaveChangesAsync();
-
-                // Update MongoDB Order Details
-                var existingOrderDetails = await _ordersDetailsCollection.Find(d => d.OrderId == id).ToListAsync();
-
-                var updatedOrderDetails = new List<ReplaceOneModel<OrderDetails>>();
-                var newOrderDetails = new List<OrderDetails>();
-                var detailIdsToKeep = new HashSet<string>();
-
-                foreach (var detailDto in orderDTO.OrderDetails)
-                {
-                    var detailId = string.IsNullOrEmpty(detailDto.Id) ? ObjectId.GenerateNewId().ToString() : detailDto.Id;
-                    var existingDetail = existingOrderDetails.FirstOrDefault(d => d.Id == detailId);
-
-                    if (existingDetail != null)
+                    if (orderDTO == null || id <= 0)
                     {
-                        // Overwrite all fields in existing detail
-                        _mapper.Map(detailDto, existingDetail);
-                        existingDetail.PartnerId = partner.Id;
-
-                        updatedOrderDetails.Add(new ReplaceOneModel<OrderDetails>(
-                            Builders<OrderDetails>.Filter.Eq(d => d.Id, detailId),
-                            existingDetail
-                        )
-                        { IsUpsert = true });
-                    }
-                    else
-                    {
-                        var newDetail = _mapper.Map<OrderDetails>(detailDto);
-                        newDetail.Id = detailId;
-                        newDetail.OrderId = existingOrder.Id;
-                        newDetail.PartnerId = partner.Id;
-
-                        newOrderDetails.Add(newDetail);
+                        return new GeneralResponse(false, "Invalid order data provided.");
                     }
 
-                    detailIdsToKeep.Add(detailId);
-                }
+                    var existingOrder = await _appContext.Orders
+                        .Include(c => c.OrderEmployees)
+                        .FirstOrDefaultAsync(o => o.Id == id
+                            && (o.OwnerId == employee.Id || o.OrderEmployees.Any(oe => oe.EmployeeId == employee.Id && oe.AccessLevel == AccessLevel.Write))
+                            && o.Partner == partner);
 
-                var detailIdsToDelete = existingOrderDetails.Select(d => d.Id).Except(detailIdsToKeep).ToList();
-                if (detailIdsToDelete.Any())
-                {
-                    await _ordersDetailsCollection.DeleteManyAsync(d => detailIdsToDelete.Contains(d.Id));
-                }
+                    if (existingOrder == null)
+                    {
+                        return new GeneralResponse(false, "Order not found.");
+                    }
+                    decimal? previousSaleOrderAmount = existingOrder.SaleOrderAmount;
 
-                // Perform Bulk Update in MongoDB
-                if (updatedOrderDetails.Any())
-                {
-                    await _ordersDetailsCollection.BulkWriteAsync(updatedOrderDetails);
-                }
-                if (newOrderDetails.Any())
-                {
-                    await _ordersDetailsCollection.InsertManyAsync(newOrderDetails);
-                }
+                    foreach (var prop in typeof(UpdateOrderDTO).GetProperties())
+                    {
+                        var newValue = prop.GetValue(orderDTO);
+                        if (newValue != null)
+                        {
+                            var existingProp = typeof(Order).GetProperty(prop.Name);
+                            if (existingProp != null)
+                            {
+                                var currentValue = existingProp.GetValue(existingOrder);
+                                if (!object.Equals(currentValue, newValue))
+                                {
+                                    existingProp.SetValue(existingOrder, newValue);
+                                    _appContext.Entry(existingOrder).Property(existingProp.Name).IsModified = true;
+                                }
 
-                await transaction.CommitAsync();
-                return new GeneralResponse(true, "Order updated successfully.");
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return new GeneralResponse(false, $"Failed to update order: {ex.Message}");
-            }
+                            }
+                        }
+                    }
+                    existingOrder.OwnerId = employee.Id;
+                    existingOrder.Partner = partner;
+
+                    await _appContext.SaveChangesAsync();
+
+                    // Update MongoDB Order Details
+                    if (orderDTO.OrderDetails != null)
+                    {
+                        var existingOrderDetails = await _ordersDetailsCollection.Find(d => d.OrderId == id).ToListAsync();
+                        var updatedOrderDetails = new List<ReplaceOneModel<OrderDetails>>();
+                        var newOrderDetails = new List<OrderDetails>();
+                        var detailIdsToKeep = new HashSet<string>();
+
+                        foreach (var detailDto in orderDTO.OrderDetails)
+                        {
+                            var detailId = string.IsNullOrEmpty(detailDto.Id) ? ObjectId.GenerateNewId().ToString() : detailDto.Id;
+                            var existingDetail = existingOrderDetails.FirstOrDefault(d => d.Id == detailId);
+
+                            if (existingDetail != null)
+                            {
+                                existingDetail = _mapper.Map<OrderDetails>(detailDto);
+                                existingDetail.PartnerId = partner.Id;
+
+                                updatedOrderDetails.Add(new ReplaceOneModel<OrderDetails>(
+                                    Builders<OrderDetails>.Filter.Eq(d => d.Id, detailId),
+                                    existingDetail
+                                )
+                                { IsUpsert = true });
+                            }
+                            else
+                            {
+                                var newDetail = _mapper.Map<OrderDetails>(detailDto);
+                                newDetail.Id = detailId;
+                                newDetail.OrderId = existingOrder.Id;
+                                newDetail.PartnerId = partner.Id;
+
+                                newOrderDetails.Add(newDetail);
+                            }
+
+                            detailIdsToKeep.Add(detailId);
+                        }
+
+                        var detailIdsToDelete = existingOrderDetails.Select(d => d.Id).Except(detailIdsToKeep).ToList();
+                        if (detailIdsToDelete.Any())
+                        {
+                            await _ordersDetailsCollection.DeleteManyAsync(d => detailIdsToDelete.Contains(d.Id));
+                        }
+
+                        if (updatedOrderDetails.Any())
+                        {
+                            await _ordersDetailsCollection.BulkWriteAsync(updatedOrderDetails);
+                        }
+                        if (newOrderDetails.Any())
+                        {
+                            await _ordersDetailsCollection.InsertManyAsync(newOrderDetails);
+                        }
+                    }
+
+                    await transaction.CommitAsync();
+                    return new GeneralResponse(true, "Cập nhật đơn hàng thành công");
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return new GeneralResponse(false, $"Đã xảy ra lỗi khi cập nhật đơn hàng: {ex.Message}");
+                }
+            });
         }
+
         public async Task<GeneralResponse?> BulkAddContactsIntoOrder(List<int> ContactIds, int OrderId, Employee employee, Partner Partner)
         {
             if (ContactIds == null || !ContactIds.Any())
@@ -687,7 +708,7 @@ namespace ServerLibrary.Services.Implementations
          }).ToListAsync();
             return result;
         }
-        public async Task<GeneralResponse> RemoveInvoiceFromIdAsync(int id, Employee employee, Partner partner)
+        public async Task<GeneralResponse?> RemoveInvoiceFromIdAsync(int id, Employee employee, Partner partner)
         {
             Console.WriteLine($"Starting RemoveInvoiceFromIdAsync for Order ID: {id}, Employee ID: {employee?.Id}, Partner ID: {partner?.Id}");
 
@@ -767,6 +788,100 @@ namespace ServerLibrary.Services.Implementations
                 throw new Exception($"Failed to delete invoice details: {ex.Message}");
             }
 
+        }
+
+        public async Task<GeneralResponse?> UnassignCustomerFromOrder(int id, int customerId, Employee employee, Partner partner)
+        {
+            var strategy = _appContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _appContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Transaction started.");
+                    var order = await _appContext.Orders
+                        .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == customerId && o.Partner.Id == partner.Id);
+                    if (order == null)
+                    {
+                        Console.WriteLine($"No order found for ID {customerId}.");
+                        return new GeneralResponse(false, $"Không tìm thấy đơn hàng với ID {customerId}.");
+                    }
+
+                    order.CustomerId = null;
+                    _appContext.Orders.Update(order);
+                    await _appContext.SaveChangesAsync();
+                    Console.WriteLine("Order unassigned from customer successfully.");
+                    await transaction.CommitAsync();
+                    return new GeneralResponse(true, $"Đã gỡ bỏ liên kết đơn hàng với khách hàng ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return new GeneralResponse(false, $"Không thể gỡ bỏ liên kết đơn hàng với khách hàng: {ex.Message}");
+                }
+            });
+        }
+
+        public async Task<GeneralResponse?> UnassignActivityFromOrder(int id, int activityId, Partner partner)
+        {
+            var strategy = _appContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _appContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Transaction started.");
+                    var activity = await _appDbContext.Activities
+                        .FirstOrDefaultAsync(a => a.Id == activityId && a.OrderId == id && a.PartnerId == partner.Id);
+                    if (activity == null)
+                    {
+                        Console.WriteLine($"No activity found for ID {activityId}.");
+                        return new GeneralResponse(false, $"Không tìm thấy hoạt động với ID {activityId}.");
+                    }
+
+                    activity.OrderId = null;
+                    _appDbContext.Activities.Update(activity);
+                    await _appDbContext.SaveChangesAsync();
+                    Console.WriteLine("Activity unassigned from order successfully.");
+                    await transaction.CommitAsync();
+                    return new GeneralResponse(true, $"Đã gỡ bỏ liên kết hoạt động với đơn hàng ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return new GeneralResponse(false, $"Không thể gỡ bỏ liên kết hoạt động với đơn hàng: {ex.Message}");
+                }
+            });
+        }
+
+        public async Task<GeneralResponse?> RemoveContactFromOrder(int id, int contactId, Employee employee, Partner partner)
+        {
+            var strategy = _appContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _appContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Transaction started.");
+                    var order = await _appDbContext.OrderContacts.FirstOrDefaultAsync(c => c.ContactId == contactId
+                    && c.OrderId == id && c.PartnerId == partner.Id);
+                    if (order == null)
+                    {
+                        Console.WriteLine($"No order found for ID {contactId}.");
+                        return new GeneralResponse(false, $"Không tìm thấy đơn hàng với ID {contactId}.");
+                    }
+                    _appDbContext.OrderContacts.Remove(order);
+                    await _appDbContext.SaveChangesAsync();
+                    Console.WriteLine("Contact unassigned from order successfully.");
+                    await transaction.CommitAsync();
+                    return new GeneralResponse(true, $"Đã gỡ bỏ liên kết liên hệ với đơn hàng ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return new GeneralResponse(false, $"Không thể gỡ bỏ liên kết liên hệ với đơn hàng: {ex.Message}");
+                }
+            });
         }
     }
 }

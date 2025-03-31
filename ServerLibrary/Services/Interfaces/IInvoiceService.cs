@@ -24,6 +24,10 @@ namespace ServerLibrary.Services.Interfaces
         Task<GeneralResponse?> BulkUpdateInvoicesAsync(List<int> invoiceIds, int? ContactId, int? CustomerId,
          Employee employee, Partner partner);
 
+
+        Task<GeneralResponse?> RemoveOrderFromInvoiceAsync(int id, int orderId, Employee employee, Partner partner);
+
+        Task<GeneralResponse?> RemoveActivityFromInvoiceAsync(int id, int activityId, Employee employee, Partner partner);
         // Task<GeneralResponse?> RemoveOrderAsync(int orderId, int employeeId);
     }
 }

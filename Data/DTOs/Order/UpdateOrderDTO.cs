@@ -9,10 +9,10 @@ namespace Data.DTOs
     public class UpdateOrderDTO
     {
         // [Required]
-        public required string SaleOrderNo { get; set; } = string.Empty;
+        public string? SaleOrderNo { get; set; }
 
-        [Required]
-        public decimal SaleOrderAmount { get; set; }
+        // [Required]
+        public decimal? SaleOrderAmount { get; set; }
 
         public string? SaleOrderName { get; set; }
         [JsonConverter(typeof(NullableBoolConverter))]
@@ -27,14 +27,14 @@ namespace Data.DTOs
 
         public DateTime SaleOrderDate { get; set; }
 
-        [Required]
+        // [Required]
         [JsonConverter(typeof(NullableDateTimeConverter))]
         public DateTime? DueDate { get; set; }
 
         [JsonConverter(typeof(NullableDateTimeConverter))]
         public DateTime? DeadlineDate { get; set; }
 
-        [Required]
+        // [Required]
         [JsonConverter(typeof(NullableDateTimeConverter))]
         public DateTime? BookDate { get; set; }
 
@@ -147,7 +147,7 @@ namespace Data.DTOs
 
         public int? PartnerId { get; set; }
 
-        [Required(ErrorMessage = "Thông tin hàng hoá không được để trống")]
-        public required List<OrderDetailDTO> OrderDetails { get; set; } = new List<OrderDetailDTO>();
+        // [Required(ErrorMessage = "Thông tin hàng hoá không được để trống")]
+        public List<OrderDetailDTO> OrderDetails { get; set; } = new List<OrderDetailDTO>();
     }
 }

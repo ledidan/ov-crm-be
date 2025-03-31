@@ -205,12 +205,16 @@ namespace ServerLibrary.Services.Implementations
             if (!activityResponse.Flag) return activityResponse;
 
             var appointment = await _appDbContext.Appointments.FirstOrDefaultAsync(a => a.ActivityId == activityId);
-            appointment.IsAllDay = updateAppointmentDTO.IsAllDay;
 
             if (appointment == null)
                 return new GeneralResponse(false, "Không tìm thấy lịch hẹn trong của hoạt động");
 
-            _mapper.Map(updateAppointmentDTO, appointment);
+                
+            if (updateAppointmentDTO != null)
+            {
+                appointment.IsAllDay = updateAppointmentDTO.IsAllDay;
+                _mapper.Map(updateAppointmentDTO, appointment);
+            }
             await _appDbContext.SaveChangesAsync();
 
             return new GeneralResponse(true, "Cập nhật lịch hẹn thành công");

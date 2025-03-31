@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServerLibrary.Data;
 
@@ -11,9 +12,11 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250320095305_update-partner-pCateogry")]
+    partial class updatepartnerpCateogry
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,21 +53,6 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("OrdersId");
 
                     b.ToTable("ActivityOrder");
-                });
-
-            modelBuilder.Entity("CustomerOrder", b =>
-                {
-                    b.Property<int>("CustomersId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OrdersId")
-                        .HasColumnType("int");
-
-                    b.HasKey("CustomersId", "OrdersId");
-
-                    b.HasIndex("OrdersId");
-
-                    b.ToTable("CustomerOrder");
                 });
 
             modelBuilder.Entity("Data.Entities.Activity", b =>
@@ -746,6 +734,26 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("PartnerId");
 
                     b.ToTable("CustomerEmployees");
+                });
+
+            modelBuilder.Entity("Data.Entities.CustomerOrders", b =>
+                {
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CustomerId", "OrderId", "PartnerId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("CustomerOrders");
                 });
 
             modelBuilder.Entity("Data.Entities.EmailVerification", b =>
@@ -2004,21 +2012,6 @@ namespace ServerLibrary.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CustomerOrder", b =>
-                {
-                    b.HasOne("Data.Entities.Customer", null)
-                        .WithMany()
-                        .HasForeignKey("CustomersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Data.Entities.Order", null)
-                        .WithMany()
-                        .HasForeignKey("OrdersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Data.Entities.ActivityEmployees", b =>
                 {
                     b.HasOne("Data.Entities.Activity", "Activity")
@@ -2176,6 +2169,33 @@ namespace ServerLibrary.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Employee");
+
+                    b.Navigation("Partner");
+                });
+
+            modelBuilder.Entity("Data.Entities.CustomerOrders", b =>
+                {
+                    b.HasOne("Data.Entities.Customer", "Customer")
+                        .WithMany("CustomerOrders")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Order", "Order")
+                        .WithMany("CustomerOrders")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany("CustomerOrders")
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Order");
 
                     b.Navigation("Partner");
                 });
@@ -2530,6 +2550,8 @@ namespace ServerLibrary.Migrations
 
                     b.Navigation("CustomerEmployees");
 
+                    b.Navigation("CustomerOrders");
+
                     b.Navigation("Invoices");
                 });
 
@@ -2557,6 +2579,8 @@ namespace ServerLibrary.Migrations
 
             modelBuilder.Entity("Data.Entities.Order", b =>
                 {
+                    b.Navigation("CustomerOrders");
+
                     b.Navigation("InvoiceOrders");
 
                     b.Navigation("OrderContacts");
@@ -2573,6 +2597,8 @@ namespace ServerLibrary.Migrations
                     b.Navigation("CustomerContacts");
 
                     b.Navigation("CustomerEmployees");
+
+                    b.Navigation("CustomerOrders");
 
                     b.Navigation("InvoiceEmployees");
 

@@ -68,7 +68,7 @@ namespace Server.Controllers
             var customer = await _customerService.GetCustomerByIdAsync(id, employee, partner);
             if (customer == null)
             {
-                return NotFound($"Contact with ID {id} not found for employeeId {employee.Id} and partnerId {partner.Id}.");
+                return NotFound($"Customer with ID {id} not found for employeeId {employee.Id} and partnerId {partner.Id}.");
             }
             return Ok(customer.ToCustomerDTO());
         }
@@ -97,7 +97,7 @@ namespace Server.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] CustomerDTO updateCustomer)
+        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] UpdateCustomerDTO updateCustomer)
         {
             if (updateCustomer == null)
                 return BadRequest(new { message = "Invalid request data" });
@@ -293,6 +293,51 @@ namespace Server.Controllers
 
             return Ok(response);
 
+        }
+        [HttpPut("{id:int}/activity/unassign")]
+        public async Task<IActionResult> UnassignActivityFromCustomer(int id, [FromBody] int activityId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+                return BadRequest("Danh sách liên hệ không được để trống!");
+
+            var response = await _customerService.UnassignActivityFromCustomer(id, activityId, partner);
+            if (response.Flag == false)
+                return BadRequest(response.Message);
+
+            return Ok(response);
+        }
+        [HttpPut("{id:int}/order/unassign")]
+        public async Task<IActionResult> UnassignOrderFromCustomer(int id, [FromBody] int orderId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+                return BadRequest("Danh sách liên hệ không được để trống!");
+
+            var response = await _customerService.UnassignOrderFromCustomer(id, orderId, partner);
+            if (response.Flag == false)
+                return BadRequest(response.Message);
+
+            return Ok(response);
+        }
+        [HttpPut("{id:int}/invoice/unassign")]
+        public async Task<IActionResult> UnassignInvoiceFromCustomer(int id, [FromBody] int invoiceId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+                return BadRequest("Danh sách liên hệ không được để trống!");
+
+            var response = await _customerService.UnassignInvoiceFromCustomer(id, invoiceId, partner);
+            if (response.Flag == false)
+                return BadRequest(response.Message);
+
+            return Ok(response);
         }
     }
 }

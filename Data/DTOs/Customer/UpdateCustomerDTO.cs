@@ -4,8 +4,7 @@ namespace Data.DTOs
 {
     public class UpdateCustomerDTO
     {   
-        [Required]
-        public string AccountName { get; set; }
+        public string? AccountName { get; set; }
         public string? AccountNumber { get; set; }
         public string? AccountReferredID { get; set; }
         public string? AccountShortName { get; set; }
