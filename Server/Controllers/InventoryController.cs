@@ -53,7 +53,7 @@ namespace Server.Controllers
             }
 
             var response = await _inventoryService.GetInventoryByIdAsync(id, partner);
-            if (!response.Flag)
+            if (response == null)
             {
                 return NotFound(response);
             }

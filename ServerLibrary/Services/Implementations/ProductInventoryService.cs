@@ -141,7 +141,7 @@ namespace ServerLibrary.Services.Implementations
             return new List<InventoryDTO?> { _mapper.Map<InventoryDTO>(inventory) };
         }
 
-        public async Task<DataObjectResponse> GetInventoryByIdAsync(int id, Partner partner)
+        public async Task<InventoryDTO> GetInventoryByIdAsync(int id, Partner partner)
         {
             var inventory = await _context
                 .ProductInventories.Where(i => i.Id == id && i.Partner.Id == partner.Id)
@@ -152,13 +152,9 @@ namespace ServerLibrary.Services.Implementations
 
             if (inventory == null)
             {
-                return new DataObjectResponse(
-                    false,
-                    $"Không tìm thấy tồn kho với ID {id} cho đối tác này",
-                    null
-                );
+                return null;
             }
-            return new DataObjectResponse(true, "Lấy thông tin tồn kho thành công", inventory);
+            return _mapper.Map<InventoryDTO>(inventory);
         }
 
         public async Task<DataObjectResponse> UpdateInventoryAsync(
