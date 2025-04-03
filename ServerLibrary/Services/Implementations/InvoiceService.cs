@@ -466,98 +466,107 @@ namespace ServerLibrary.Services.Implementations
             }
         }
 
-        public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, InvoiceDTO invoiceDTO, Employee employee, Partner partner)
+        public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, InvoiceDTO? invoiceDTO, Employee employee, Partner partner)
         {
-            using var transaction = await _appContext.Database.BeginTransactionAsync();
-            try
+            var strategy = _appContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
             {
-                if (invoiceDTO == null || id <= 0)
+                using var transaction = await _appContext.Database.BeginTransactionAsync();
+                try
                 {
-                    return new GeneralResponse(false, "Vui lòng truyền ID hoá đơn vào !");
-                }
-
-                Invoice? existingInvoice = await _appContext.Invoices
-                    .Include(c => c.InvoiceEmployees)
-                    .FirstOrDefaultAsync(o => o.Id == id
-                        && (o.OwnerId == employee.Id || o.InvoiceEmployees.Any(ie => ie.EmployeeId == employee.Id && ie.AccessLevel == AccessLevel.Write))
-                        && o.Partner == partner);
-
-                if (existingInvoice == null)
-                {
-                    return new GeneralResponse(false, "Không thể cập nhật hoá đơn hiện tại");
-                }
-
-                // Overwrite all fields
-                _mapper.Map(invoiceDTO, existingInvoice);
-
-                existingInvoice.OwnerId = employee.Id;
-                existingInvoice.Partner = partner;
-
-                _appContext.Invoices.Update(existingInvoice);
-                await _appContext.SaveChangesAsync();
-
-                // Update MongoDB Invoice Details
-                var existingInvoiceDetails = await _invoicesDetailsCollection.Find(d => d.InvoiceId == id).ToListAsync();
-
-                var updatedInvoiceDetails = new List<ReplaceOneModel<InvoiceDetails>>();
-                var newInvoiceDetails = new List<InvoiceDetails>();
-                var detailIdsToKeep = new HashSet<string>();
-
-                foreach (var detailDto in invoiceDTO.InvoiceDetails)
-                {
-                    var detailId = string.IsNullOrEmpty(detailDto.Id) ? ObjectId.GenerateNewId().ToString() : detailDto.Id;
-                    var existingDetail = existingInvoiceDetails.FirstOrDefault(d => d.Id == detailId);
-
-                    if (existingDetail != null)
+                    // Kiểm tra id và invoiceDTO
+                    if (id <= 0)
                     {
-                        // Overwrite all fields in existing detail
-                        _mapper.Map(detailDto, existingDetail);
-                        existingDetail.PartnerId = partner.Id;
-
-                        updatedInvoiceDetails.Add(new ReplaceOneModel<InvoiceDetails>(
-                            Builders<InvoiceDetails>.Filter.Eq(d => d.Id, detailId),
-                            existingDetail
-                        )
-                        { IsUpsert = true });
-                    }
-                    else
-                    {
-                        var newDetail = _mapper.Map<InvoiceDetails>(detailDto);
-                        newDetail.Id = detailId;
-                        newDetail.InvoiceId = existingInvoice.Id;
-                        newDetail.PartnerId = partner.Id;
-
-                        newInvoiceDetails.Add(newDetail);
+                        return new GeneralResponse(false, "Vui lòng truyền ID hóa đơn hợp lệ!");
                     }
 
-                    detailIdsToKeep.Add(detailId);
-                }
+                    if (invoiceDTO == null)
+                    {
+                        return new GeneralResponse(false, "Dữ liệu hóa đơn (invoiceDTO) không được để trống!");
+                    }
 
-                // Remove details not included in the update request
-                var detailIdsToDelete = existingInvoiceDetails.Select(d => d.Id).Except(detailIdsToKeep).ToList();
-                if (detailIdsToDelete.Any())
-                {
-                    await _invoicesDetailsCollection.DeleteManyAsync(d => detailIdsToDelete.Contains(d.Id));
-                }
+                    // Tìm hóa đơn hiện tại
+                    Invoice? existingInvoice = await _appContext.Invoices
+                        .Include(c => c.InvoiceEmployees)
+                        .FirstOrDefaultAsync(o => o.Id == id
+                            && (o.OwnerId == employee.Id || o.InvoiceEmployees.Any(ie => ie.EmployeeId == employee.Id && ie.AccessLevel == AccessLevel.Write))
+                            && o.Partner.Id == partner.Id);
 
-                // Perform Bulk Update in MongoDB
-                if (updatedInvoiceDetails.Any())
-                {
-                    await _invoicesDetailsCollection.BulkWriteAsync(updatedInvoiceDetails);
-                }
-                if (newInvoiceDetails.Any())
-                {
-                    await _invoicesDetailsCollection.InsertManyAsync(newInvoiceDetails);
-                }
+                    if (existingInvoice == null)
+                    {
+                        return new GeneralResponse(false, "Không thể cập nhật hóa đơn hiện tại");
+                    }
 
-                await transaction.CommitAsync();
-                return new GeneralResponse(true, "Invoice updated successfully.");
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return new GeneralResponse(false, $"Failed to update Invoice: {ex.Message}");
-            }
+                    _mapper.Map(invoiceDTO, existingInvoice);
+
+                    existingInvoice.OwnerId = employee.Id;
+                    existingInvoice.Partner.Id = partner.Id;
+
+                    _appContext.Invoices.Update(existingInvoice);
+                    await _appContext.SaveChangesAsync();
+
+                    if (invoiceDTO.InvoiceDetails != null && invoiceDTO.InvoiceDetails.Any())
+                    {
+                        var existingInvoiceDetails = await _invoicesDetailsCollection.Find(d => d.InvoiceId == id).ToListAsync();
+                        var updatedInvoiceDetails = new List<ReplaceOneModel<InvoiceDetails>>();
+                        var newInvoiceDetails = new List<InvoiceDetails>();
+                        var detailIdsToKeep = new HashSet<string>();
+
+                        foreach (var detailDto in invoiceDTO.InvoiceDetails)
+                        {
+                            var detailId = string.IsNullOrEmpty(detailDto.Id) ? ObjectId.GenerateNewId().ToString() : detailDto.Id;
+                            var existingDetail = existingInvoiceDetails.FirstOrDefault(d => d.Id == detailId);
+
+                            if (existingDetail != null)
+                            {
+                                _mapper.Map(detailDto, existingDetail);
+                                existingDetail.PartnerId = partner.Id;
+
+                                updatedInvoiceDetails.Add(new ReplaceOneModel<InvoiceDetails>(
+                                    Builders<InvoiceDetails>.Filter.Eq(d => d.Id, detailId),
+                                    existingDetail
+                                )
+                                { IsUpsert = true });
+                            }
+                            else
+                            {
+                                var newDetail = _mapper.Map<InvoiceDetails>(detailDto);
+                                newDetail.Id = detailId;
+                                newDetail.InvoiceId = existingInvoice.Id;
+                                newDetail.PartnerId = partner.Id;
+
+                                newInvoiceDetails.Add(newDetail);
+                            }
+
+                            detailIdsToKeep.Add(detailId);
+                        }
+
+                        // Xóa các detail không còn trong request
+                        var detailIdsToDelete = existingInvoiceDetails.Select(d => d.Id).Except(detailIdsToKeep).ToList();
+                        if (detailIdsToDelete.Any())
+                        {
+                            await _invoicesDetailsCollection.DeleteManyAsync(d => detailIdsToDelete.Contains(d.Id));
+                        }
+
+                        if (updatedInvoiceDetails.Any())
+                        {
+                            await _invoicesDetailsCollection.BulkWriteAsync(updatedInvoiceDetails);
+                        }
+                        if (newInvoiceDetails.Any())
+                        {
+                            await _invoicesDetailsCollection.InsertManyAsync(newInvoiceDetails);
+                        }
+                    }
+
+                    await transaction.CommitAsync();
+                    return new GeneralResponse(true, "Cập nhật hóa đơn thành công.");
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return new GeneralResponse(false, $"Cập nhật hóa đơn thất bại: {ex.Message}");
+                }
+            });
         }
 
         public async Task<GeneralResponse?> DeleteBulkInvoicesAsync(string ids, Employee employee, Partner partner)
@@ -727,16 +736,114 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<List<Activity>> GetAllActivitiesByIdAsync(int id, Employee employee, Partner partner)
         {
-                if (employee == null || partner == null)
+            if (employee == null || partner == null)
             {
                 throw new ArgumentNullException(nameof(employee), "ID nhân viên và ID tổ chức không đuọc bỏ trống.");
             }
             var activities = await _appContext.Activities
             // .Include(c => c.ActivityEmployees)
-            .Where(c => c.InvoiceId == id && c.TaskOwnerId == employee.Id && c.PartnerId == partner.Id)
+            .Where(c => c.InvoiceId == id && c.PartnerId == partner.Id)
             .ToListAsync();
 
             return activities.Any() ? activities : new List<Activity>();
+        }
+
+        public async Task<GeneralResponse?> RemoveOrderFromInvoiceAsync(int id, int orderId, Employee employee, Partner partner)
+        {
+            Console.WriteLine($"Starting RemoveOrderFromIdAsync for Order ID: {id}, Employee ID: {employee?.Id}, Partner ID: {partner?.Id}");
+
+            var strategy = _appContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                Console.WriteLine("Execution strategy started.");
+                using var transaction = await _appContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Transaction started.");
+
+                    // Tìm các InvoiceOrders liên quan đến OrderId và PartnerId
+                    Console.WriteLine($"Fetching InvoiceOrders for Invoice ID {id}...");
+                    var invoiceOrders = await _appContext.InvoiceOrders
+                        .Where(io => io.OrderId == orderId && io.InvoiceId == id && io.PartnerId == partner.Id)
+                        .ToListAsync();
+
+                    if (!invoiceOrders.Any())
+                    {
+                        Console.WriteLine($"No InvoiceOrders found for Invoice ID {id}.");
+                        return new GeneralResponse(true, $"Hoá đơn ID {id} không liên kết với đơn hàng nào.");
+                    }
+
+                    Console.WriteLine($"Removing {invoiceOrders.Count} InvoiceOrders for Invoice ID {id}...");
+                    _appContext.InvoiceOrders.RemoveRange(invoiceOrders);
+                    await _appContext.SaveChangesAsync();
+                    Console.WriteLine("InvoiceOrders removed successfully.");
+
+                    Console.WriteLine("Committing transaction...");
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Đã xóa liên kết đơn hàng khỏi hoá đơn ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error occurred: {ex.Message}");
+                    Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                    if (ex.InnerException != null)
+                    {
+                        Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                    }
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Transaction rolled back.");
+                    return new GeneralResponse(false, $"Không thể xóa liên kết đơn hàng khỏi hoá đơn: {ex.Message}");
+                }
+            });
+        }
+
+        public async Task<GeneralResponse?> RemoveActivityFromInvoiceAsync(int id, int activityId, Employee employee, Partner partner)
+        {
+            Console.WriteLine($"Starting RemoveActivityFromIdAsync for Invoice ID: {id}, Activity ID: {activityId}, Employee ID: {employee?.Id}, Partner ID: {partner?.Id}");
+
+            var strategy = _appContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                Console.WriteLine("Execution strategy started.");
+                using var transaction = await _appContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Transaction started.");
+
+                    Console.WriteLine($"Fetching InvoiceOrders for Invoice ID {id}...");
+                    var activity = await _appContext.Activities
+                        .FirstOrDefaultAsync(a => a.Id == activityId
+                         && a.InvoiceId == id && a.PartnerId == partner.Id);
+
+                    if (activity == null)
+                    {
+                        Console.WriteLine($"No InvoiceOrders found for Invoice ID {id}.");
+                        return new GeneralResponse(true, $"Hoá đơn ID {id} không liên kết với hoạt động nào.");
+                    }
+
+                    _appContext.Activities.Remove(activity);
+                    await _appContext.SaveChangesAsync();
+                    Console.WriteLine("InvoiceOrders removed successfully.");
+
+                    Console.WriteLine("Committing transaction...");
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Đã xóa liên kết hoạt động khỏi hoá đơn ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error occurred: {ex.Message}");
+                    Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                    if (ex.InnerException != null)
+                    {
+                        Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                    }
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Transaction rolled back.");
+                    return new GeneralResponse(false, $"Không thể xóa liên kết đơn hàng khỏi hoá đơn: {ex.Message}");
+                }
+            });
         }
     }
 }

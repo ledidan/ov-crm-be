@@ -68,7 +68,6 @@ namespace Data.DTOs
         // public int? EmployeeId { get; set; }
         public int PartnerId { get; set; }
         public List<int>? Orders { get; set; }
-        [Required]
-        public required List<InvoiceDetailDTO> InvoiceDetails { get; set; } = new List<InvoiceDetailDTO>();
+        public List<InvoiceDetailDTO>? InvoiceDetails { get; set; } = new List<InvoiceDetailDTO>();
     }
 }

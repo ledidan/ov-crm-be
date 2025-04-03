@@ -24,7 +24,6 @@ namespace Server.Controllers
             _inventoryService = inventoryService;
             _partnerService = partnerService;
         }
-
         // GET: api/inventory
         [HttpGet]
         public async Task<IActionResult> GetAllInventories()

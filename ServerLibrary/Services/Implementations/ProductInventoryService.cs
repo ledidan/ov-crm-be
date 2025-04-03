@@ -13,7 +13,6 @@ namespace ServerLibrary.Services.Implementations
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-
         public ProductInventoryService(AppDbContext context, IMapper mapper)
         {
             _context = context;

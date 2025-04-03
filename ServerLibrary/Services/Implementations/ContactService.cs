@@ -198,10 +198,12 @@ namespace ServerLibrary.Services.Implementations
                 return new GeneralResponse(false, "Không tìm thấy ID liên hệ để cập nhất");
             }
 
-            foreach (var prop in typeof(UpdateContactDTO).GetProperties())
+            var properties = typeof(UpdateContactDTO).GetProperties();
+
+            foreach (var prop in properties)
             {
                 var newValue = prop.GetValue(updateContact);
-                if (newValue != null)
+                if (newValue != null && newValue.ToString() != "")
                 {
                     var existingProp = typeof(Contact).GetProperty(prop.Name);
                     if (existingProp != null)
@@ -373,6 +375,194 @@ namespace ServerLibrary.Services.Implementations
             {
                 throw new Exception($"Failed to retrieve invoices: {ex.Message}");
             }
+        }
+
+        public async Task<GeneralResponse?> AssignContactToOrderAsync(int id, AssignOrderRequest request, Employee employee, Partner partner)
+        {
+            var strategy = _appDbContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                Console.WriteLine("Execution strategy started.");
+                using var transaction = await _appDbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Transaction started.");
+
+                    if (request.OrderIds == null || !request.OrderIds.Any())
+                    {
+                        return new GeneralResponse(false, "Danh sách đơn hàng rỗng.");
+                    }
+
+                    Console.WriteLine($"Fetching Orders for Order IDs: {string.Join(", ", request.OrderIds)}...");
+                    var orders = await _appDbContext.Orders
+                        .Where(o => request.OrderIds.Contains(o.Id) && o.Partner.Id == partner.Id)
+                        .ToListAsync();
+
+                    if (!orders.Any())
+                    {
+                        return new GeneralResponse(false, "Không tìm thấy đơn hàng nào phù hợp.");
+                    }
+
+                    foreach (var order in orders)
+                    {
+                        order.ContactId = id;
+                    }
+
+                    _appDbContext.Orders.UpdateRange(orders);
+                    await _appDbContext.SaveChangesAsync();
+
+                    Console.WriteLine($"Assigned Contact ID {id} to {orders.Count} orders.");
+
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Đã liên kết liên hệ ID {id} với {orders.Count} đơn hàng.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error occurred: {ex.Message}");
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Transaction rolled back.");
+                    return new GeneralResponse(false, $"Không thể liên kết đơn hàng với liên hệ: {ex.Message}");
+                }
+            });
+        }
+        public async Task<GeneralResponse?> UnassignContactToOrderAsync(int id, AssignOrderRequest request, Employee employee, Partner partner)
+        {
+            var strategy = _appDbContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                Console.WriteLine("Execution strategy started.");
+                using var transaction = await _appDbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    if (request.OrderIds == null || !request.OrderIds.Any())
+                    {
+                        return new GeneralResponse(false, "Danh sách đơn hàng rỗng.");
+                    }
+
+                    Console.WriteLine($"Fetching Orders for Order IDs: {string.Join(", ", request.OrderIds)}...");
+                    var orders = await _appDbContext.Orders
+                        .Where(o => request.OrderIds.Contains(o.Id) && o.Partner.Id == partner.Id)
+                        .ToListAsync();
+
+                    if (!orders.Any())
+                    {
+                        return new GeneralResponse(false, "Không tìm thấy đơn hàng nào phù hợp.");
+                    }
+
+                    foreach (var order in orders)
+                    {
+                        order.ContactId = null;
+                    }
+
+                    _appDbContext.Orders.UpdateRange(orders);
+                    await _appDbContext.SaveChangesAsync();
+
+                    Console.WriteLine($"Unassigned Contact ID {id} from {orders.Count} orders.");
+                    await transaction.CommitAsync();
+                    return new GeneralResponse(true, $"Đã hủy liên kết liên hệ ID {id} khỏi {orders.Count} đơn hàng.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                    await transaction.RollbackAsync();
+                    return new GeneralResponse(false, $"Lỗi khi hủy liên kết: {ex.Message}");
+                }
+            });
+        }
+
+        public async Task<GeneralResponse?> UnassignInvoiceFromContactAsync(int id, int invoiceId, Employee employee, Partner partner)
+        {
+            var strategy = _appDbContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                Console.WriteLine("Execution strategy started.");
+                using var transaction = await _appDbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Transaction started.");
+
+                    Console.WriteLine($"Fetching Invoices for Contact ID {id}...");
+
+                    var invoice = await _appDbContext.Invoices
+                        .FirstOrDefaultAsync(a => a.Id == invoiceId
+                         && a.BuyerId == id && a.Partner.Id == partner.Id);
+
+                    if (invoice == null)
+                    {
+                        Console.WriteLine($"No Invoices found for Contact ID {id}.");
+                        return new GeneralResponse(true, $"ID {id} không liên kết với hóa đơn nào.");
+                    }
+                    invoice.BuyerId = null;
+                    _appDbContext.Invoices.Update(invoice);
+                    await _appDbContext.SaveChangesAsync();
+
+                    Console.WriteLine("Invoices removed successfully.");
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Đã xóa liên kết hóa đơn khỏi liên hệ ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                    await transaction.RollbackAsync();
+                    return new GeneralResponse(false, $"Lỗi khi xóa liên kết hóa đơn: {ex.Message}");
+                }
+            });
+        }
+
+        public async Task<List<ActivityDTO?>> GetAllActivitiesByContactAsync(int contactId, Employee employee, Partner partner)
+        {
+            var activities = await _appDbContext.Activities
+                .Where(a => a.ContactId == contactId && a.PartnerId == partner.Id)
+                .ToListAsync();
+            var activityDtos = activities.Select(activity =>
+            {
+                var dto = _mapper.Map<ActivityDTO>(activity);
+                return dto;
+            }).ToList();
+
+            return activityDtos;
+        }
+
+        public async Task<GeneralResponse?> UnassignActivityFromContactAsync(int id, int activityId, Employee employee, Partner partner)
+        {
+            var strategy = _appDbContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                Console.WriteLine("Execution strategy started.");
+                using var transaction = await _appDbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Transaction started.");
+
+                    Console.WriteLine($"Fetching Activities for Contact ID {id}...");
+
+                    var activity = await _appDbContext.Activities
+                        .FirstOrDefaultAsync(a => a.Id == activityId
+                         && a.ContactId == id && a.PartnerId == partner.Id);
+
+                    if (activity == null)
+                    {
+                        Console.WriteLine($"No Activities found for Contact ID {id}.");
+                        return new GeneralResponse(true, $"ID {id} không liên kết với hoạt động nào.");
+                    }
+                    activity.ContactId = null;
+                    _appDbContext.Activities.Update(activity);
+                    await _appDbContext.SaveChangesAsync();
+
+                    Console.WriteLine("Activities removed successfully.");
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Đã xóa liên kết hoạt động khỏi liên hệ ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                    await transaction.RollbackAsync();
+                    return new GeneralResponse(false, $"Lỗi khi xóa liên kết hoạt động: {ex.Message}");
+                }
+            });
         }
     }
 }

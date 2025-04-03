@@ -3,14 +3,11 @@ using System.ComponentModel.DataAnnotations;
 namespace Data.DTOs
 {
     public class UpdateCustomerDTO
-<<<<<<< Updated upstream
-    {   
-        [Required]
-        public string AccountName { get; set; }
-=======
     {
+
+        [Required]
         public string? AccountName { get; set; }
->>>>>>> Stashed changes
+
         public string? AccountNumber { get; set; }
         public string? AccountReferredID { get; set; }
         public string? AccountShortName { get; set; }

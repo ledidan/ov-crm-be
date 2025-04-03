@@ -466,7 +466,7 @@ namespace ServerLibrary.Services.Implementations
 
         }
 
-        public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, CustomerDTO updateCustomer, Employee employee, Partner partner)
+        public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateCustomerDTO updateCustomer, Employee employee, Partner partner)
         {
             var existingCustomer = await _appDbContext.Customers
                     .Include(c => c.CustomerEmployees)
@@ -475,16 +475,160 @@ namespace ServerLibrary.Services.Implementations
                         c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id && ce.Employee.PartnerId == partner.Id));
 
             if (existingCustomer == null)
-                return new GeneralResponse(false, "Customer not found");
+                return new GeneralResponse(false, "Không tìm thấy thông tin khách hàng");
 
-            _mapper.Map(updateCustomer, existingCustomer);
 
-            _appDbContext.Entry(existingCustomer).State = EntityState.Modified;
-
-            await _appDbContext.SaveChangesAsync();
-
-            return new GeneralResponse(true, "Customer updated successfully");
+            var properties = typeof(UpdateCustomerDTO).GetProperties();
+            foreach (var prop in properties)
+            {
+                var newValue = prop.GetValue(updateCustomer);
+                if (newValue != null && newValue.ToString() != "")
+                {
+                    var existingProp = typeof(Customer).GetProperty(prop.Name);
+                    if (existingProp != null)
+                    {
+                        existingProp.SetValue(existingCustomer, newValue);
+                        _appDbContext.Entry(existingCustomer).Property(existingProp.Name).IsModified = true;
+                    }
+                }
+                await _appDbContext.SaveChangesAsync();
+            }
+            return new GeneralResponse(true, "Cập nhật thông tin khách hàng thành công");
         }
 
+        public async Task<GeneralResponse?> UnassignActivityFromCustomer(int id, int activityId, Partner partner)
+        {
+            var strategy = _appDbContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _appDbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Execution strategy started.");
+
+                    if (id == null)
+                    {
+                        Console.WriteLine($"No Customer found for ID {id}.");
+                        return new GeneralResponse(true, $"ID {id} không liên kết với khách hàng nào.");
+                    }
+
+                    var activity = await _appDbContext.Activities
+                        .FirstOrDefaultAsync(a => a.Id == activityId && a.CustomerId == id && a.PartnerId == partner.Id);
+
+                    if (activity == null)
+                    {
+                        Console.WriteLine($"No Activity found for ID {activityId}.");
+                        return new GeneralResponse(true, $"ID {activityId} không liên kết với hoạt động nào.");
+                    }
+
+                    activity.CustomerId = null;
+                    _appDbContext.Activities.Update(activity);
+                    await _appDbContext.SaveChangesAsync();
+
+                    Console.WriteLine("Activity removed successfully.");
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Đã xóa hoạt động khỏi khách hàng ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Transaction rolled back.");
+                    return new GeneralResponse(false, $"Lỗi khi xóa hoạt động khỏi khách hàng ID {id}: {ex.Message}");
+                }
+            });
+        }
+
+        public async Task<GeneralResponse?> UnassignOrderFromCustomer(int id, int orderId, Partner partner)
+        {
+            var strategy = _appDbContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _appDbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Execution strategy started.");
+                    var customer = await _appDbContext.Customers
+                        .FirstOrDefaultAsync(c => c.Id == id && c.Partner.Id == partner.Id);
+
+                    if (customer == null)
+                    {
+                        Console.WriteLine($"No Customer found for ID {id}.");
+                        return new GeneralResponse(true, $"ID {id} không liên kết với khách hàng nào.");
+                    }
+
+                    var order = await _appDbContext.Orders
+                        .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == id && o.Partner.Id == partner.Id);
+
+                    if (order == null)
+                    {
+                        Console.WriteLine($"No Order found for ID {orderId}.");
+                        return new GeneralResponse(true, $"ID {orderId} không liên kết với đơn hàng nào.");
+                    }
+                    order.CustomerId = null;
+                    _appDbContext.Orders.Update(order);
+                    await _appDbContext.SaveChangesAsync();
+
+                    Console.WriteLine("Order removed successfully.");
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Đã xóa đơn hàng khỏi khách hàng ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Transaction rolled back.");
+                    return new GeneralResponse(false, $"Lỗi khi xóa đơn hàng khỏi khách hàng ID {id}: {ex.Message}");
+                }
+            });
+        }
+
+        public async Task<GeneralResponse?> UnassignInvoiceFromCustomer(int id, int invoiceId, Partner partner)
+        {
+            var strategy = _appDbContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _appDbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Execution strategy started.");
+                    var customer = await _appDbContext.Customers
+                        .FirstOrDefaultAsync(c => c.Id == id && c.Partner.Id == partner.Id);
+
+                    if (customer == null)
+                    {
+                        Console.WriteLine($"No Customer found for ID {id}.");
+                        return new GeneralResponse(true, $"ID {id} không liên kết với khách hàng nào.");
+                    }
+
+                    var invoice = await _appDbContext.Invoices
+                        .FirstOrDefaultAsync(i => i.Id == invoiceId && i.CustomerId == id && i.Partner.Id == partner.Id);
+
+                    if (invoice == null)
+                    {
+                        Console.WriteLine($"No Invoice found for ID {invoiceId}.");
+                        return new GeneralResponse(true, $"ID {invoiceId} không liên kết với hóa đơn nào.");
+                    }
+                    invoice.CustomerId = null;
+                    _appDbContext.Invoices.Update(invoice);
+                    await _appDbContext.SaveChangesAsync();
+
+                    Console.WriteLine("Invoice removed successfully.");
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Đã xóa hóa đơn khỏi khách hàng ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Transaction rolled back.");
+                    return new GeneralResponse(false, $"Lỗi khi xóa hóa đơn khỏi khách hàng ID {id}: {ex.Message}");
+                }
+            });
+        }
     }
+
 }

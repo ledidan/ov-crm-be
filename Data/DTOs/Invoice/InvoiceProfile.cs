@@ -1,5 +1,6 @@
 using AutoMapper;
 using Data.Entities;
+using Data.MongoModels;
 
 namespace Data.DTOs
 {
@@ -20,6 +21,9 @@ namespace Data.DTOs
                 .ForMember(dest => dest.OwnerTaskExecuteId, opt => opt.Ignore()) // Ignore Owner (set manually)
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
+                
+            CreateMap<InvoiceDetailDTO, InvoiceDetails>()
+                            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<UpdateInvoiceDTO, InvoiceDTO>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<UpdateInvoiceDTO, InvoiceDTO>()

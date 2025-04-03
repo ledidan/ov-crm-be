@@ -37,7 +37,7 @@ namespace ServerLibrary.Services.Implementations
             string templateName
         )
         {
-            string projectRoot = "/app";
+            // string projectRoot = "/app";
             // if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")
             // {
             //     projectRoot = "/app";
@@ -46,19 +46,11 @@ namespace ServerLibrary.Services.Implementations
             // {
             //     projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName;
             // }
-<<<<<<< Updated upstream
-            string templateFolder = Path.Combine(projectRoot, "ServerLibrary", "Templates");
-            string templatePath = Path.Combine(templateFolder, templateName);
 
-=======
-            string projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName;
+            string projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName; 
             string templateFolder = Path.Combine(projectRoot, "ServerLibrary", "Templates");
             string templatePath = Path.Combine(templateFolder, templateName);
-            Console.WriteLine(
-                $"Dotnet running in container",
-                Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")
-            );
->>>>>>> Stashed changes
+            Console.WriteLine($"Dotnet running in container", Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"));
             Console.WriteLine($"Template Folder: {templateFolder}");
             Console.WriteLine($"Template Path: {templatePath}");
 

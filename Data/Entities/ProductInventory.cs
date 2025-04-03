@@ -26,7 +26,7 @@ namespace Data.Entities
 
         public DateTime? DateDispatched { get; set; } // Ngày xuất kho (Date Dispatched)
 
-        public StockStatus? StockStatus{ get; set; } // Trạng thái hàng hóa (Stock Status): "In Stock", "Out of Stock", "Pending", v.v.
+        public StockStatus? StockStatus { get; set; } // Trạng thái hàng hóa (Stock Status): "In Stock", "Out of Stock", "Pending", v.v.
 
         public string? BatchNumber { get; set; } // Số lô (Batch/Lot Number)
 
@@ -45,6 +45,7 @@ namespace Data.Entities
 
         public virtual Product Product { get; set; } // Navigation property tới Product
 
+        public required Partner Partner { get; set; }
         // Liên kết với Supplier
         public int? SupplierId { get; set; } // Nhà cung cấp (Supplier) - Nullable nếu không bắt buộc
 

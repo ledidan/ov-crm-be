@@ -68,8 +68,6 @@ namespace ServerLibrary.Services.Implementations
             return await appDbContext.Partners.FirstOrDefaultAsync(_ => _.EmailContact == email);
         }
 
-
-
         public async Task<Partner?> FindById(int id)
         {
             return await appDbContext.Partners.FirstOrDefaultAsync(_ => _.Id == id);
