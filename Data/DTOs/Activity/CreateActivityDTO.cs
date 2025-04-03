@@ -20,7 +20,7 @@ namespace Data.DTOs
         public DateTime EventEnd { get; set; }
         public string? Place { get; set; }
 
-         public bool? Duplicate { get; set; }
+        public bool? Duplicate { get; set; }
         public bool? SendEmail { get; set; }
         public bool? IsPublic { get; set; }
         public bool? IsOpen { get; set; }
@@ -29,12 +29,18 @@ namespace Data.DTOs
         public string? OfficeEmail { get; set; }
         public int? CustomerId { get; set; }
         [Required]
+        public string? CustomerName { get; set; }
+        public string? PartnerName { get; set; }
         public int? TaskOwnerId { get; set; }
+        public string? TaskOwnerName { get; set; }
         public int? ModifiedBy { get; set; }
+        public string? ModifiedByName { get; set; }
         public int? ContactId { get; set; }
+        public string? ContactName { get; set; }
         public int? OrderId { get; set; }
 
         public int? InvoiceId { get; set; }
         public int? RelatedUsersID { get; set; }
+        public string? RelatedUsersName { get; set; }
     }
 }

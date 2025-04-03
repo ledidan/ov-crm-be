@@ -88,9 +88,15 @@ namespace ServerLibrary.Services.Implementations
                 IsPublic = contact.IsPublic,
                 EmailOptOut = contact.EmailOptOut,
                 PhoneOptOut = contact.PhoneOptOut,
-                Partner = partner,
+                CustomerId = contact.CustomerId,
+                CustomerName = contact.CustomerName,
+                EmployeeId = contact.EmployeeId,
+                EmployeeName = contact.EmployeeName,
+                // ** Automatically assign to employee for Owner and Partner
+                OwnerID = employee.Id,
+                OwnerIDName = employee.FullName,
                 PartnerId = partner.Id,
-                EmployeeId = employee.Id,
+                PartnerName = partner.Name,
                 ContactEmployees = new List<ContactEmployees>
         {
             new ContactEmployees
@@ -168,6 +174,13 @@ namespace ServerLibrary.Services.Implementations
             existingContact.IsPublic = updateContact.IsPublic;
             existingContact.EmailOptOut = updateContact.EmailOptOut;
             existingContact.PhoneOptOut = updateContact.PhoneOptOut;
+            existingContact.CustomerId = updateContact.CustomerId;
+            existingContact.CustomerName = updateContact.CustomerName;
+            existingContact.EmployeeId = updateContact.EmployeeId;
+            existingContact.EmployeeName = updateContact.EmployeeName;
+            existingContact.OwnerID = updateContact.OwnerID;
+            existingContact.OwnerIDName = updateContact.OwnerIDName;
+     
             await _appDbContext.UpdateDb(existingContact);
             return new GeneralResponse(true, "Cập nhật liên hệ thành công.");
         }

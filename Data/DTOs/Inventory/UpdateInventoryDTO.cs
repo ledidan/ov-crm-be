@@ -1,13 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+
+
 using Data.Enums;
 
-namespace Data.Entities
+namespace Data.DTOs
 {
 
-    public class ProductInventory : BaseEntity
-    {
-        public int Id { get; set; } // Khóa chính cho Inventory
 
+    public class UpdateInventoryDTO
+    {
+        public int Id { get; set; }
         public int ProductId { get; set; } // Khóa ngoại liên kết với Product
 
         public string? ProductCode { get; set; } // Mã hàng hóa (Product Code/ID) - Đồng bộ với Product
@@ -26,28 +27,24 @@ namespace Data.Entities
 
         public DateTime? DateDispatched { get; set; } // Ngày xuất kho (Date Dispatched)
 
-        public StockStatus? StockStatus{ get; set; } // Trạng thái hàng hóa (Stock Status): "In Stock", "Out of Stock", "Pending", v.v.
+        public StockStatus? StockStatus { get; set; } // Trạng thái hàng hóa (Stock Status): "In Stock", "Out of Stock", "Pending", v.v.
 
         public string? BatchNumber { get; set; } // Số lô (Batch/Lot Number)
 
         public DateTime? ExpirationDate { get; set; } // Hạn sử dụng (Expiration Date)
 
-        public int? OrderQuantity { get; set; } // Số lượng đặt hàng (Order Quantity)
+        public int OrderQuantity { get; set; } // Số lượng đặt hàng (Order Quantity)
 
         public int? AvailableQuantity { get; set; } // Số lượng có sẵn (Available Quantity)
 
         public int? ReturnedQuantity { get; set; } // Số lượng trả hàng (Returned Quantity)
-        public int? MinimumStockLevel { get; set; } // Ngưỡng tồn kho tối thiểu (Minimum Stock Level)
 
         public string? SupplierName { get; set; } // Tên nhà cung cấp (Supplier Name)
 
         public string? Brand { get; set; } // Thương hiệu (Brand)
 
-        public virtual Product Product { get; set; } // Navigation property tới Product
-
-        // Liên kết với Supplier
-        public int? SupplierId { get; set; } // Nhà cung cấp (Supplier) - Nullable nếu không bắt buộc
-
-        public virtual Supplier Supplier { get; set; } // Navigation property tới Supplier
+        public int MinimumStockLevel { get; set; } // Ngưỡng tồn kho tối thiểu (Minimum Stock Level)
+        public int PartnerId { get; set; }
+        public int? SupplierId { get; set; }
     }
 }

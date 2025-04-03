@@ -3,9 +3,14 @@ using System.ComponentModel.DataAnnotations;
 namespace Data.DTOs
 {
     public class UpdateCustomerDTO
+<<<<<<< Updated upstream
     {   
         [Required]
         public string AccountName { get; set; }
+=======
+    {
+        public string? AccountName { get; set; }
+>>>>>>> Stashed changes
         public string? AccountNumber { get; set; }
         public string? AccountReferredID { get; set; }
         public string? AccountShortName { get; set; }
@@ -25,7 +30,6 @@ namespace Data.DTOs
         public string? BusinessTypeID { get; set; }
         public string? NumberOfDaysOwed { get; set; }
         public DateTime? CelebrateDate { get; set; }
-        public string? ContactIDAim { get; set; }
         public string? AnnualRevenueID { get; set; }
         public string? Debt { get; set; }
         public string? DebtLimit { get; set; }
@@ -41,8 +45,8 @@ namespace Data.DTOs
         public string? NoOfEmployeeID { get; set; }
         public string? OfficeEmail { get; set; }
         public string? OfficeTel { get; set; }
-        public string? OrganizationUnitID { get; set; }
         public string? OwnerID { get; set; }
+        public string? OwnerIDName { get; set; }
         public string? RevenueDetail { get; set; }
         public string? SectorText { get; set; }
         public string? ShippingCode { get; set; }
@@ -61,7 +65,8 @@ namespace Data.DTOs
         public bool IsPersonal { get; set; }
         public bool IsOldCustomer { get; set; }
         public bool IsDistributor { get; set; }
-
+        public string? EmployeeCode { get; set; }
+        public string? EmployeeName { get; set; }
         public DateTime? CustomerSinceDate { get; set; }
     }
 }

@@ -12,6 +12,9 @@ namespace Data.MongoModels
         [BsonElement("InvoiceId")]
         public int? InvoiceId { get; set; } = null!; // Reference to Invoice 
 
+        [BsonElement("InvoiceRequestName")]
+        public string? InvoiceRequestName { get; set; }
+
         [BsonElement("ProductId")]
         public int? ProductId { get; set; } // Reference to Product (MySQL)
 
@@ -60,7 +63,25 @@ namespace Data.MongoModels
         [BsonElement("OrderId")]
         public int? OrderId { get; set; }
 
+        [BsonElement("SaleOrderNo")]
+        public string? SaleOrderNo { get; set; }
+
         [BsonElement("PartnerId")]
         public int PartnerId { get; set; }
+
+        [BsonElement("PartnerName")]
+        public string? PartnerName { get; set; }
+
+        [BsonElement("CustomerId")]
+        public int? CustomerId { get; set; }
+
+        [BsonElement("CustomerName")]
+        public string? CustomerName { get; set; }
+
+        [BsonElement("CreatedAt")]
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        [BsonElement("UpdatedAt")]
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
     }
 }

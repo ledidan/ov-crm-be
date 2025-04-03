@@ -40,5 +40,13 @@ namespace Data.DTOs.Contact
         public bool? IsPublic { get; set; } = false;
         public bool? EmailOptOut { get; set; } = false;
         public bool? PhoneOptOut { get; set; } = false;
+        public int? OwnerID { get; set; }
+        public string? OwnerIDName { get; set; }
+        public int? CustomerId { get; set; }
+        public string? CustomerName { get; set; }
+        public int? PartnerId { get; set; }
+        public string? PartnerName { get; set; }
+        public int? EmployeeId { get; set; }
+        public string? EmployeeName { get; set; }
     }
 }

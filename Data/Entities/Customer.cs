@@ -33,8 +33,8 @@ namespace Data.Entities
         public string? BudgetCode { get; set; }
         public string? RevenueDetail { get; set; }
         public string? BusinessTypeID { get; set; }
-        public string? ContactIDAim { get; set; }
         public string? OwnerID { get; set; }
+        public string? OwnerIDName { get; set; }
         public string? Fax { get; set; }
         public string? GenderID { get; set; }
         public string? Identification { get; set; }
@@ -46,7 +46,6 @@ namespace Data.Entities
         public string? NumberOfDaysOwed { get; set; }
         public string? OfficeEmail { get; set; }
         public string? OfficeTel { get; set; }
-        public string? OrganizationUnitID { get; set; }
         public string? SectorText { get; set; }
         public string? ShippingCode { get; set; }
         public string? ShippingCountryID { get; set; }
@@ -69,6 +68,7 @@ namespace Data.Entities
         public int? PartnerId { get; set; }
         [NotMapped]
         public Employee Employee { get; set; }
+
         public Partner Partner { get; set; }
         public List<Contact> Contacts { get; set; } = new List<Contact>();
         public List<Activity> Activities { get; set; } = new List<Activity>();

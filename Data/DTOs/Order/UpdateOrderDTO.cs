@@ -142,6 +142,10 @@ namespace Data.DTOs
         [JsonConverter(typeof(NullableIntConverter))]
         public int? ContactId { get; set; }
         public string? ContactName { get; set; }
+        public string? OwnerIdName { get; set; }
+        public string? ModifiedByIdName { get; set; }
+        public string? CustomerName { get; set; }
+        public string? OwnerTaskExecuteName { get; set; }
         public int? OwnerTaskExecuteId { get; set; }
         public int? OwnerId { get; set; }
 

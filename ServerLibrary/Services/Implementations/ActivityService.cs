@@ -188,11 +188,17 @@ namespace ServerLibrary.Services.Implementations
             activity.PhoneNumber = dto.PhoneNumber ?? activity.PhoneNumber;
             activity.OfficeEmail = dto.OfficeEmail ?? activity.OfficeEmail;
             activity.CustomerId = dto.CustomerId ?? activity.CustomerId;
+            activity.CustomerName = dto.CustomerName ?? activity.CustomerName;
             activity.ContactId = dto.ContactId ?? activity.ContactId;
+            activity.ContactName = dto.ContactName ?? activity.ContactName;
             activity.TaskOwnerId = dto.TaskOwnerId ?? activity.TaskOwnerId;
+            activity.TaskOwnerName = dto.TaskOwnerName ?? activity.TaskOwnerName;
+            activity.ModifiedBy = dto.ModifiedBy ?? activity.ModifiedBy;
+            activity.ModifiedByName = dto.ModifiedByName ?? activity.ModifiedByName;
             activity.OrderId = dto.OrderId ?? activity.OrderId;
             activity.InvoiceId = dto.InvoiceId ?? activity.InvoiceId;
             activity.RelatedUsersID = dto.RelatedUsersID ?? activity.RelatedUsersID;
+            activity.RelatedUsersName = dto.RelatedUsersName ?? activity.RelatedUsersName;
 
             await _appDbContext.SaveChangesAsync();
             return new GeneralResponse(true, "Đã cập nhật hành động");
@@ -274,12 +280,19 @@ namespace ServerLibrary.Services.Implementations
                 PhoneNumber = dto.PhoneNumber,
                 OfficeEmail = dto.OfficeEmail,
                 CustomerId = dto.CustomerId,
+                CustomerName = dto.CustomerName,
                 ContactId = dto.ContactId,
+                ContactName = dto.ContactName,
                 TaskOwnerId = dto.TaskOwnerId,
+                TaskOwnerName = dto.TaskOwnerName,
+                ModifiedBy = dto.ModifiedBy,
+                ModifiedByName = dto.ModifiedByName,
                 OrderId = dto.OrderId,
                 InvoiceId = dto.InvoiceId,
-                RelatedUsersID = dto.OrderId,
-                PartnerId = partner.Id
+                RelatedUsersID = dto.RelatedUsersID,
+                RelatedUsersName = dto.RelatedUsersName,
+                PartnerId = partner.Id,
+                PartnerName = partner.Name
             };
             await _appDbContext.InsertIntoDb(activity);
 

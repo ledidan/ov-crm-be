@@ -49,6 +49,7 @@ namespace Data.DTOs
         public string? WarrantyPeriod { get; set; }
         public string? WarrantyPeriodTypeID { get; set; }
         public int? OwnerID { get; set; }
+        public string? OwnerIDName { get; set; }
         public int? ProductCategoryId { get; set; }
 
     }

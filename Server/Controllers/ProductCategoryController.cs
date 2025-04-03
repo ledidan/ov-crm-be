@@ -77,13 +77,14 @@ namespace Server.Controllers
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
             if (partner == null) return BadRequest("Unauthorized Partner");
             if (partner == null)
             {
                 return BadRequest("Invalid partner.");
             }
 
-            var result = await _productCategoryService.UpdateAsync(id, productCategory, partner);
+            var result = await _productCategoryService.UpdateAsync(id, productCategory, partner, employee);
             return result.Flag ? Ok(result) : BadRequest(result);
         }
 

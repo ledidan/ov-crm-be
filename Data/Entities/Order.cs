@@ -58,7 +58,10 @@ namespace Data.Entities
         public string? ShippingStreet { get; set; }
         public string? ShippingCode { get; set; }
         public int? OwnerId { get; set; }
+        public string? OwnerIdName { get; set; }
         public int? ModifiedBy { get; set; }
+
+        public string? ModifiedByIdName { get; set; }
         public bool IsPublic { get; set; }
         public bool IsDeleted { get; set; }
         public decimal? TotalSummary { get; set; }
@@ -98,8 +101,10 @@ namespace Data.Entities
 
         public decimal? RevenueAccountingAmount { get; set; }
         public DateTime? RevenueRecognitionDate { get; set; }
-        public int? CustomerId { get; set; }
+        public int? CustomerId { get; set; }    
+        public string? CustomerName { get; set; }
         public int? OwnerTaskExecuteId { get; set; }
+        public string? OwnerTaskExecuteName { get; set; }
         public int? ContactId { get; set; }
         public string? ContactName { get; set; }
         public List<Contact> Contacts { get; set; } = new List<Contact>();

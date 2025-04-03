@@ -42,5 +42,10 @@ namespace Data.DTOs
         public bool? PhoneOptOut { get; set; } = false;
         public int PartnerId { get; set; }
         public int? EmployeeId { get; set; }
+        public string? EmployeeName { get; set; }
+        public int? OwnerID { get; set; }
+        public string? OwnerIDName { get; set; }
+        public int? CustomerId { get; set; }
+        public string? CustomerName { get; set; }
     }
 }

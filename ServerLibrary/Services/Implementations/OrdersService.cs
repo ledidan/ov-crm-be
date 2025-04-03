@@ -76,6 +76,10 @@ namespace ServerLibrary.Services.Implementations
                             OrderId = d.OrderId,
                             PartnerId = d.PartnerId,
                             ProductId = d.ProductId,
+                            CustomerId = d.CustomerId,
+                            CustomerName = d.CustomerName,
+                            PartnerName = d.PartnerName,
+                            SaleOrderNo = d.SaleOrderNo,
                             ProductCode = d.ProductCode,
                             ProductName = d.ProductName,
                             TaxID = d.TaxID,
@@ -89,7 +93,9 @@ namespace ServerLibrary.Services.Implementations
                             UsageUnitID = d.UsageUnitID,
                             UsageUnitIDText = d.UsageUnitIDText,
                             Quantity = d.Quantity,
-                            AmountSummary = d.AmountSummary
+                            AmountSummary = d.AmountSummary,
+                            CreatedAt = d.CreatedAt,
+                            UpdatedAt = d.UpdatedAt
                         }).ToList()
                         : new List<OrderDetailDTO>();
 
@@ -154,7 +160,11 @@ namespace ServerLibrary.Services.Implementations
                     Total = d.Total,
                     UsageUnitIDText = d.UsageUnitIDText,
                     Quantity = d.Quantity,
-                    AmountSummary = d.AmountSummary
+                    AmountSummary = d.AmountSummary,
+                    CustomerId = d.CustomerId,
+                    CustomerName = d.CustomerName,
+                    CreatedAt = d.CreatedAt,
+                    UpdatedAt = d.UpdatedAt
                 }).ToList();
 
                 return orderDto;
@@ -200,7 +210,10 @@ namespace ServerLibrary.Services.Implementations
             {
                 Id = ObjectId.GenerateNewId().ToString(),
                 OrderId = order.Id,
+                SaleOrderNo = order.SaleOrderNo,
                 PartnerId = partner.Id,
+                PartnerName = partner.Name,
+                // ** Order Detail Manually
                 ProductId = detailDto.ProductId,
                 ProductCode = detailDto.ProductCode,
                 ProductName = detailDto.ProductName,
@@ -216,6 +229,9 @@ namespace ServerLibrary.Services.Implementations
                 UsageUnitIDText = detailDto.UsageUnitIDText,
                 Quantity = detailDto.Quantity,
                 AmountSummary = detailDto.AmountSummary,
+                CustomerId = detailDto.CustomerId,
+                CustomerName = detailDto.CustomerName,
+                CreatedAt = DateTime.Now,
             }).ToList();
             
             // có orders mới chạy code
@@ -288,7 +304,7 @@ namespace ServerLibrary.Services.Implementations
                     {
                         var detailId = string.IsNullOrEmpty(detailDto.Id) ? ObjectId.GenerateNewId().ToString() : detailDto.Id;
                         var existingDetail = existingOrderDetails.FirstOrDefault(d => d.Id == detailId);
-
+                
                         if (existingDetail != null)
                         {
                             existingDetail.ProductId = detailDto.ProductId;
@@ -306,8 +322,8 @@ namespace ServerLibrary.Services.Implementations
                             existingDetail.Quantity = detailDto.Quantity;
                             existingDetail.AmountSummary = detailDto.AmountSummary;
                             existingDetail.Total = detailDto.Total;
-                            existingDetail.PartnerId = partner.Id;
-
+                            existingDetail.CustomerId = detailDto.CustomerId;
+                            existingDetail.CustomerName = detailDto.CustomerName;
                             updatedOrderDetails.Add(new ReplaceOneModel<OrderDetails>(
                                 Builders<OrderDetails>.Filter.Eq(d => d.Id, detailId),
                                 existingDetail
@@ -321,7 +337,9 @@ namespace ServerLibrary.Services.Implementations
                             {
                                 Id = detailId,
                                 OrderId = existingOrder.Id,
+                                SaleOrderNo = existingOrder.SaleOrderNo,
                                 PartnerId = partner.Id,
+                                PartnerName = existingOrder.Partner.Name,
                                 ProductId = detailDto.ProductId,
                                 ProductCode = detailDto.ProductCode,
                                 ProductName = detailDto.ProductName,
@@ -336,7 +354,11 @@ namespace ServerLibrary.Services.Implementations
                                 UsageUnitIDText = detailDto.UsageUnitIDText,
                                 Quantity = detailDto.Quantity,
                                 Total = detailDto.Total,
-                                AmountSummary = detailDto.AmountSummary
+                                AmountSummary = detailDto.AmountSummary,
+                                CustomerId = detailDto.CustomerId,
+                                CustomerName = detailDto.CustomerName,
+                                CreatedAt = DateTime.Now,
+                                UpdatedAt = DateTime.Now
                             };
                             newOrderDetails.Add(newDetail);
                         }

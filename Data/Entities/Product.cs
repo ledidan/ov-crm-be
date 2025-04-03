@@ -53,7 +53,9 @@ namespace Data.Entities
         public string? WarrantyPeriod { get; set; }
         public string? WarrantyPeriodTypeID { get; set; }
         public int? SupplierId { get; set; }
+        public string? SupplierName { get; set; }
         public int? OwnerID { get; set; }
+        public string? OwnerIDName { get; set; }
         public ProductCategory? ProductCategory { get; set; }
         public List<Employee> Employees { get; set; } = new List<Employee>();
         public ICollection<ProductEmployees> ProductEmployees { get; set; } = new List<ProductEmployees>();

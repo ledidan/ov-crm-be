@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace ServerLibrary.Services
 {
-    public class S3Service
+    public class S3Service : IS3Service
     {
         private readonly IAmazonS3 _s3Client;
         private readonly string _bucketName;
@@ -20,7 +20,8 @@ namespace ServerLibrary.Services
             var region = Environment.GetEnvironmentVariable("AWS_REGION") ?? "ap-southeast-1";
             _bucketName = Environment.GetEnvironmentVariable("AWS_BUCKET") ?? "5p-technologies";
 
-            if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(region) || string.IsNullOrEmpty(_bucketName))
+            if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey) ||
+             string.IsNullOrEmpty(region) || string.IsNullOrEmpty(_bucketName))
             {
                 throw new InvalidOperationException("AWS credentials are missing. Make sure they are set in the .env file.");
             }
@@ -44,10 +45,9 @@ namespace ServerLibrary.Services
             {
                 throw new Exception("Invalid file type. Only JPG, PNG, GIF, and PDF files are allowed.");
             }
-            var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-            var formattedFileName = $"{timestamp}_{fileName}";
-            var partnerRoute = $"organizations/partnerId_{partnerId}/userId_{userId}/{app}/{formattedFileName}";
-            var individualRoute = $"individuals/userId_{userId}/{app}/{formattedFileName}";
+            var formattedFileName = $"{fileName}";
+            var partnerRoute = $"organizations/partner_{partnerId}/user_{userId}/{app}/{formattedFileName}";
+            var individualRoute = $"individuals/user_{userId}/{app}/{formattedFileName}";
 
             string location = userType == "partner" ? partnerRoute : individualRoute;
 
@@ -59,10 +59,9 @@ namespace ServerLibrary.Services
                 ContentType = contentType,
                 // CannedACL = S3CannedACL.PublicRead
             };
-
+            Console.WriteLine($"Uploading image to {_bucketName} at {location}");
             await _s3Client.PutObjectAsync(request);
-
-            return $"{app}/{formattedFileName}"; // Return S3 file URL
+            return location; // Return S3 file URL
         }
 
         public async Task<string> UploadBase64ImageToS3(string base64Image, string categoryName, int partnerId, int userId, string app, string userType)
@@ -81,11 +80,11 @@ namespace ServerLibrary.Services
                 byte[] imageBytes = Convert.FromBase64String(base64Data);
                 using var memoryStream = new MemoryStream(imageBytes);
 
+                Console.WriteLine("Handling file size memory stream");
                 if (memoryStream.Length > 2 * 1024 * 1024)
                 {
                     throw new Exception("File size exceeds the 2MB limit.");
                 }
-
                 string timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
                 string fileName = $"{categoryName}_{timestamp}.{fileType}";
 
@@ -94,6 +93,31 @@ namespace ServerLibrary.Services
             catch (Exception ex)
             {
                 throw new Exception($"Image upload failed: {ex.Message}");
+            }
+        }
+        public async Task RemoveFileFromS3(string fileKey)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(fileKey))
+                {
+                    throw new ArgumentException("File key cannot be null or empty.");
+                }
+
+                var request = new DeleteObjectRequest
+                {
+                    BucketName = _bucketName,
+                    Key = fileKey // Đường dẫn file trên S3 (ví dụ: "organizations/partner_1/user_1/crm/product_20231010120000.jpg")
+                };
+
+                Console.WriteLine($"Removing file from S3: {_bucketName}/{fileKey}");
+                await _s3Client.DeleteObjectAsync(request);
+                Console.WriteLine($"Successfully removed file: {fileKey}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to remove file from S3: {ex.Message}");
+                throw new Exception($"Failed to remove file from S3: {ex.Message}");
             }
         }
     }

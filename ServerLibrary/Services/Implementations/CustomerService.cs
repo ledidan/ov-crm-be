@@ -113,9 +113,7 @@ namespace ServerLibrary.Services.Implementations
                 BudgetCode = customer.BudgetCode,
                 RevenueDetail = customer.RevenueDetail,
                 BusinessTypeID = customer.BusinessTypeID,
-                ContactIDAim = customer.ContactIDAim,
                 NumberOfDaysOwed = customer.NumberOfDaysOwed,
-                OwnerID = customer.EmployeeId.ToString(),
                 Fax = customer.Fax,
                 GenderID = customer.GenderID,
                 Identification = customer.Identification,
@@ -126,7 +124,6 @@ namespace ServerLibrary.Services.Implementations
                 NoOfEmployeeID = customer.NoOfEmployeeID,
                 OfficeEmail = customer.OfficeEmail,
                 OfficeTel = customer.OfficeTel,
-                OrganizationUnitID = customer.OrganizationUnitID,
                 SectorText = customer.SectorText,
                 ShippingCode = customer.ShippingCode,
                 ShippingCountryID = customer.ShippingCountryID,
@@ -151,9 +148,12 @@ namespace ServerLibrary.Services.Implementations
                 IsOldCustomer = customer.IsOldCustomer,
                 IsDistributor = customer.IsDistributor,
 
+                CustomerSinceDate = customer.CustomerSinceDate,
+                // ** Automatically assign to employee for Owner and Partner
+                OwnerID = employee.Id.ToString(),
+                OwnerIDName = employee.FullName,
                 Partner = partner,
                 Employee = employee,
-                CustomerSinceDate = customer.CustomerSinceDate
             };
 
             newCustomer.CustomerEmployees.Add(new CustomerEmployees

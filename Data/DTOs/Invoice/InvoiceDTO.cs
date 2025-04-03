@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Data.Entities;
@@ -52,8 +53,19 @@ namespace Data.DTOs
         public int? BuyerId { get; set; }
         [JsonConverter(typeof(NullableIntConverter))]
         public int? CustomerId { get; set; }
-        [JsonConverter(typeof(NullableIntConverter))]
-        public int? EmployeeId { get; set; }
+
+        [JsonConverter(typeof(NullStringConverter))]
+        public string? OwnerIdName { get; set; }
+        [JsonConverter(typeof(NullStringConverter))]
+        public string? ModifiedByIdName { get; set; }
+        [JsonConverter(typeof(NullStringConverter))]
+        public string? CustomerName { get; set; }
+        [JsonConverter(typeof(NullStringConverter))]
+        public string? OwnerTaskExecuteName { get; set; }
+        [JsonConverter(typeof(NullStringConverter))]
+        public string? BuyerName { get; set; }
+
+        // public int? EmployeeId { get; set; }
         public int PartnerId { get; set; }
         public List<int>? Orders { get; set; }
         [Required]

@@ -81,8 +81,13 @@ namespace ServerLibrary.Services.Implementations
                     {
                         Id = ObjectId.GenerateNewId().ToString(),
                         InvoiceId = invoice.Id,
+                        InvoiceRequestName = invoice.InvoiceRequestName,
                         PartnerId = partner.Id,
+                        PartnerName = partner.Name,
+                        CustomerId = detailDto.CustomerId,
+                        CustomerName = detailDto.CustomerName,
                         OrderId = detailDto.OrderId,
+                        SaleOrderNo = detailDto.SaleOrderNo,
                         ProductId = detailDto.ProductId,
                         ProductCode = detailDto.ProductCode,
                         ProductName = detailDto.ProductName,
@@ -98,6 +103,7 @@ namespace ServerLibrary.Services.Implementations
                         UsageUnitIDText = detailDto.UsageUnitIDText,
                         Quantity = detailDto.Quantity,
                         AmountSummary = detailDto.AmountSummary,
+                        CreatedAt = DateTime.Now,
                     }).ToList();
                     Console.WriteLine($"Prepared {invoiceDetails.Count} InvoiceDetails.");
 
@@ -234,6 +240,8 @@ namespace ServerLibrary.Services.Implementations
                         {
                             Console.WriteLine($"Updating existing detail ID: {detailId}");
                             existingDetail.OrderId = detailDto.OrderId;
+                            existingDetail.CustomerId = detailDto.CustomerId;
+                            existingDetail.CustomerName = detailDto.CustomerName;
                             existingDetail.ProductId = detailDto.ProductId;
                             existingDetail.ProductCode = detailDto.ProductCode;
                             existingDetail.ProductName = detailDto.ProductName;
@@ -250,7 +258,7 @@ namespace ServerLibrary.Services.Implementations
                             existingDetail.AmountSummary = detailDto.AmountSummary;
                             existingDetail.Total = detailDto.Total;
                             existingDetail.PartnerId = partner.Id;
-
+                            existingDetail.UpdatedAt = DateTime.Now;
                             updatedInvoiceDetails.Add(new ReplaceOneModel<InvoiceDetails>(
                                 Builders<InvoiceDetails>.Filter.Eq(d => d.Id, detailId),
                                 existingDetail
@@ -265,7 +273,11 @@ namespace ServerLibrary.Services.Implementations
                                 Id = detailId,
                                 PartnerId = partner.Id,
                                 InvoiceId = existingInvoice.Id,
+                                InvoiceRequestName = existingInvoice.InvoiceRequestName,
                                 OrderId = detailDto.OrderId,
+                                SaleOrderNo = detailDto.SaleOrderNo,
+                                CustomerId = detailDto.CustomerId,
+                                CustomerName = detailDto.CustomerName,
                                 ProductId = detailDto.ProductId,
                                 ProductCode = detailDto.ProductCode,
                                 ProductName = detailDto.ProductName,
@@ -280,7 +292,8 @@ namespace ServerLibrary.Services.Implementations
                                 UsageUnitIDText = detailDto.UsageUnitIDText,
                                 Quantity = detailDto.Quantity,
                                 Total = detailDto.Total,
-                                AmountSummary = detailDto.AmountSummary
+                                AmountSummary = detailDto.AmountSummary,
+                                CreatedAt = DateTime.Now,
                             };
                             newInvoiceDetails.Add(newDetail);
                         }

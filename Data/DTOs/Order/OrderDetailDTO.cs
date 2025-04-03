@@ -8,7 +8,10 @@ namespace Data.DTOs
 
         public int? OrderId { get; set; }
 
+        public string? SaleOrderNo { get; set; }
+
         public int PartnerId { get; set; }
+        public string? PartnerName { get; set; }
         public int? ProductId { get; set; }
 
         public string? ProductCode { get; set; }
@@ -33,5 +36,10 @@ namespace Data.DTOs
 
         public decimal? AmountSummary { get; set; }
 
+        public int? CustomerId { get; set; }
+        public string? CustomerName { get; set; }
+
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }

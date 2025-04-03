@@ -36,10 +36,13 @@ namespace Data.Entities
 
         public string? RecipientEmail { get; set; }
         public int? OwnerId { get; set; }
-
+        public string? OwnerIdName { get; set; }
         public int? OwnerTaskExecuteId { get; set; }
+        public string? OwnerTaskExecuteName { get; set; }
         public int? CustomerId { get; set; }
+        public string? CustomerName { get; set; }
         public int? BuyerId { get; set; }
+        public string? BuyerName { get; set; }
         public int? OrderId { get; set; }
         public List<Employee> Employees { get; set; } = new List<Employee>();
         public List<Order> Orders { get; set; } = new List<Order>();

@@ -2,8 +2,6 @@ using Data.DTOs;
 using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Enums;
-using Mapper.ContactMapper;
-using Mapper.CustomerMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerLibrary.Services.Interfaces;

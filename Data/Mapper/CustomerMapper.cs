@@ -27,12 +27,10 @@ namespace Mapper.CustomerMapper
                 BudgetCode = customerModel.BudgetCode,
                 RevenueDetail = customerModel.RevenueDetail,
                 BusinessTypeID = customerModel.BusinessTypeID,
-                ContactIDAim = customerModel.ContactIDAim,
                 CelebrateDate = customerModel.CelebrateDate,
                 OwnerID = customerModel.OwnerID,
                 OfficeEmail = customerModel.OfficeEmail,
                 OfficeTel = customerModel.OfficeTel,
-                OrganizationUnitID = customerModel.OrganizationUnitID,
                 SectorText = customerModel.SectorText,
                 ShippingCode = customerModel.ShippingCode,
                 ShippingCountryID = customerModel.ShippingCountryID,
@@ -52,6 +50,11 @@ namespace Mapper.CustomerMapper
                 IsPersonal = customerModel.IsPersonal,
                 IsOldCustomer = customerModel.IsOldCustomer,
                 IsDistributor = customerModel.IsDistributor,
+                OwnerIDName = customerModel.OwnerIDName,
+                EmployeeCode = customerModel.Employee.EmployeeCode,
+                EmployeeName = customerModel.Employee.FullName,
+                PartnerId = customerModel.Partner.Id,
+                PartnerName = customerModel.Partner.Name
             };
         }
         public static Customer ToCustomerFromUpdateDTO(this UpdateCustomerDTO customerModel)
@@ -74,13 +77,11 @@ namespace Mapper.CustomerMapper
                 BudgetCode = customerModel.BudgetCode,
                 RevenueDetail = customerModel.RevenueDetail,
                 BusinessTypeID = customerModel.BusinessTypeID,
-                ContactIDAim = customerModel.ContactIDAim,
                 CelebrateDate = customerModel.CelebrateDate,
                 CustomerSinceDate = customerModel.CustomerSinceDate,
                 OwnerID = customerModel.OwnerID,
                 OfficeEmail = customerModel.OfficeEmail,
                 OfficeTel = customerModel.OfficeTel,
-                OrganizationUnitID = customerModel.OrganizationUnitID,
                 AnnualRevenueID = customerModel.AnnualRevenueID,
                 SectorText = customerModel.SectorText,
                 ShippingCode = customerModel.ShippingCode,
@@ -99,7 +100,7 @@ namespace Mapper.CustomerMapper
                 IsPartner = customerModel.IsPartner,
                 IsPersonal = customerModel.IsPersonal,
                 IsOldCustomer = customerModel.IsOldCustomer,
-                IsDistributor = customerModel.IsDistributor
+                IsDistributor = customerModel.IsDistributor,
             };
         }
     }

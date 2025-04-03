@@ -12,6 +12,8 @@ namespace Data.MongoModels
         [BsonElement("OrderId")]
         public int? OrderId { get; set; } = null!; // Reference to Order 
 
+        [BsonElement("SaleOrderNo")]
+        public string? SaleOrderNo { get; set; }
         [BsonElement("ProductId")]
         public int? ProductId { get; set; } // Reference to Product (MySQL)
 
@@ -26,7 +28,7 @@ namespace Data.MongoModels
 
         [BsonElement("TaxAmount")]
         public double? TaxAmount { get; set; }
-        
+
         [BsonElement("TaxIDText")]
         public string? TaxIDText { get; set; }
 
@@ -59,5 +61,20 @@ namespace Data.MongoModels
 
         [BsonElement("PartnerId")]
         public int PartnerId { get; set; }
+
+        [BsonElement("PartnerName")]
+        public string? PartnerName { get; set; }
+
+        [BsonElement("CustomerId")]
+        public int? CustomerId { get; set; }
+
+        [BsonElement("CustomerName")]
+        public string? CustomerName { get; set; }
+
+        [BsonElement("CreatedAt")]
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        [BsonElement("UpdatedAt")]
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
     }
 }

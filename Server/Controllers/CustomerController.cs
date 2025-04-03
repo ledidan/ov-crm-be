@@ -51,8 +51,7 @@ namespace Server.Controllers
             try
             {
                 var result = await _customerService.GetAllAsync(employee, partner);
-                var resultDTO = result.Select(x => x.ToCustomerDTO()).ToList();
-                return Ok(resultDTO);
+                return Ok(result);
             }
             catch (Exception)
             {
@@ -70,7 +69,7 @@ namespace Server.Controllers
             {
                 return NotFound($"Contact with ID {id} not found for employeeId {employee.Id} and partnerId {partner.Id}.");
             }
-            return Ok(customer.ToCustomerDTO());
+            return Ok(customer);
         }
         [HttpPut]
         [Route("{id:int}")]

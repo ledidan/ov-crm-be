@@ -34,9 +34,22 @@ namespace Data.Entities
         public bool? IsPublic { get; set; } = false;
         public bool? EmailOptOut { get; set; } = false;
         public bool? PhoneOptOut { get; set; } = false;
-        public int PartnerId { get; set; }
+
+        public int? OwnerID { get; set; }
+
+        public string? OwnerIDName { get; set; }
+
+        public int? CustomerId { get; set; }
+
+        public string? CustomerName { get; set; }
+
+        public int? PartnerId { get; set; }
+
+        public string? PartnerName { get; set; }
+
         public int? EmployeeId { get; set; }
-        public virtual required Partner Partner { get; set; }
+
+        public string? EmployeeName { get; set; }
         public List<Customer> Customers { get; set; } = new List<Customer>();
         public List<Employee> Employees { get; set; } = new List<Employee>();
 

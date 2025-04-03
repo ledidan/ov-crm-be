@@ -1,18 +1,13 @@
 
-
-
-
-
-using System.ComponentModel.DataAnnotations;
-
 namespace Data.DTOs
 {
     public class UpdateProductDTO
     {   
+
+        public int? Id { get; set; }
         public string? ProductCode { get; set; }
         public string? ProductGroupID { get; set; }
         public string? ProductGroupName { get; set; }
-        [Required]
         public string? ProductName { get; set; }
         public decimal? AmountSummary { get; set; }
         public string? Avatar { get; set; }
@@ -32,7 +27,6 @@ namespace Data.DTOs
         public string? OldProductCode { get; set; }
         public string? OperatorID { get; set; }
         public bool? PriceAfterTax { get; set; }
-        [Required]
         public string? ProductPropertiesID { get; set; }
         public decimal? PurchasedPrice { get; set; }
         public int? QuantityDemanded { get; set; }
@@ -56,5 +50,7 @@ namespace Data.DTOs
         public string? WarrantyPeriod { get; set; }
         public string? WarrantyPeriodTypeID { get; set; }
         public int? ProductCategoryId { get; set; }
+
+        public string? OwnerIDName { get; set; }
     }
 }

@@ -6,7 +6,7 @@ using ServerLibrary.Services.Interfaces;
 using System.Security.Claims;
 
 namespace Server.Controllers
-{
+{   
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -63,10 +63,11 @@ namespace Server.Controllers
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);
+            var employee = await employeeService.FindByClaim(identity);
             if (partner == null) return BadRequest("Partner not found");
             if (product == null) return BadRequest("Model is empty");
 
-            var result = await productService.UpdateAsync(id, product, partner);
+            var result = await productService.UpdateAsync(id, product, partner, employee);
             return Ok(result);
         }
 
@@ -117,5 +118,27 @@ namespace Server.Controllers
         //     var result = await productService.UpdateSellingPriceAsync(product, sellingPrice);
         //     return Ok(result);
         // }
+
+        [HttpGet("{id:int}/orders")]
+        public async Task<IActionResult> GetOrdersByProductIdAsync(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            if (partner == null) return BadRequest("Không tìm thấy đối tác");
+
+            var result = await productService.GetOrdersByProductIdAsync(id, partner);
+            return Ok(result);
+        }
+
+        [HttpGet("{id:int}/invoices")]
+        public async Task<IActionResult> GetInvoicesByProductIdAsync(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            if (partner == null) return BadRequest("Không tìm thấy đối tác");
+
+            var result = await productService.GetInvoicesByProductIdAsync(id, partner);
+            return Ok(result);
+        }
     }
 }

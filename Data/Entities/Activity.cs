@@ -29,13 +29,19 @@ namespace Data.Entities
         public string? PhoneNumber { get; set; }
         public string? OfficeEmail { get; set; }
         public int? CustomerId { get; set; }
+        public string? CustomerName { get; set; }
         public int PartnerId { get; set; }
+        public string? PartnerName { get; set; }
         public int? TaskOwnerId { get; set; }
+        public string? TaskOwnerName { get; set; }
         public int? ModifiedBy { get; set; }
+        public string? ModifiedByName { get; set; }
         public int? ContactId { get; set; }
+        public string? ContactName { get; set; }
         public int? OrderId { get; set; }
         public int? InvoiceId { get; set; }
         public int? RelatedUsersID { get; set; }
+        public string? RelatedUsersName { get; set; }
         public Appointment? Appointment { get; set; }
         public Mission? Mission { get; set; }
         public Call? Call { get; set; }

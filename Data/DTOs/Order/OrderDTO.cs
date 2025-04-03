@@ -142,10 +142,22 @@ namespace Data.DTOs
         public int? CustomerId { get; set; }
         [JsonConverter(typeof(NullableIntConverter))]
         public int? ContactId { get; set; }
+        [JsonConverter(typeof(NullStringConverter))]
         public string? ContactName { get; set; }
+        [JsonConverter(typeof(NullableIntConverter))]
         public int? OwnerTaskExecuteId { get; set; }
+        [JsonConverter(typeof(NullableIntConverter))]
         public int? OwnerId { get; set; }
+        [JsonConverter(typeof(NullStringConverter))]
+        public string? OwnerIdName { get; set; }
+        [JsonConverter(typeof(NullStringConverter))]
+        public string? ModifiedByIdName { get; set; }
 
+        [JsonConverter(typeof(NullStringConverter))]
+        public string? CustomerName { get; set; }
+
+        public string? OwnerTaskExecuteName { get; set; }
+        [JsonConverter(typeof(NullableIntConverter))]
         public int? PartnerId { get; set; }
 
         [Required(ErrorMessage = "Thông tin hàng hoá không được để trống")]
