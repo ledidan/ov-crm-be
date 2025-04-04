@@ -86,6 +86,9 @@ namespace ServerLibrary.Services.Implementations
                     ProductCategoryCode = category.ProductCategoryCode,
                     ProductCategoryName = category.ProductCategoryName,
                     ParentProductCategoryID = category.ParentProductCategoryID,
+                    InActive = category.InActive,
+                    Description = category.Description,
+                    Avatar = category.Avatar,
                 };
 
                 flattenedCategories.Add(categoryDTO);
@@ -304,7 +307,6 @@ namespace ServerLibrary.Services.Implementations
                 using var transaction = await appDbContext.Database.BeginTransactionAsync();
                 try
                 {
-                    // Kiểm tra tham số đầu vào
                     if (productCategory == null || id <= 0)
                         return new GeneralResponse(
                             false,
@@ -317,7 +319,6 @@ namespace ServerLibrary.Services.Implementations
                     if (employee == null)
                         return new GeneralResponse(false, "Nhân viên không hợp lệ");
 
-                    // Tìm danh mục hiện tại
                     var existingCategory = await appDbContext.ProductCategories.FirstOrDefaultAsync(
                         pc => pc.Id == id && pc.Partner.Id == partner.Id
                     );
@@ -328,12 +329,9 @@ namespace ServerLibrary.Services.Implementations
                             $"Không tìm thấy danh mục sản phẩm với ID {id} thuộc đối tác {partner.Id}"
                         );
 
-                    // Validate ParentProductCategoryID trước khi cập nhật
-                    if (productCategory.ParentProductCategoryID.HasValue)
+                    // Kiểm tra ParentProductCategoryID
+                    if (productCategory.ParentProductCategoryID.HasValue && productCategory.ParentProductCategoryID != 0)
                     {
-                        Console.WriteLine(
-                            $"ParentProductCategoryID: {productCategory.ParentProductCategoryID}"
-                        );
                         if (productCategory.ParentProductCategoryID == id)
                             return new GeneralResponse(
                                 false,
@@ -345,27 +343,41 @@ namespace ServerLibrary.Services.Implementations
                                 pc.Id == productCategory.ParentProductCategoryID.Value
                             );
 
-                        // if (parentCategory == null)
-                        //     return new GeneralResponse(
-                        //         false,
-                        //         "Danh mục cha được chỉ định không tồn tại"
-                        //     );
-
-                        // Cập nhật ParentProductCategoryID
-                        existingCategory.ParentProductCategoryID = productCategory
-                            .ParentProductCategoryID
-                            .Value;
-                        appDbContext
-                            .Entry(existingCategory)
-                            .Property("ParentProductCategoryID")
-                            .IsModified = true;
+                        if (parentCategory == null)
+                            return new GeneralResponse(
+                                false,
+                                "Danh mục cha được chỉ định không tồn tại"
+                            );
                     }
-                    else if (
+
+                    // Duyệt qua các thuộc tính của UpdateProductCategoryDTO
+                    var properties = typeof(UpdateProductCategoryDTO).GetProperties();
+                    foreach (var prop in properties)
+                    {
+                        var newValue = prop.GetValue(productCategory);
+                        if (newValue != null && newValue.ToString() != "")
+                        {
+                            var existingProp = typeof(ProductCategory).GetProperty(prop.Name);
+                            if (existingProp != null && existingProp.CanWrite)
+                            {
+                                if (prop.Name != "Id") // Bỏ qua Id
+                                {
+                                    existingProp.SetValue(existingCategory, newValue);
+                                    appDbContext
+                                        .Entry(existingCategory)
+                                        .Property(existingProp.Name)
+                                        .IsModified = true;
+                                }
+                            }
+                        }
+                    }
+
+                    // Xử lý trường hợp ParentProductCategoryID là null
+                    if (
                         !productCategory.ParentProductCategoryID.HasValue
                         && existingCategory.ParentProductCategoryID != null
                     )
                     {
-                        // Xóa ParentProductCategoryID nếu DTO gửi null
                         existingCategory.ParentProductCategoryID = null;
                         appDbContext
                             .Entry(existingCategory)
@@ -373,34 +385,11 @@ namespace ServerLibrary.Services.Implementations
                             .IsModified = true;
                     }
 
-                    var properties = typeof(UpdateProductCategoryDTO)
-                        .GetProperties()
-                        .Where(p => p.Name != "ParentProductCategoryID");
-                    foreach (var prop in properties)
-                    {
-                        var newValue = prop.GetValue(productCategory);
-                        if (newValue != null && newValue.ToString() != "")
-                        {
-                            var existingProp = typeof(ProductCategory).GetProperty(prop.Name);
-                            if (existingProp != null && existingProp.CanWrite && prop.Name != "Id")
-                            {
-                                existingProp.SetValue(existingCategory, newValue);
-                                appDbContext
-                                    .Entry(existingCategory)
-                                    .Property(existingProp.Name)
-                                    .IsModified = true;
-                            }
-                        }
-                    }
-
-                    // Log trước khi lưu
                     Console.WriteLine(
                         $"Before Save - Id: {existingCategory.Id}, ParentProductCategoryID: {existingCategory.ParentProductCategoryID}"
                     );
 
-                    // Lưu thay đổi
                     await appDbContext.SaveChangesAsync();
-
                     await transaction.CommitAsync();
 
                     return new GeneralResponse(true, "Cập nhật danh mục sản phẩm thành công");
@@ -408,10 +397,13 @@ namespace ServerLibrary.Services.Implementations
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    Console.WriteLine($"Update failed: {ex.Message}");
+                    // Hiển thị chi tiết lỗi từ InnerException
+                    var errorMessage =
+                        ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                    Console.WriteLine($"Update failed: {errorMessage}");
                     return new GeneralResponse(
                         false,
-                        $"Cập nhật danh mục sản phẩm thất bại: {ex.Message}"
+                        $"Cập nhật danh mục sản phẩm thất bại: {errorMessage}"
                     );
                 }
             });

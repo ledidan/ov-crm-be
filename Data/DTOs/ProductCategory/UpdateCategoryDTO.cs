@@ -8,7 +8,7 @@ namespace Data.DTOs
         public string? ProductCategoryCode { get; set; }
         public string? ProductCategoryName { get; set; }
         public string? InventoryCategoryID { get; set; }
-        public int? ParentProductCategoryID { get; set; } = 0;
+        public int? ParentProductCategoryID { get; set; }
         public bool? IsPublic { get; set; }
         public bool? InActive { get; set; }
         public string? Description { get; set; }
