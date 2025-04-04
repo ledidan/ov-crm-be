@@ -309,7 +309,8 @@ namespace ServerLibrary.Data
         public DbSet<PartnerUser> PartnerUsers { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Customer> Customers { get; set; }
-
+        public DbSet<CustomerCare> CustomerCares { get; set; }
+        public DbSet<SupportTicket> SupportTickets { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Mission> Missions { get; set; }
         public DbSet<Call> Calls { get; set; }

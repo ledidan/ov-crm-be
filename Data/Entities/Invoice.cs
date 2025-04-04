@@ -44,9 +44,9 @@ namespace Data.Entities
         public int? BuyerId { get; set; }
         public string? BuyerName { get; set; }
         public int? OrderId { get; set; }
-        public List<Employee> Employees { get; set; } = new List<Employee>();
         public List<Order> Orders { get; set; } = new List<Order>();
         public virtual required Partner Partner { get; set; }
+        public List<Employee> Employees { get; set; } = new List<Employee>();
         public ICollection<InvoiceEmployees> InvoiceEmployees { get; set; } = new List<InvoiceEmployees>();
         public ICollection<InvoiceOrders> InvoiceOrders { get; set; } = new List<InvoiceOrders>();
 

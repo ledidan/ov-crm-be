@@ -29,7 +29,7 @@ namespace Data.DTOs
         public string? PhoneNumber { get; set; }
         public string? OfficeEmail { get; set; }
         public int? CustomerId { get; set; }
-        [Required]
+        // [Required]
         public string? CustomerName { get; set; }
         public string? PartnerName { get; set; }
         public int? TaskOwnerId { get; set; }

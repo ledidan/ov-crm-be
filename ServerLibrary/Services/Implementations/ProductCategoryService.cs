@@ -206,6 +206,7 @@ namespace ServerLibrary.Services.Implementations
                     Avatar = c.Avatar,
                     ProductCategoryCode = c.ProductCategoryCode,
                     ProductCategoryName = c.ProductCategoryName,
+                    ParentProductCategoryID = c.ParentProductCategoryID,
                     Description = c.Description,
                     IsPublic = c.IsPublic,
                     InActive = c.InActive,
