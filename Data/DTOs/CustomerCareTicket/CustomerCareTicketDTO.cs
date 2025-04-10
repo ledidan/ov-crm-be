@@ -1,9 +1,15 @@
-namespace Data.Entities
+
+
+
+using System.ComponentModel.DataAnnotations;
+
+namespace Data.DTOs
 {
-    public class CustomerCare : BaseEntity
+    public class CustomerCareTicketDTO
     {
         public int Id { get; set; }
 
+        [Required]
         public string? CustomerCareNumber { get; set; }
 
         public string? AccountNumber { get; set; }
@@ -17,6 +23,7 @@ namespace Data.Entities
         public string? Address { get; set; }
 
         public string? OwnerName { get; set; }
+        [Required]
 
         public int? CustomerId { get; set; }
 
@@ -42,6 +49,8 @@ namespace Data.Entities
 
         public string? WardID { get; set; }
 
+        [Required]
+
         public int? SaleOrderID { get; set; }
 
         public string? SaleOrderNo { get; set; }
@@ -60,7 +69,6 @@ namespace Data.Entities
 
         public string? ModifiedByName { get; set; }
 
-        public virtual required Partner Partner { get; set; }
-        public List<Employee> Employees { get; set; } = new List<Employee>();
+
     }
 }

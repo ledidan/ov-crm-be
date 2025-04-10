@@ -72,7 +72,7 @@ namespace ServerLibrary.Services.Implementations
         {
             var categories = await appDbContext
                 .ProductCategories.Where(pc =>
-                    pc.Partner.Id == partner.Id && pc.OwnerId == employee.Id
+                    pc.Partner.Id == partner.Id
                 )
                 .ToListAsync();
 

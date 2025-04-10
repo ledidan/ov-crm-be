@@ -1,6 +1,10 @@
-namespace Data.Entities
+
+
+
+namespace Data.DTOs
 {
-    public class SupportTicket : BaseEntity
+
+    public class SupportTicketDTO
     {
         public int Id { get; set; }
 
@@ -54,7 +58,6 @@ namespace Data.Entities
 
         public int? RelatedUsersID { get; set; }
 
-
         public int? ModifiedBy { get; set; }
 
         public int? CreatedBy { get; set; }
@@ -63,7 +66,6 @@ namespace Data.Entities
 
         public string? CreatedByName { get; set; }
 
-        public virtual required Partner Partner { get; set; }
-        public List<Employee> Employees { get; set; } = new List<Employee>();
     }
+
 }

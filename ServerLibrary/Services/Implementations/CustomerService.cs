@@ -35,9 +35,6 @@ namespace ServerLibrary.Services.Implementations
             _employeeService = employeeService;
             _mapper = mapper;
         }
-
-
-
         public async Task<GeneralResponse?> BulkAddContactsIntoCustomer(List<int> contactIds, int customerId, Employee employee, Partner partner)
         {
             if (contactIds == null || !contactIds.Any())

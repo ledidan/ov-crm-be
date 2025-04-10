@@ -8,10 +8,11 @@ namespace Data.DTOs
     {
         public InvoiceProfile()
         {
-            CreateMap<Invoice, InvoiceDTO>();
+            CreateMap<Invoice, InvoiceDTO>(); 
             CreateMap<Invoice, ContactInvoiceDTO>();
             CreateMap<Invoice, UpdateInvoiceDTO>();
             CreateMap<ContactInvoiceDTO, Invoice>()
+
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<InvoiceDTO, Invoice>()
                 .ForMember(dest => dest.InvoiceOrders, opt => opt.Ignore()) // Ignore InvoiceOrders
@@ -20,8 +21,8 @@ namespace Data.DTOs
                 .ForMember(dest => dest.OwnerId, opt => opt.Ignore()) // Ignore OwnerId (set manually)
                 .ForMember(dest => dest.OwnerTaskExecuteId, opt => opt.Ignore()) // Ignore Owner (set manually)
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-
                 
+
             CreateMap<InvoiceDetailDTO, InvoiceDetails>()
                             .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<UpdateInvoiceDTO, InvoiceDTO>()

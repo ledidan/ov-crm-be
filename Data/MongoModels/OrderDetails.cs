@@ -20,6 +20,10 @@ namespace Data.MongoModels
         [BsonElement("ProductCode")]
         public string? ProductCode { get; set; }
 
+        [BsonElement("Avatar")]
+        public string? Avatar { get; set; }
+
+        
         [BsonElement("ProductName")]
         public string? ProductName { get; set; }
 

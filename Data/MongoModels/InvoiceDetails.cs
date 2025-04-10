@@ -10,10 +10,13 @@ namespace Data.MongoModels
         public string? Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
         [BsonElement("InvoiceId")]
-        public int? InvoiceId { get; set; } = null!; // Reference to Invoice 
+        public int? InvoiceId { get; set; } = null!; // Reference to Invoice
 
         [BsonElement("InvoiceRequestName")]
         public string? InvoiceRequestName { get; set; }
+
+        [BsonElement("Avatar")]
+        public string? Avatar { get; set; }
 
         [BsonElement("ProductId")]
         public int? ProductId { get; set; } // Reference to Product (MySQL)
@@ -29,7 +32,7 @@ namespace Data.MongoModels
 
         [BsonElement("TaxAmount")]
         public double? TaxAmount { get; set; }
-        
+
         [BsonElement("TaxIDText")]
         public string? TaxIDText { get; set; }
 

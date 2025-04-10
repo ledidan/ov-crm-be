@@ -17,7 +17,6 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<GeneralResponse> DeleteAsync(int customerId, Employee employee, Partner partner);
 
-
         // ** Bulk Add Customer Relationship
         Task<GeneralResponse?> BulkAddContactsIntoCustomer(List<int> contactIds, int customerId, Employee employee, Partner partner);
 

@@ -1,11 +1,10 @@
-
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Data.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Interfaces;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace Server.Controllers
 {
@@ -19,12 +18,17 @@ namespace Server.Controllers
 
         private readonly IPartnerService _partnerService;
 
-        public OrdersController(IOrderService ordersService, IPartnerService partnerService, IEmployeeService employeeService)
+        public OrdersController(
+            IOrderService ordersService,
+            IPartnerService partnerService,
+            IEmployeeService employeeService
+        )
         {
             _ordersService = ordersService;
             _partnerService = partnerService;
             _employeeService = employeeService;
         }
+
         [HttpPost]
         [Route("create")]
         [Authorize(Roles = "User,Admin")]
@@ -44,6 +48,7 @@ namespace Server.Controllers
             }
             return StatusCode(500, response);
         }
+
         [HttpGet("orders")]
         public async Task<IActionResult> GetAllOrders()
         {
@@ -69,10 +74,12 @@ namespace Server.Controllers
             var order = await _ordersService.GetOrderByIdAsync(id, employee, partner);
             return Ok(order);
         }
+
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateOrderAsync(int id,
-        [FromBody] UpdateOrderRequestDTO request
-         )
+        public async Task<IActionResult> UpdateOrderAsync(
+            int id,
+            [FromBody] UpdateOrderRequestDTO request
+        )
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -81,7 +88,12 @@ namespace Server.Controllers
             {
                 return BadRequest("Order ID cannot be null or empty.");
             }
-            var result = await _ordersService.UpdateOrderAsync(id, request.Order, employee, partner);
+            var result = await _ordersService.UpdateOrderAsync(
+                id,
+                request.Order,
+                employee,
+                partner
+            );
 
             if (result.Flag == true)
             {
@@ -91,7 +103,10 @@ namespace Server.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> UpdateFieldOrder(int id, [FromBody] UpdateOrderRequestDTO request)
+        public async Task<IActionResult> UpdateFieldOrder(
+            int id,
+            [FromBody] UpdateOrderRequestDTO request
+        )
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -102,13 +117,19 @@ namespace Server.Controllers
             if (employee == null || partner == null)
                 return Unauthorized(new { message = "Unauthorized access" });
 
-            var result = await _ordersService.UpdateFieldIdAsync(id, request.Order, employee, partner);
+            var result = await _ordersService.UpdateFieldIdAsync(
+                id,
+                request.Order,
+                employee,
+                partner
+            );
 
             if (result == null || !result.Flag)
                 return NotFound(new { message = result?.Message ?? "Order not found" });
 
             return Ok(new { Flag = result.Flag, Message = result.Message });
         }
+
         // [HttpDelete("{id:length(24)}")]
         // public async Task<IActionResult> DeleteOrderAsync(int id, int employeeId)
         // {
@@ -149,7 +170,10 @@ namespace Server.Controllers
         }
 
         [HttpPost("{id:int}/add-contacts")]
-        public async Task<IActionResult> BulkAddContactsIntoOrder([FromRoute] int id, [FromBody] List<int> ContactIds)
+        public async Task<IActionResult> BulkAddContactsIntoOrder(
+            [FromRoute] int id,
+            [FromBody] List<int> ContactIds
+        )
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             if (id == null || ContactIds == null || !ContactIds.Any())
@@ -161,7 +185,12 @@ namespace Server.Controllers
             if (partner == null)
                 return NotFound("Không tìm thấy tổ chức!");
 
-            var response = await _ordersService.BulkAddContactsIntoOrder(ContactIds, id, employee, partner);
+            var response = await _ordersService.BulkAddContactsIntoOrder(
+                ContactIds,
+                id,
+                employee,
+                partner
+            );
             if (response == null || !response.Flag)
                 return BadRequest(response);
 
@@ -179,7 +208,8 @@ namespace Server.Controllers
             var partner = await _partnerService.FindByClaim(identity);
             var employee = await _employeeService.FindByClaim(identity);
 
-            if (partner == null || employee == null) return BadRequest("ID nhân viên và ID tổ chức không đuọc bỏ trống.");
+            if (partner == null || employee == null)
+                return BadRequest("ID nhân viên và ID tổ chức không đuọc bỏ trống.");
             var response = await _ordersService.GetAllActivitiesByOrderAsync(id, employee, partner);
             return Ok(response);
         }
@@ -195,7 +225,8 @@ namespace Server.Controllers
             var partner = await _partnerService.FindByClaim(identity);
             var employee = await _employeeService.FindByClaim(identity);
 
-            if (partner == null || employee == null) return BadRequest("ID nhân viên và ID tổ chức không đuọc bỏ trống.");
+            if (partner == null || employee == null)
+                return BadRequest("ID nhân viên và ID tổ chức không đuọc bỏ trống.");
             var response = await _ordersService.GetAllContactsLinkedIdAsync(id, employee, partner);
             return Ok(response);
         }
@@ -211,8 +242,13 @@ namespace Server.Controllers
             var partner = await _partnerService.FindByClaim(identity);
             var employee = await _employeeService.FindByClaim(identity);
 
-            if (partner == null || employee == null) return BadRequest("ID nhân viên và ID tổ chức không đuọc bỏ trống.");
-            var response = await _ordersService.GetAllContactsAvailableByIdAsync(id, employee, partner);
+            if (partner == null || employee == null)
+                return BadRequest("ID nhân viên và ID tổ chức không đuọc bỏ trống.");
+            var response = await _ordersService.GetAllContactsAvailableByIdAsync(
+                id,
+                employee,
+                partner
+            );
             return Ok(response);
         }
 
@@ -227,7 +263,8 @@ namespace Server.Controllers
             var partner = await _partnerService.FindByClaim(identity);
             var employee = await _employeeService.FindByClaim(identity);
 
-            if (partner == null || employee == null) return BadRequest("ID nhân viên và ID tổ chức không đuọc bỏ trống.");
+            if (partner == null || employee == null)
+                return BadRequest("ID nhân viên và ID tổ chức không đuọc bỏ trống.");
             var response = await _ordersService.RemoveInvoiceFromIdAsync(id, employee, partner);
             return Ok(response);
         }
@@ -243,14 +280,17 @@ namespace Server.Controllers
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
             var employee = await _employeeService.FindByClaim(identity);
-            if (partner == null || employee == null) return BadRequest("ID nhân viên và ID tổ chức không đuọc bỏ trống.");
+            if (partner == null || employee == null)
+                return BadRequest("ID nhân viên và ID tổ chức không đuọc bỏ trống.");
             var response = await _ordersService.GetAllInvoicesAsync(id, employee, partner);
             return Ok(response);
-
         }
 
         [HttpPut("{id:int}/customer/unassign")]
-        public async Task<IActionResult> UnassignCustomerFromOrder(int id, [FromBody] int customerId)
+        public async Task<IActionResult> UnassignCustomerFromOrder(
+            int id,
+            [FromBody] int customerId
+        )
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -259,7 +299,12 @@ namespace Server.Controllers
             {
                 return BadRequest("Không tìm thấy đơn hàng");
             }
-            var response = await _ordersService.UnassignCustomerFromOrder(id, customerId, employee, partner);
+            var response = await _ordersService.UnassignCustomerFromOrder(
+                id,
+                customerId,
+                employee,
+                partner
+            );
             if (response == null || !response.Flag)
             {
                 return BadRequest(response);
@@ -268,7 +313,10 @@ namespace Server.Controllers
         }
 
         [HttpPut("{id:int}/activity/unassign")]
-        public async Task<IActionResult> UnassignActivityFromOrder(int id, [FromBody] int activityId)
+        public async Task<IActionResult> UnassignActivityFromOrder(
+            int id,
+            [FromBody] int activityId
+        )
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -295,12 +343,32 @@ namespace Server.Controllers
             {
                 return BadRequest("Không tìm thấy đơn hàng");
             }
-            var response = await _ordersService.RemoveContactFromOrder(id, contactId, employee, partner);
+            var response = await _ordersService.RemoveContactFromOrder(
+                id,
+                contactId,
+                employee,
+                partner
+            );
             if (response == null || !response.Flag)
             {
                 return BadRequest(response);
             }
             return Ok(response);
         }
+
+        [HttpGet("{customerId}/order-stats")]
+        public async Task<IActionResult> GetOrderStats(int customerId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            var stats = await _ordersService.GetOrderStatsForCustomer(
+                customerId,
+                employee,
+                partner
+            );
+            return Ok(stats);
+        }
+
     }
 }

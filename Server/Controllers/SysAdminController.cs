@@ -9,7 +9,7 @@ namespace Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class OvieAdminController(IUserService userService, IPartnerService partnerService) : ControllerBase
+    public class SysAdminController(IUserService userService, IPartnerService partnerService) : ControllerBase
     {
 
         [HttpPost("create-sysadmin")]

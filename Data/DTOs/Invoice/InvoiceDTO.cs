@@ -11,7 +11,7 @@ namespace Data.DTOs
     public class InvoiceDTO
     {
         public int Id { get; set; }
-        public string? InvoiceRequestName { get; set; }
+        public string? InvoiceRequestName { get; set; } 
         public string? InvoiceAddress { get; set; }
         public string? Description { get; set; }
         [JsonConverter(typeof(NullableDecimalConverter))]

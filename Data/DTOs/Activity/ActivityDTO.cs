@@ -49,6 +49,9 @@ namespace Data.DTOs
         public int? RelatedUsersID { get; set; }
         public string? RelatedUsersName { get; set; }
 
+        public int? CustomerCareTicketID { get; set; }
+        public int? SupportTicketID { get; set; }
+
         // public List<AppointmentDTO> Appointments { get; set; } = new List<AppointmentDTO>();
         // public List<MissionDTO> Missions { get; set; } = new List<MissionDTO>();
         // public List<CallDTO> Calls { get; set; } = new List<CallDTO>();

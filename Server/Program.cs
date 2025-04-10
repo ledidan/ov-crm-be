@@ -138,6 +138,7 @@ builder.Services.AddScoped<IJobGroupService, JobGroupService>();
 builder.Services.AddScoped<IProductInventoryService, ProductInventoryService>();
 builder.Services.AddScoped<ISupportTicketService, SupportTicketService>();
 builder.Services.AddScoped<ICustomerCareService, CustomerCareService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<S3Service>();
 

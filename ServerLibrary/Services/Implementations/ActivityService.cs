@@ -168,6 +168,8 @@ namespace ServerLibrary.Services.Implementations
 
             activity.ActivityName = dto.ActivityName ?? activity.ActivityName;
             activity.ActivityCategory = dto.ActivityCategory ?? activity.ActivityCategory;
+            activity.CustomerCareTicketID = dto.CustomerCareTicketID ?? activity.CustomerCareTicketID;
+            activity.SupportTicketID = dto.SupportTicketID ?? activity.SupportTicketID;
             activity.DueDate = dto.DueDate ?? activity.DueDate;
             activity.StatusID = dto.StatusID ?? activity.StatusID;
             activity.PriorityID = dto.PriorityID ?? activity.PriorityID;
@@ -215,7 +217,7 @@ namespace ServerLibrary.Services.Implementations
             if (appointment == null)
                 return new GeneralResponse(false, "Không tìm thấy lịch hẹn trong của hoạt động");
 
-                
+
             if (updateAppointmentDTO != null)
             {
                 appointment.IsAllDay = updateAppointmentDTO.IsAllDay;
@@ -265,6 +267,8 @@ namespace ServerLibrary.Services.Implementations
                 ActivityName = dto.ActivityName,
                 ActivityCategory = dto.ActivityCategory,
                 DueDate = dto.DueDate,
+                CustomerCareTicketID = dto.CustomerCareTicketID,
+                SupportTicketID = dto.SupportTicketID,
                 StatusID = dto.StatusID,
                 PriorityID = dto.PriorityID,
                 IsSendNotificationEmail = dto.IsSendNotificationEmail,

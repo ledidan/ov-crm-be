@@ -38,7 +38,7 @@ namespace Data.Entities
 
         public int? ReturnedQuantity { get; set; } // Số lượng trả hàng (Returned Quantity)
         public int? MinimumStockLevel { get; set; } // Ngưỡng tồn kho tối thiểu (Minimum Stock Level)
-
+            
         public string? SupplierName { get; set; } // Tên nhà cung cấp (Supplier Name)
 
         public string? Brand { get; set; } // Thương hiệu (Brand)

@@ -13,7 +13,7 @@ namespace Data.DTOs
         public int PartnerId { get; set; }
         public string? PartnerName { get; set; }
         public int? ProductId { get; set; }
-
+        public string? Avatar { get; set; }
         public string? ProductCode { get; set; }
         public string? ProductName { get; set; }
 

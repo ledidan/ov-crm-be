@@ -30,7 +30,7 @@ namespace Data.DTOs
 
         public DateTime? ExpirationDate { get; set; } // Hạn sử dụng (Expiration Date)
 
-        public int OrderQuantity { get; set; } // Số lượng đặt hàng (Order Quantity)
+        public int? OrderQuantity { get; set; } // Số lượng đặt hàng (Order Quantity)
 
         public int? AvailableQuantity { get; set; } // Số lượng có sẵn (Available Quantity)
 
