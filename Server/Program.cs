@@ -181,7 +181,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("OVIE_CLIENT", policyBuilder =>
     {
-        policyBuilder.WithOrigins("http://localhost:3000", "https://app.ovie.vn");
+        policyBuilder.WithOrigins("http://localhost:3000", "https://app.autuna.com");
         policyBuilder.AllowAnyHeader();
         policyBuilder.AllowAnyMethod();
         policyBuilder.AllowCredentials();
