@@ -13,7 +13,6 @@ namespace ServerLibrary.Services.Implementations
     public class ActivityService : IActivityService
     {
         private readonly AppDbContext _appDbContext;
-
         private readonly IPartnerService _partnerService;
 
         private readonly IEmployeeService _employeeService;
@@ -198,6 +197,7 @@ namespace ServerLibrary.Services.Implementations
             activity.ModifiedBy = dto.ModifiedBy ?? activity.ModifiedBy;
             activity.ModifiedByName = dto.ModifiedByName ?? activity.ModifiedByName;
             activity.OrderId = dto.OrderId ?? activity.OrderId;
+            activity.QuoteId = dto.QuoteId ?? activity.QuoteId;
             activity.InvoiceId = dto.InvoiceId ?? activity.InvoiceId;
             activity.RelatedUsersID = dto.RelatedUsersID ?? activity.RelatedUsersID;
             activity.RelatedUsersName = dto.RelatedUsersName ?? activity.RelatedUsersName;
@@ -297,6 +297,7 @@ namespace ServerLibrary.Services.Implementations
                 ModifiedByName = dto.ModifiedByName,
                 OrderId = dto.OrderId,
                 InvoiceId = dto.InvoiceId,
+                QuoteId = dto.QuoteId,
                 RelatedUsersID = dto.RelatedUsersID,
                 RelatedUsersName = dto.RelatedUsersName,
                 PartnerId = partner.Id,
@@ -368,5 +369,7 @@ namespace ServerLibrary.Services.Implementations
 
             return new GeneralResponse(true, "Tạo cuộc gọi thành công");
         }
+
+      
     }
 }

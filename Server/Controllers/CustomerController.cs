@@ -338,5 +338,41 @@ namespace Server.Controllers
 
             return Ok(response);
         }
+
+
+         [HttpPost("check-code")]
+        public async Task<IActionResult> CheckCustomerCode([FromBody] string code)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await _customerService.CheckCustomerCodeAsync(code, employee, partner);
+
+            if (!result.Flag)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("generate-code")]
+        public async Task<IActionResult> GenerateCustomerCode()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await _customerService.GenerateCustomerCodeAsync(partner);
+
+            if (!result.Flag)
+                return BadRequest(result.Message);
+
+            return Ok(result);
+        }
     }
 }

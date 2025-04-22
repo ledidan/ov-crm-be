@@ -4,6 +4,7 @@ using Data.Entities;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
+using ServerLibrary.Helpers;
 using ServerLibrary.Services.Interfaces;
 
 namespace ServerLibrary.Services.Implementations
@@ -408,6 +409,52 @@ namespace ServerLibrary.Services.Implementations
                     );
                 }
             });
+        }
+
+
+        private async Task<ProductCategoryDTO> GetProductCategoryByCode(string code, Partner partner)
+        {
+            var existingProductCategory = await appDbContext.ProductCategories
+                .FirstOrDefaultAsync(c => c.ProductCategoryCode == code && c.PartnerId == partner.Id);
+            if (existingProductCategory == null)
+                return null;
+
+            return new ProductCategoryDTO
+            {
+                Id = existingProductCategory.Id,
+                ProductCategoryCode = existingProductCategory.ProductCategoryCode,
+                ProductCategoryName = existingProductCategory.ProductCategoryName,
+            };
+        }
+        public async Task<DataObjectResponse?> GenerateProductCategoryCodeAsync(Partner partner)
+        {
+            var codeGenerator = new GenerateNextCode(appDbContext);
+
+            var code = await codeGenerator
+            .GenerateNextCodeAsync<ProductCategory>(prefix: "LHH",
+                codeSelector: c => c.ProductCategoryCode,
+                filter: c => c.PartnerId == partner.Id);
+
+            return new DataObjectResponse(true, "Tạo mã loại hàng hoá thành công", code);
+        }
+
+        public async Task<DataObjectResponse?> CheckProductCategoryCodeAsync(string code, Employee employee, Partner partner)
+        {
+            var productCategoryDetail = await GetProductCategoryByCode(code, partner);
+
+            if (productCategoryDetail == null)
+            {
+                return new DataObjectResponse(true, "Mã loại hàng hoá có thể sử dụng", null);
+            }
+            else
+            {
+                return new DataObjectResponse(false, "Mã loại hàng hoá đã tồn tại", new
+                {
+                    productCategoryDetail.ProductCategoryCode,
+                    productCategoryDetail.ProductCategoryName,
+                    productCategoryDetail.Id
+                });
+            }
         }
     }
 }

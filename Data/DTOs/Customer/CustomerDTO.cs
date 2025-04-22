@@ -1,11 +1,9 @@
-using System.ComponentModel.DataAnnotations;
 
 namespace Data.DTOs
 {
     public class CustomerDTO
     {
         public int Id { get; set; }
-        [Required]
         public string? AccountName { get; set; }
         public string? AccountNumber { get; set; }
         public string? AccountReferredID { get; set; }

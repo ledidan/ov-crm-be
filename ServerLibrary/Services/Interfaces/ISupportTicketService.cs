@@ -6,6 +6,11 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface ISupportTicketService
     {
+
+
+        Task<DataObjectResponse?> GenerateSupportCodeAsync(Partner partner);
+        Task<DataObjectResponse?> CheckSupportCodeAsync(string code, Employee employee, Partner partner);
+
         public Task<List<SupportTicketDTO>> GetAllSupportTickets(Partner partner);
 
         public Task<SupportTicketDTO> GetSupportTicketById(int id, Partner partner);

@@ -53,6 +53,37 @@ namespace ServerLibrary.Data
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            //** Generate Unique Code for Contact
+            builder.Entity<Contact>()
+    .HasIndex(c => new { c.ContactCode, c.PartnerId }) // Or just ContactCode if it's globally unique
+    .IsUnique();
+
+            //** Generate Unique Code for Customer
+            builder.Entity<Customer>().HasIndex(c => new { c.AccountNumber, c.PartnerId }).IsUnique(); ; // Or just CustomerCode if it's globally unique
+            //** Generate Unique Code for Product
+            builder.Entity<Product>().HasIndex(c => new { c.ProductCode, c.PartnerId }).IsUnique(); ; // Or just ProductCode if it's globally unique
+            //** Generate Unique Code for Order
+            builder.Entity<Order>().HasIndex(c => new { c.SaleOrderNo, c.PartnerId }).IsUnique(); ; // Or just OrderCode if it's globally unique
+            //** Generate Unique Code for Invoice
+            builder.Entity<Invoice>().HasIndex(c => new { c.InvoiceRequestName, c.PartnerId }).IsUnique(); ; // Or just InvoiceCode if it's globally unique
+            //** Generate Unique Code for Category
+            builder.Entity<ProductCategory>().HasIndex(c => new { c.ProductCategoryCode, c.PartnerId }).IsUnique(); ; // Or just ActivityCode if it's globally unique
+            builder.Entity<CustomerCare>().HasIndex(c => new { c.CustomerCareNumber, c.PartnerId }).IsUnique(); ;
+            
+            builder.Entity<SupportTicket>()
+                .HasIndex(st => new { st.TicketNumber, st.PartnerId })
+                .IsUnique();
+
+
+            builder.Entity<ProductInventory>().HasIndex(pi => new { pi.InventoryCode, pi.PartnerId }).IsUnique();
+
+            builder.Entity<Opportunity>()
+                .HasIndex(o => new { o.OpportunityNo, o.PartnerId })
+                .IsUnique();
+            builder.Entity<Quote>()
+                .HasIndex(q => new { q.QuoteNo, q.PartnerId })
+                .IsUnique();
+
             builder.Entity<SystemRole>().HasData(
                  new SystemRole { Id = 1, Name = Constants.Role.User },
                  new SystemRole { Id = 2, Name = Constants.Role.Admin },
@@ -248,7 +279,26 @@ namespace ServerLibrary.Data
             {
                 j.HasKey(ce => new { ce.CustomerId, ce.ContactId, ce.PartnerId });
             });
-      
+
+            builder.Entity<Opportunity>()
+        .HasMany(c => c.Contacts)
+        .WithMany(e => e.Opportunities)
+        .UsingEntity<OpportunityContacts>(
+            j => j
+                .HasOne(ce => ce.Contact)
+                .WithMany(e => e.OpportunityContacts)
+                .HasForeignKey(ce => ce.ContactId)
+                .OnDelete(DeleteBehavior.Restrict),
+            j => j
+                .HasOne(ce => ce.Opportunity)
+                .WithMany(c => c.OpportunityContacts)
+                .HasForeignKey(ce => ce.OpportunityId)
+                .OnDelete(DeleteBehavior.Cascade),
+            j =>
+            {
+                j.HasKey(ce => new { ce.OpportunityId, ce.ContactId, ce.PartnerId });
+            });
+
 
             builder.Entity<Appointment>()
         .HasOne(a => a.Activity)
@@ -297,12 +347,15 @@ namespace ServerLibrary.Data
         public DbSet<ProductEmployees> ProductEmployees { get; set; }
         public DbSet<ContactEmployees> ContactEmployees { get; set; }
         public DbSet<OrderEmployees> OrderEmployees { get; set; }
+        public DbSet<OpportunityContacts> OpportunityContacts { get; set; }
         public DbSet<InvoiceOrders> InvoiceOrders { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<OrderContacts> OrderContacts { get; set; }
         public DbSet<PasswordResetTokens> PasswordResetTokens { get; set; }
         public DbSet<EmailVerification> EmailVerifications { get; set; }
         public DbSet<SystemRole> SystemRoles { get; set; }
+        public DbSet<Opportunity> Opportunities { get; set; }
+        public DbSet<Quote> Quotes { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<RefreshTokenInfo> RefreshTokenInfos { get; set; }
         public DbSet<Partner> Partners { get; set; }

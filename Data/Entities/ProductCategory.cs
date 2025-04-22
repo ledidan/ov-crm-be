@@ -12,6 +12,7 @@
         public string? Description { get; set; }
         public string? ModifiedBy { get; set; }
         public int? OwnerId { get; set; }
+        public int? PartnerId { get; set; }
         public Partner Partner { get; set; }
         public int? ParentProductCategoryID { get; set; }
         public ProductCategory? ParentCategory { get; set; }

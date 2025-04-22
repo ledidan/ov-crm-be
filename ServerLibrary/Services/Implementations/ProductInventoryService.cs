@@ -29,7 +29,7 @@ namespace ServerLibrary.Services.Implementations
                 if (inventoryDto == null)
                     return new DataObjectResponse(false, "Dữ liệu tồn kho không hợp lệ", null);
 
-                if (partner == null || partner.Id <= 0)
+                if (partner == null)
                     return new DataObjectResponse(false, "Đối tác không hợp lệ", null);
 
                 var existingPartner = await _context.Partners.FirstOrDefaultAsync(p =>

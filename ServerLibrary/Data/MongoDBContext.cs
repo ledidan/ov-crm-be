@@ -15,6 +15,10 @@ namespace ServerLibrary.Data
         _mongoDatabase.GetCollection<OrderDetails>("OrderDetails");
         public IMongoCollection<InvoiceDetails> InvoiceDetails =>
         _mongoDatabase.GetCollection<InvoiceDetails>("InvoiceDetails");
+        public IMongoCollection<QuoteDetails> QuoteDetails =>
+        _mongoDatabase.GetCollection<QuoteDetails>("QuoteDetails");
+        public IMongoCollection<OpportunityProductDetails> OpportunityProductDetails =>
+        _mongoDatabase.GetCollection<OpportunityProductDetails>("OpportunityProductDetails");
 
     }
 }

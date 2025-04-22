@@ -486,5 +486,51 @@ namespace ServerLibrary.Services.Implementations
                 })
                 .ToList();
         }
+
+
+        private async Task<ProductDTO> GetProductByCode(string code, Partner partner)
+        {
+            var existingProduct = await appDbContext.Products
+                .FirstOrDefaultAsync(c => c.ProductCode == code && c.PartnerId == partner.Id);
+            if (existingProduct == null)
+                return null;
+
+            return new ProductDTO
+            {
+                Id = existingProduct.Id,
+                ProductCode = existingProduct.ProductCode,
+                ProductName = existingProduct.ProductName,
+            };
+        }
+        public async Task<DataObjectResponse?> GenerateProductCodeAsync(Partner partner)
+        {
+            var codeGenerator = new GenerateNextCode(appDbContext);
+
+            var productCode = await codeGenerator
+            .GenerateNextCodeAsync<Product>(prefix: "HH",
+                codeSelector: c => c.ProductCode,
+                filter: c => c.PartnerId == partner.Id);
+
+            return new DataObjectResponse(true, "Tạo mã sản phẩm thành công", productCode);
+        }
+
+        public async Task<DataObjectResponse?> CheckProductCodeAsync(string code, Employee employee, Partner partner)
+        {
+            var productDetail = await GetProductByCode(code, partner);
+
+            if (productDetail == null)
+            {
+                return new DataObjectResponse(true, "Mã sản phẩm có thể sử dụng", null);
+            }
+            else
+            {
+                return new DataObjectResponse(false, "Mã sản phẩm đã tồn tại", new
+                {
+                    productDetail.ProductCode,
+                    productDetail.ProductName,
+                    productDetail.Id
+                });
+            }
+        }
     }
 }

@@ -10,6 +10,9 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface ICustomerCareService
     {
+
+        Task<DataObjectResponse?> GenerateCustomerCareCodeAsync(Partner partner);
+        Task<DataObjectResponse?> CheckCustomerCareCodeAsync(string code, Employee employee, Partner partner);
         Task<List<CustomerCareTicketDTO>> GetAllCustomerCareTickets();
 
         Task<CustomerCareTicketDTO> GetCustomerCareTicketById(int id, Partner partner);

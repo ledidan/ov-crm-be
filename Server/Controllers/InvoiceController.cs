@@ -215,5 +215,40 @@ namespace Server.Controllers
             }
             return BadRequest("Đã xảy ra lỗi trong khi xoá hoạt động khỏi hoá đơn");
         }
+
+        [HttpPost("check-code")]
+        public async Task<IActionResult> CheckInvoiceCode([FromBody] string code)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await _invoiceService.CheckInvoiceCodeAsync(code, employee, partner);
+
+            if (!result.Flag)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("generate-code")]
+        public async Task<IActionResult> GenerateInvoiceCode()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await _invoiceService.GenerateInvoiceCodeAsync(partner);
+
+            if (!result.Flag)
+                return BadRequest(result.Message);
+
+            return Ok(result);
+        }
     }
 }

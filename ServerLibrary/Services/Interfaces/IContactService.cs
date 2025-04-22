@@ -8,8 +8,11 @@ using Data.Responses;
 namespace ServerLibrary.Services.Interfaces
 {
     public interface IContactService
-    {
-        Task<DataStringResponse> CreateAsync(CreateContact contact, Employee employee, Partner partner);
+    {   
+        Task<DataObjectResponse?> GenerateContactCodeAsync(Partner partner);
+        Task<DataObjectResponse?> CheckContactCodeAsync(string code, Employee employee, Partner partner);
+
+        Task<DataObjectResponse> CreateAsync(CreateContact contact, Employee employee, Partner partner);
 
         Task<Contact?> GetByIdAsync(int id, Employee employee, Partner partner);
 
@@ -29,7 +32,7 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<List<ActivityDTO?>> GetAllActivitiesByContactAsync(int contactId, Employee employee, Partner partner);
 
-        //** Contacts 
+        //** Contacts
         Task<GeneralResponse?> UnassignInvoiceFromContactAsync(int id, int invoiceId, Employee employee, Partner partner);
 
         Task<GeneralResponse?> AssignContactToOrderAsync(int id, AssignOrderRequest request, Employee employee, Partner partner);

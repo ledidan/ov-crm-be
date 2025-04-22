@@ -155,7 +155,10 @@ namespace Data.DTOs
 
         [JsonConverter(typeof(NullStringConverter))]
         public string? CustomerName { get; set; }
-
+        [JsonConverter(typeof(NullableIntConverter))]
+        public int? OpportunityId { get; set; }
+        [JsonConverter(typeof(NullableIntConverter))]
+        public int? QuoteId { get; set; }
         public string? OwnerTaskExecuteName { get; set; }
         [JsonConverter(typeof(NullableIntConverter))]
         public int? PartnerId { get; set; }

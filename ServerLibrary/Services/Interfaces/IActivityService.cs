@@ -14,7 +14,7 @@ namespace ServerLibrary.Services.Interfaces
         Task<GeneralResponse?> DeleteBulkActivities(string ids, Employee employee, Partner partner);
         Task<GeneralResponse?> DeleteIdAsync(int id, Employee employee, Partner partner);
 
-        // ______
+        // ______   
 
         // ** Appointment
         Task<GeneralResponse> CreateAppointmentAsync(CreateActivityDTO activityDto, CreateAppointmentDTO appointmentDto, Partner partner);

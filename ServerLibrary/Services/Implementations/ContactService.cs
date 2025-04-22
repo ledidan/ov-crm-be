@@ -32,30 +32,39 @@ namespace ServerLibrary.Services.Implementations
             _mapper = mapper;
         }
 
-        public async Task<DataStringResponse> CreateAsync(CreateContact contact, Employee employee, Partner partner)
+        public async Task<DataObjectResponse> CreateAsync(CreateContact contact, Employee employee, Partner partner)
         {
             var codeGenerator = new GenerateNextCode(_appDbContext);
             if (contact == null)
-                return new DataStringResponse(false, "Thông tin liên hệ rỗng !");
+                return new DataObjectResponse(false, "Thông tin liên hệ rỗng !");
+
+
+            var checkCodeExisted = await CheckContactCodeAsync(contact.ContactCode, employee, partner);
+            if (checkCodeExisted != null && !checkCodeExisted.Flag)
+                return new DataObjectResponse(false, "Mã liên hệ đã tồn tại !");
 
             var partnerData = await _partnerService.FindById(partner.Id);
             if (partnerData == null)
-                return new DataStringResponse(false, "Thông tin tổ chức không để trống !");
+                return new DataObjectResponse(false, "Thông tin tổ chức không để trống !");
             if (employee != null)
             {
                 var employeeData = await _employeeService.FindByIdAsync(employee.Id);
                 if (employeeData == null)
-                    return new DataStringResponse(false, "Không tìm thấy nhân viên");
+                    return new DataObjectResponse(false, "Không tìm thấy nhân viên");
             }
             else
             {
-                return new DataStringResponse(false, "ID Nhân viên không có !");
+                return new DataObjectResponse(false, "ID Nhân viên không có !");
             }
             if (string.IsNullOrEmpty(contact.ContactCode))
             {
-                contact.ContactCode = await codeGenerator
-                .GenerateNextCodeAsync<Contact>("LH", c => c.ContactCode, c => c.PartnerId == c.PartnerId);
+                contact.ContactCode = await codeGenerator.GenerateNextCodeAsync<Contact>(
+            "LH",
+            c => c.ContactCode,
+            c => c.PartnerId == partner.Id
+        );
             }
+
             var newContact = new Contact()
             {
                 ContactCode = contact.ContactCode,
@@ -90,8 +99,8 @@ namespace ServerLibrary.Services.Implementations
                 PhoneOptOut = contact.PhoneOptOut,
                 CustomerId = contact.CustomerId,
                 CustomerName = contact.CustomerName,
-                EmployeeId = contact.EmployeeId,
-                EmployeeName = contact.EmployeeName,
+                EmployeeId = employee.Id,
+                EmployeeName = employee.FullName,
                 // ** Automatically assign to employee for Owner and Partner
                 OwnerID = employee.Id,
                 OwnerIDName = employee.FullName,
@@ -112,7 +121,7 @@ namespace ServerLibrary.Services.Implementations
 
             await _appDbContext.InsertIntoDb(newContact);
 
-            return new DataStringResponse(true, "Tạo liên hệ thành công !", newContact.Id.ToString());
+            return new DataObjectResponse(true, "Tạo liên hệ thành công !", newContact.Id.ToString());
         }
 
         public Task<GeneralResponse?> DeleteAsync(int id, int employeeId)
@@ -136,13 +145,24 @@ namespace ServerLibrary.Services.Implementations
             var codeGenerator = new GenerateNextCode(_appDbContext);
             var existingContact = await _appDbContext.Contacts
         .FirstOrDefaultAsync(c => c.Id == id && c.EmployeeId == employee.Id && c.PartnerId == partner.Id);
+
             var updatedContact = updateContact.FromUpdateContactDTO();
+
             if (existingContact == null)
                 return new GeneralResponse(false, "Không tìm thấy ID liên hệ để cập nhất");
 
             if (string.IsNullOrEmpty(updateContact.ContactCode))
             {
-                updateContact.ContactCode = await codeGenerator.GenerateNextCodeAsync<Contact>("LH", c => c.ContactCode, c => c.PartnerId == c.PartnerId);
+                string originalCode = updateContact.ContactCode;
+                bool exists = await _appDbContext.Contacts.AnyAsync(c =>
+     c.ContactCode == updateContact.ContactCode &&
+     c.PartnerId == partner.Id &&
+     c.Id != id);
+                if (exists)
+                {
+                    updateContact.ContactCode = await codeGenerator.GenerateNextCodeAsync<Contact>("LH", c => c.ContactCode, c => c.PartnerId == partner.Id);
+                    Console.WriteLine($"ContactCode '{originalCode}' already existed. Replaced with '{updateContact.ContactCode}' for Contact ID {id}.");
+                }
             }
             existingContact.AccountTypeID = updateContact.AccountTypeID;
             existingContact.ContactCode = updateContact.ContactCode;
@@ -174,13 +194,7 @@ namespace ServerLibrary.Services.Implementations
             existingContact.IsPublic = updateContact.IsPublic;
             existingContact.EmailOptOut = updateContact.EmailOptOut;
             existingContact.PhoneOptOut = updateContact.PhoneOptOut;
-            existingContact.CustomerId = updateContact.CustomerId;
-            existingContact.CustomerName = updateContact.CustomerName;
-            existingContact.EmployeeId = updateContact.EmployeeId;
-            existingContact.EmployeeName = updateContact.EmployeeName;
-            existingContact.OwnerID = updateContact.OwnerID;
-            existingContact.OwnerIDName = updateContact.OwnerIDName;
-     
+
             await _appDbContext.UpdateDb(existingContact);
             return new GeneralResponse(true, "Cập nhật liên hệ thành công.");
         }
@@ -190,7 +204,7 @@ namespace ServerLibrary.Services.Implementations
          Employee employee, Partner partner)
         {
             var existingContact = await _appDbContext.Contacts.FirstOrDefaultAsync(
-                c => c.Id == id && c.EmployeeId == employee.Id && c.PartnerId == partner.Id
+                c => c.Id == id && c.PartnerId == partner.Id
             );
 
             if (existingContact == null)
@@ -563,6 +577,56 @@ namespace ServerLibrary.Services.Implementations
                     return new GeneralResponse(false, $"Lỗi khi xóa liên kết hoạt động: {ex.Message}");
                 }
             });
+        }
+        private async Task<ContactDTO> GetContactByCode(string code, Partner partner)
+        {
+            var existingContact = await _appDbContext.Contacts
+                .FirstOrDefaultAsync(c => c.ContactCode == code && c.PartnerId == partner.Id);
+            if (existingContact == null)
+                return null;
+
+            return new ContactDTO
+            {
+                Id = existingContact.Id,
+                ContactCode = existingContact.ContactCode,
+                ContactName = existingContact.ContactName,
+            };
+        }
+
+        public async Task<DataObjectResponse?> CheckContactCodeAsync(string code, Employee employee, Partner partner)
+        {
+            var contactDetail = await GetContactByCode(code, partner);
+
+            if (contactDetail == null)
+            {
+                return new DataObjectResponse(true, "Mã liên hệ có thể sử dụng", null);
+            }
+            else
+            {
+                return new DataObjectResponse(false, "Mã liên hệ đã tồn tại", new
+                {
+                    contactDetail.ContactCode,
+                    contactDetail.ContactName,
+                    contactDetail.Id
+                });
+            }
+        }
+
+        public async Task<DataObjectResponse?> GenerateContactCodeAsync(Partner partner)
+        {
+            var codeGenerator = new GenerateNextCode(_appDbContext);
+
+            var partnerData = await _partnerService.FindById(partner.Id);
+            if (partnerData == null)
+                new DataStringResponse(false, "Thông tin tổ chức không để trống !", null);
+
+
+            var contactCode = await codeGenerator
+            .GenerateNextCodeAsync<Contact>(prefix: "LH",
+                codeSelector: c => c.ContactCode,
+                filter: c => c.PartnerId == partner.Id);
+
+            return new DataObjectResponse(true, "Tạo mã liên hệ thành công", contactCode);
         }
     }
 }

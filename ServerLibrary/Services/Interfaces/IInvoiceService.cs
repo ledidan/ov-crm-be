@@ -6,6 +6,10 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IInvoiceService
     {
+
+         Task<DataObjectResponse?> GenerateInvoiceCodeAsync(Partner partner);
+        Task<DataObjectResponse?> CheckInvoiceCodeAsync(string code, Employee employee, Partner partner);
+
         Task<List<InvoiceDTO>> GetAllInvoicesAsync(Employee employee, Partner partner);
 
         Task<InvoiceDTO?> GetInvoiceByIdAsync(int id, Employee employee, Partner partner);

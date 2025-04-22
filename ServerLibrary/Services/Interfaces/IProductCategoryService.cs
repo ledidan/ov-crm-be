@@ -6,6 +6,9 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IProductCategoryService
     {
+        Task<DataObjectResponse?> GenerateProductCategoryCodeAsync(Partner partner);
+        Task<DataObjectResponse?> CheckProductCategoryCodeAsync(string code, Employee employee, Partner partner);
+
         Task<GeneralResponse> CreateAsync(CreateProductCategory productCategory, Employee employee, Partner partner);
         Task<GeneralResponse> UpdateAsync(int id, UpdateProductCategoryDTO productCategory, Partner partner, Employee employee);
 

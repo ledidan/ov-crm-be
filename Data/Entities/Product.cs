@@ -1,6 +1,6 @@
 ﻿using Data.MongoModels;
 using Microsoft.EntityFrameworkCore;
-
+using System.ComponentModel.DataAnnotations.Schema;
 namespace Data.Entities
 {
     [Index("ProductCode", "PartnerId", IsUnique = true, Name = "Unique_ProductCode_PartnerId")]
@@ -11,8 +11,10 @@ namespace Data.Entities
         public string? ProductGroupID { get; set; }
         public string? ProductGroupName { get; set; }
         public string? ProductName { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal? AmountSummary { get; set; }
         public string? Avatar { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal? ConversionRate { get; set; }
         public string? ConversionUnit { get; set; }
         public string? CreatedBy { get; set; }
@@ -31,6 +33,7 @@ namespace Data.Entities
         public string? OperatorID { get; set; }
         public bool PriceAfterTax { get; set; }
         public string? ProductPropertiesID { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal PurchasedPrice { get; set; }
         public int? QuantityDemanded { get; set; }
         public string? QuantityFormula { get; set; }
@@ -42,10 +45,15 @@ namespace Data.Entities
         public string? TagID { get; set; }
         public string? TaxID { get; set; }
         public bool? Taxable { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal UnitCost { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal UnitPrice { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal UnitPrice1 { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal UnitPrice2 { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal UnitPriceFixed { get; set; }
         public string? UsageUnitID { get; set; }
         public string? VendorNameID { get; set; }
@@ -56,6 +64,7 @@ namespace Data.Entities
         public string? SupplierName { get; set; }
         public int? OwnerID { get; set; }
         public string? OwnerIDName { get; set; }
+        public int? PartnerId { get; set; }
         public ProductCategory? ProductCategory { get; set; }
         public List<Employee> Employees { get; set; } = new List<Employee>();
         public ICollection<ProductEmployees> ProductEmployees { get; set; } = new List<ProductEmployees>();

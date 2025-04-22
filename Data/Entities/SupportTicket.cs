@@ -62,6 +62,7 @@ namespace Data.Entities
         public string? ModifiedByName { get; set; }
 
         public string? CreatedByName { get; set; }
+        public int? PartnerId { get; set; }
 
         public virtual required Partner Partner { get; set; }
         public List<Employee> Employees { get; set; } = new List<Employee>();

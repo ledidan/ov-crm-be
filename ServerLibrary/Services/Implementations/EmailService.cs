@@ -13,12 +13,12 @@ namespace ServerLibrary.Services.Implementations
         public async Task SendEmailAsync(string to, string subject, string body)
         {
             var email = new MimeMessage();
-            email.From.Add(new MailboxAddress("Ovie System Service", "didan.mobe@gmail.com"));
+            email.From.Add(new MailboxAddress("Autuna System Service", "didan.mobe@gmail.com"));
             email.To.Add(new MailboxAddress("", to));
             email.Subject = subject;
             email.Body = new TextPart("html") { Text = body };
 
-            email.ReplyTo.Add(new MailboxAddress("Ovie System Service", "didan.moeb@gmail.com"));
+            email.ReplyTo.Add(new MailboxAddress("Autuna System Service", "didan.mobe@gmail.com"));
 
             using var smtpClient = new SmtpClient();
             await smtpClient.ConnectAsync(
@@ -46,9 +46,9 @@ namespace ServerLibrary.Services.Implementations
             // {
             //     projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName;
             // }
-
+            string basePath = AppContext.BaseDirectory;
             string projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName; 
-            string templateFolder = Path.Combine(projectRoot, "ServerLibrary", "Templates");
+            string templateFolder = Path.Combine(basePath, "ServerLibrary", "Templates");
             string templatePath = Path.Combine(templateFolder, templateName);
             Console.WriteLine($"Dotnet running in container", Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"));
             Console.WriteLine($"Template Folder: {templateFolder}");
@@ -65,6 +65,7 @@ namespace ServerLibrary.Services.Implementations
                 throw new FileNotFoundException($"Template file not found: {templatePath}");
             }
             Console.WriteLine($"projectRoot {projectRoot}");
+            Console.WriteLine($"basePath {basePath}");
             var engine = new RazorLightEngineBuilder()
                 .UseFileSystemProject(templateFolder)
                 .UseMemoryCachingProvider()

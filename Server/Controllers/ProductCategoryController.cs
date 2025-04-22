@@ -102,7 +102,7 @@ namespace Server.Controllers
             var result = await _productCategoryService.RemoveBulkIdsAsync(ids, partner);
             return Ok(result);
         }
-        
+
         [HttpPatch("{id:int}")]
         public async Task<IActionResult> UpdateProductCategory(int id, [FromBody] UpdateProductCategoryDTO productCategory)
         {
@@ -123,6 +123,39 @@ namespace Server.Controllers
 
             return Ok(new { Flag = result.Flag, Message = result.Message });
         }
+        [HttpPost("check-code")]
+        public async Task<IActionResult> CheckProductCategoryCode([FromBody] string code)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
 
+            var result = await _productCategoryService.CheckProductCategoryCodeAsync(code, employee, partner);
+
+            if (!result.Flag)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("generate-code")]
+        public async Task<IActionResult> GenerateProductCategoryCode()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await _productCategoryService.GenerateProductCategoryCodeAsync(partner);
+
+            if (!result.Flag)
+                return BadRequest(result.Message);
+
+            return Ok(result);
+        }
     }
 }

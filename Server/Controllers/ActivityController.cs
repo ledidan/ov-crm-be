@@ -238,5 +238,15 @@ namespace Server.Controllers
             var response = await _activityService.DeleteIdAsync(id, employee, partner);
             return Ok(response);
         }
+
+
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateActivityById(int id, [FromBody] UpdateActivityDTO updateActivityDTO)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var response = await _activityService.UpdateActivityIdAsync(id, updateActivityDTO, partner);
+            return Ok(response);
+        }
     }
 }

@@ -42,7 +42,7 @@ namespace Data.DTOs
         public int? InvoiceId { get; set; }
         public int? RelatedUsersID { get; set; }
         public string? RelatedUsersName { get; set; }
-
+        public int? QuoteId { get; set; }
         public int? CustomerCareTicketID { get; set; }
         public int? SupportTicketID { get; set; }
     }

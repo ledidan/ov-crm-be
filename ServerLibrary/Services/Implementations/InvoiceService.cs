@@ -490,8 +490,8 @@ namespace ServerLibrary.Services.Implementations
                         .Include(c => c.InvoiceEmployees)
                         .FirstOrDefaultAsync(o => o.Id == id
                             && (o.OwnerId == employee.Id || o.InvoiceEmployees.Any(ie => ie.EmployeeId == employee.Id && ie.AccessLevel == AccessLevel.Write))
-                            && o.Partner.Id == partner.Id);
-
+                            && o.PartnerId == partner.Id);
+                    Console.WriteLine($"Existing Invoice: {existingInvoice}");
                     if (existingInvoice == null)
                     {
                         return new GeneralResponse(false, "Không thể cập nhật hóa đơn hiện tại");
@@ -500,7 +500,7 @@ namespace ServerLibrary.Services.Implementations
                     _mapper.Map(invoiceDTO, existingInvoice);
 
                     existingInvoice.OwnerId = employee.Id;
-                    existingInvoice.Partner.Id = partner.Id;
+                    existingInvoice.PartnerId = partner.Id;
 
                     _appContext.Invoices.Update(existingInvoice);
                     await _appContext.SaveChangesAsync();
@@ -563,6 +563,7 @@ namespace ServerLibrary.Services.Implementations
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine(ex.InnerException?.Message);
                     await transaction.RollbackAsync();
                     return new GeneralResponse(false, $"Cập nhật hóa đơn thất bại: {ex.Message}");
                 }
@@ -844,6 +845,51 @@ namespace ServerLibrary.Services.Implementations
                     return new GeneralResponse(false, $"Không thể xóa liên kết đơn hàng khỏi hoá đơn: {ex.Message}");
                 }
             });
+        }
+
+        private async Task<InvoiceDTO> GetInvoiceByCode(string code, Partner partner)
+        {
+            var existingInvoice = await _appContext.Invoices
+                .FirstOrDefaultAsync(c => c.InvoiceRequestName == code && c.PartnerId == partner.Id);
+            if (existingInvoice == null)
+                return null;
+
+            return new InvoiceDTO
+            {
+                Id = existingInvoice.Id,
+                InvoiceRequestName = existingInvoice.InvoiceRequestName,
+                BuyerName = existingInvoice.BuyerName,
+            };
+        }
+        public async Task<DataObjectResponse?> GenerateInvoiceCodeAsync(Partner partner)
+        {
+            var codeGenerator = new GenerateNextCode(_appContext);
+
+            var invoiceCode = await codeGenerator
+            .GenerateNextCodeAsync<Invoice>(prefix: "HĐ",
+                codeSelector: c => c.InvoiceRequestName,
+                filter: c => c.PartnerId == partner.Id);
+
+            return new DataObjectResponse(true, "Tạo mã hoá đơn thành công", invoiceCode);
+        }
+
+        public async Task<DataObjectResponse?> CheckInvoiceCodeAsync(string code, Employee employee, Partner partner)
+        {
+            var orderDetail = await GetInvoiceByCode(code, partner);
+
+            if (orderDetail == null)
+            {
+                return new DataObjectResponse(true, "Mã hoá đơn có thể sử dụng", null);
+            }
+            else
+            {
+                return new DataObjectResponse(false, "Mã hoá đơn đã tồn tại", new
+                {
+                    orderDetail.InvoiceRequestName,
+                    orderDetail.BuyerName,
+                    orderDetail.Id
+                });
+            }
         }
     }
 }

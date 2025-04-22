@@ -81,6 +81,12 @@ namespace ServerLibrary.Services.Implementations
             // Check partner
             if (partner == null) return new DataStringResponse(false, "Thông tin tổ chức không để trống !");
 
+
+            var checkCodeExisted = await CheckCustomerCodeAsync(customer.AccountNumber, employee, partner);
+            if (checkCodeExisted != null && !checkCodeExisted.Flag)
+                return new DataStringResponse(false, "Mã khách hàng đã tồn tại !");
+
+
             // Check employee   
             if (employee == null)
                 return new DataStringResponse(false, "Không tìm thấy nhân viên");
@@ -175,7 +181,7 @@ namespace ServerLibrary.Services.Implementations
             .FirstOrDefaultAsync(ce => ce.Id == customerId);
             if (customer == null)
             {
-                return new GeneralResponse(false, "Customer not found ");
+                return new GeneralResponse(false, "Không tìm thấy khách hàng ");
             }
             var employeeExists = customer.CustomerEmployees
             .Any(ce => ce.EmployeeId == employee.Id && ce.AccessLevel == AccessLevel.ReadWrite);
@@ -189,7 +195,7 @@ namespace ServerLibrary.Services.Implementations
 
             await _appDbContext.SaveChangesAsync();
 
-            return new GeneralResponse(true, "Removed customer successfully");
+            return new GeneralResponse(true, "Xoá khách hàng thành công");
         }
 
         public async Task<GeneralResponse?> DeleteBulkCustomers(string ids, Employee employee, Partner partner)
@@ -391,7 +397,7 @@ namespace ServerLibrary.Services.Implementations
             return orderDtos;
         }
 
-        public async Task<Customer?> GetCustomerByIdAsync(int id, Employee employee, Partner partner)
+        public async Task<OptionalCustomerDTO?> GetCustomerByIdAsync(int id, Employee employee, Partner partner)
         {
             var customer = await _appDbContext.Customers
                 .Include(c => c.CustomerEmployees)
@@ -403,7 +409,9 @@ namespace ServerLibrary.Services.Implementations
             {
                 return null;
             }
-            return customer;
+            var customerDto = _mapper.Map<OptionalCustomerDTO>(customer);
+
+            return customerDto;
         }
 
         public async Task<GeneralResponse?> RemoveContactFromCustomer(int id, int contactId, Partner partner)
@@ -441,6 +449,8 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<GeneralResponse?> UpdateAsync(int id, CustomerDTO updateDto, Employee employee, Partner partner)
         {
+            var codeGenerator = new GenerateNextCode(_appDbContext);
+
             if (employee == null || partner == null)
             {
                 return new GeneralResponse(false, "Không tìm thấy thông tin nhân viên hoặc tổ chức");
@@ -454,13 +464,38 @@ namespace ServerLibrary.Services.Implementations
             if (existingCustomer == null)
                 return new GeneralResponse(false, "Không tìm thấy thông tin khách hàng để cập nhật");
             Console.WriteLine("Prepared to update existing customer");
+            if (string.IsNullOrEmpty(updateDto.AccountNumber))
+            {
+                updateDto.AccountNumber = await codeGenerator.GenerateNextCodeAsync<Customer>(
+                    "KH",
+                    c => c.AccountNumber,
+                    c => c.PartnerId == partner.Id
+                );
+            }
+            else
+            {
+                bool exists = await _appDbContext.Customers.AnyAsync(c =>
+                    c.AccountNumber == updateDto.AccountNumber &&
+                    c.PartnerId == partner.Id &&
+                    c.Id != id);
+
+                if (exists)
+                {
+                    var newAccountNumber = await codeGenerator.GenerateNextCodeAsync<Customer>(
+                        "KH",
+                        c => c.AccountNumber,
+                        c => c.PartnerId == partner.Id
+                    );
+                    Console.WriteLine($"AccountNumber '{updateDto.AccountNumber}' already existed. Replaced with '{newAccountNumber}' for AccountNumber ID {id}.");
+                    updateDto.AccountNumber = newAccountNumber;
+                }
+            }
+
             _mapper.Map(updateDto, existingCustomer);
             await _appDbContext.UpdateDb(existingCustomer);
             System.Console.WriteLine("Successfully updated customer");
 
             return new GeneralResponse(true, "Cập nhật thông tin khách hàng thành công.");
-
-
         }
 
         public async Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateCustomerDTO updateCustomer, Employee employee, Partner partner)
@@ -625,6 +660,56 @@ namespace ServerLibrary.Services.Implementations
                     return new GeneralResponse(false, $"Lỗi khi xóa hóa đơn khỏi khách hàng ID {id}: {ex.Message}");
                 }
             });
+        }
+
+        private async Task<CustomerDTO> GetCustomerByCode(string code, Partner partner)
+        {
+            var existingCustomer = await _appDbContext.Customers
+                .FirstOrDefaultAsync(c => c.AccountNumber == code && c.PartnerId == partner.Id);
+            if (existingCustomer == null)
+                return null;
+
+            return new CustomerDTO
+            {
+                Id = existingCustomer.Id,
+                AccountNumber = existingCustomer.AccountNumber,
+                AccountName = existingCustomer.AccountName,
+            };
+        }
+        public async Task<DataObjectResponse?> GenerateCustomerCodeAsync(Partner partner)
+        {
+            var codeGenerator = new GenerateNextCode(_appDbContext);
+
+            var partnerData = await _partnerService.FindById(partner.Id);
+            if (partnerData == null)
+                new DataStringResponse(false, "Thông tin tổ chức không để trống !", null);
+
+
+            var customerCode = await codeGenerator
+            .GenerateNextCodeAsync<Customer>(prefix: "KH",
+                codeSelector: c => c.AccountNumber,
+                filter: c => c.PartnerId == partner.Id);
+
+            return new DataObjectResponse(true, "Tạo mã khách hàng thành công", customerCode);
+        }
+
+        public async Task<DataObjectResponse?> CheckCustomerCodeAsync(string code, Employee employee, Partner partner)
+        {
+            var customerDetail = await GetCustomerByCode(code, partner);
+
+            if (customerDetail == null)
+            {
+                return new DataObjectResponse(true, "Mã khách hàng có thể sử dụng", null);
+            }
+            else
+            {
+                return new DataObjectResponse(false, "Mã khách hàng đã tồn tại", new
+                {
+                    customerDetail.AccountNumber,
+                    customerDetail.AccountName,
+                    customerDetail.Id
+                });
+            }
         }
     }
 

@@ -6,7 +6,7 @@ using Data.Interceptor;
 namespace Data.DTOs
 {
     public class OptionalOrderDTO
-    {   
+    {
         public int Id { get; set; }
         // [Required]
         public required string SaleOrderNo { get; set; } = string.Empty;
@@ -146,6 +146,10 @@ namespace Data.DTOs
         public string? ModifiedByIdName { get; set; }
         public string? CustomerName { get; set; }
         public string? OwnerTaskExecuteName { get; set; }
+        [JsonConverter(typeof(NullableIntConverter))]
+        public int? OpportunityId { get; set; }
+        [JsonConverter(typeof(NullableIntConverter))]
+        public int? QuoteId { get; set; }
         public int? OwnerId { get; set; }
         public int? OwnerTaskExecuteId { get; set; }
         public int? PartnerId { get; set; }

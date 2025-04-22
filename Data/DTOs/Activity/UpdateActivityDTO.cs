@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Data.DTOs
 {
     public class UpdateActivityDTO
-    {   
+    {
         public int Id { get; set; }
         public string? ActivityName { get; set; }
         public string? ActivityCategory { get; set; }
@@ -42,8 +42,8 @@ namespace Data.DTOs
         public int? InvoiceId { get; set; }
         public int? RelatedUsersID { get; set; }
         public string? RelatedUsersName { get; set; }
-
-           public int? CustomerCareTicketID { get; set; }
+        public int? QuoteId { get; set; }
+        public int? CustomerCareTicketID { get; set; }
         public int? SupportTicketID { get; set; }
     }
 }

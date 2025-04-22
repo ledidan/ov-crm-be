@@ -48,7 +48,8 @@ namespace Mapper.ContactMapper
         public static UpdateContactDTO FromUpdateContactDTO(this UpdateContactDTO contactModel)
         {
             return new UpdateContactDTO
-            {
+            {   
+                
                 ContactName = contactModel.ContactName,
                 FirstName = contactModel.FirstName,
                 LastName = contactModel.LastName,

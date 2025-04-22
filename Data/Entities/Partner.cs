@@ -23,6 +23,8 @@
         public ICollection<OrderContacts> OrderContacts { get; set; } = new List<OrderContacts>();
         public ICollection<CustomerContacts> CustomerContacts { get; set; } = new List<CustomerContacts>();
 
+        public ICollection<OpportunityContacts> OpportunityContacts { get; set; } = new List<OpportunityContacts>();
+
 
     }
 }

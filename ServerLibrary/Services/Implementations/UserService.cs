@@ -95,17 +95,17 @@ namespace ServerLibrary.Services.Implementations
         public async Task<LoginResponse> SignInAsync(Login user)
         {
             var applicationUser = await FindUserByEmail(user.Email);
-            if (applicationUser == null) return new LoginResponse(false, "Email not found");
+            if (applicationUser == null) return new LoginResponse(false, "Email không tìm thấy");
 
             //verify
             if (!BCrypt.Net.BCrypt.Verify(user.Password, applicationUser.Password))
-                return new LoginResponse(false, "Password not valid");
+                return new LoginResponse(false, "Mật khẩu không hợp lệ");
             var userRole = await FindUserRole(applicationUser.Id);
-            if (userRole == null) return new LoginResponse(false, "User role not found");
+            if (userRole == null) return new LoginResponse(false, "Không tìm thấy quyền người dùng");
             var systemRole = await FindSystemRole(userRole.Role.Id);
 
             string jwtToken = await GenerateToken(applicationUser, systemRole!.Name);
-            if (string.IsNullOrEmpty(jwtToken)) return new LoginResponse(false, "Partner of user not found");
+            if (string.IsNullOrEmpty(jwtToken)) return new LoginResponse(false, "Không tìm thấy đối tác người dùng");
             string refreshToken = GenerateRefreshToken();
 
             //save Refresh token
@@ -119,7 +119,7 @@ namespace ServerLibrary.Services.Implementations
             {
                 await appDbContext.InsertIntoDb(new RefreshTokenInfo() { Token = refreshToken, UserId = applicationUser.Id });
             }
-            return new LoginResponse(true, "Login sucessfully", jwtToken, refreshToken);
+            return new LoginResponse(true, "Đăng nhập thành công", jwtToken, refreshToken);
         }
 
         private string GenerateRefreshToken()

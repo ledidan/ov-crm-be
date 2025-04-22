@@ -8,6 +8,8 @@ namespace Data.Entities
     {
         public int Id { get; set; } // Khóa chính cho Inventory
 
+        public string? InventoryCode { get; set; } // Mã tồn kho (Inventory Code) - Có thể là mã tự sinh hoặc mã nhập từ bên ngoài
+
         public int ProductId { get; set; } // Khóa ngoại liên kết với Product
 
         public string? ProductCode { get; set; } // Mã hàng hóa (Product Code/ID) - Đồng bộ với Product
@@ -42,6 +44,8 @@ namespace Data.Entities
         public string? SupplierName { get; set; } // Tên nhà cung cấp (Supplier Name)
 
         public string? Brand { get; set; } // Thương hiệu (Brand)
+
+        public int? PartnerId { get; set; }
 
         public virtual Product Product { get; set; } // Navigation property tới Product
 

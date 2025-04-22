@@ -140,5 +140,41 @@ namespace Server.Controllers
             var result = await productService.GetInvoicesByProductIdAsync(id, partner);
             return Ok(result);
         }
+
+
+        [HttpPost("check-code")]
+        public async Task<IActionResult> CheckProductCode([FromBody] string code)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            var employee = await employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await productService.CheckProductCodeAsync(code, employee, partner);
+
+            if (!result.Flag)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("generate-code")]
+        public async Task<IActionResult> GenerateContactCode()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            var employee = await employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await productService.GenerateProductCodeAsync(partner);
+
+            if (!result.Flag)
+                return BadRequest(result.Message);
+
+            return Ok(result);
+        }
     }
 }

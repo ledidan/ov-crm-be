@@ -43,6 +43,8 @@ namespace Data.Entities
         public int? RelatedUsersID { get; set; }
         public int? CustomerCareTicketID { get; set; }
         public int? SupportTicketID { get; set; }
+        public int? OpportunityId { get; set; }
+        public int? QuoteId { get; set; }
         public string? RelatedUsersName { get; set; }
         public Appointment? Appointment { get; set; }
         public Mission? Mission { get; set; }

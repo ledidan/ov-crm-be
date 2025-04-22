@@ -9,6 +9,7 @@ using Data.Enums;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
+using ServerLibrary.Helpers;
 using ServerLibrary.Services.Interfaces;
 
 namespace ServerLibrary.Services.Implementations
@@ -23,13 +24,45 @@ namespace ServerLibrary.Services.Implementations
             _mapper = mapper;
         }
 
+        public async Task<DataObjectResponse?> CheckSupportCodeAsync(string code, Employee employee, Partner partner)
+        {
+            var ticketDetail = await GetSupportByCode(code, partner);
+
+            if (ticketDetail == null)
+            {
+                return new DataObjectResponse(true, "Mã hỗ trợ có thể sử dụng", null);
+            }
+            else
+            {
+                return new DataObjectResponse(false, "Mã hỗ trợ đã tồn tại", new
+                {
+                    ticketDetail.TicketNumber,
+                    ticketDetail.AccountName,
+                    ticketDetail.Id
+                });
+            }
+        }
+
         public async Task<GeneralResponse> CreateSupportTicket(SupportTicketDTO supportTicketDTO, Employee employee, Partner partner)
         {
+            var codeGenerator = new GenerateNextCode(_appDbContext);
             var supportTicket = _mapper.Map<SupportTicket>(supportTicketDTO);
             supportTicket.Partner = partner;
             supportTicket.CreatedBy = employee.Id;
             supportTicket.CreatedByName = employee.FullName;
+            var checkCodeExisted = await CheckSupportCodeAsync(supportTicket.TicketNumber, employee, partner);
 
+            if (checkCodeExisted != null && !checkCodeExisted.Flag)
+                return new GeneralResponse(false, "Mã hỗ trợ đã tồn tại !");
+
+            if (string.IsNullOrEmpty(supportTicketDTO.TicketNumber))
+            {
+                supportTicket.TicketNumber = await codeGenerator.GenerateNextCodeAsync<SupportTicket>(
+            "LH",
+            c => c.TicketNumber,
+            c => c.PartnerId == partner.Id
+        );
+            }
             await _appDbContext.SupportTickets.AddAsync(supportTicket);
             await _appDbContext.SaveChangesAsync();
             return new GeneralResponse(true, "Tạo yêu cầu hỗ trợ thành công");
@@ -71,6 +104,33 @@ namespace ServerLibrary.Services.Implementations
             _appDbContext.SupportTickets.Remove(supportTicket);
             await _appDbContext.SaveChangesAsync();
             return new GeneralResponse(true, "Xóa yêu cầu hỗ trợ thành công");
+        }
+
+        private async Task<SupportTicketDTO> GetSupportByCode(string code, Partner partner)
+        {
+            var existingSupport = await _appDbContext.SupportTickets
+                .FirstOrDefaultAsync(c => c.TicketNumber == code && c.PartnerId == partner.Id);
+            if (existingSupport == null)
+                return null;
+
+            return new SupportTicketDTO
+            {
+                Id = existingSupport.Id,
+                TicketNumber = existingSupport.TicketNumber,
+                AccountName = existingSupport.AccountName,
+            };
+        }
+
+        public async Task<DataObjectResponse?> GenerateSupportCodeAsync(Partner partner)
+        {
+            var codeGenerator = new GenerateNextCode(_appDbContext);
+
+            var supportCode = await codeGenerator
+            .GenerateNextCodeAsync<SupportTicket>(prefix: "HT",
+                codeSelector: c => c.TicketNumber,
+                filter: c => c.PartnerId == partner.Id);
+
+            return new DataObjectResponse(true, "Tạo mã hỗ trợ thành công", supportCode);
         }
 
         public async Task<List<ActivityDTO>> GetAllActivitiesBySupportTickets(int id, Partner partner)
@@ -178,10 +238,24 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<GeneralResponse> UpdateSupportTicket(int id, SupportTicketDTO supportTicketDTO, Employee employee, Partner partner)
         {
+            var codeGenerator = new GenerateNextCode(_appDbContext);
             var supportTicket = await _appDbContext.SupportTickets.Where(s => s.Partner.Id == partner.Id).FirstOrDefaultAsync(s => s.Id == id);
             if (supportTicket == null)
             {
                 return new GeneralResponse(false, "Yêu cầu hỗ trợ không tồn tại");
+            }
+            if (string.IsNullOrEmpty(supportTicket.TicketNumber))
+            {
+                string originalCode = supportTicket.TicketNumber;
+                bool exists = await _appDbContext.SupportTickets.AnyAsync(c =>
+     c.TicketNumber == supportTicket.TicketNumber &&
+     c.PartnerId == partner.Id &&
+     c.Id != id);
+                if (exists)
+                {
+                    supportTicket.TicketNumber = await codeGenerator.GenerateNextCodeAsync<SupportTicket>("HT", c => c.TicketNumber, c => c.PartnerId == partner.Id);
+                    Console.WriteLine($"TicketNumber '{originalCode}' already existed. Replaced with '{supportTicketDTO.TicketNumber}' for TicketNumber ID {id}.");
+                }
             }
             supportTicketDTO.ModifiedBy = employee.Id;
             supportTicketDTO.ModifiedByName = employee.FullName;

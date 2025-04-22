@@ -139,6 +139,8 @@ builder.Services.AddScoped<IProductInventoryService, ProductInventoryService>();
 builder.Services.AddScoped<ISupportTicketService, SupportTicketService>();
 builder.Services.AddScoped<ICustomerCareService, CustomerCareService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IQuoteService, QuoteService>();
+builder.Services.AddScoped<IOpportunityService, OpportunityService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<S3Service>();
 

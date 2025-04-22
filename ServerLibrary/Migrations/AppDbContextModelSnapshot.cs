@@ -153,6 +153,9 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("OfficeEmail")
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("OpportunityId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("OrderId")
                         .HasColumnType("int");
 
@@ -170,6 +173,9 @@ namespace ServerLibrary.Migrations
 
                     b.Property<string>("PriorityID")
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("QuoteId")
+                        .HasColumnType("int");
 
                     b.Property<int?>("RelatedUsersID")
                         .HasColumnType("int");
@@ -408,7 +414,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("ContactCode")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("ContactName")
                         .HasColumnType("longtext");
@@ -526,6 +532,9 @@ namespace ServerLibrary.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ContactCode", "PartnerId")
+                        .IsUnique();
+
                     b.ToTable("Contacts");
                 });
 
@@ -565,7 +574,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("AccountNumber")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("AccountReferredID")
                         .HasColumnType("longtext");
@@ -739,6 +748,9 @@ namespace ServerLibrary.Migrations
 
                     b.HasIndex("PartnerId");
 
+                    b.HasIndex("AccountNumber", "PartnerId")
+                        .IsUnique();
+
                     b.ToTable("Customers");
                 });
 
@@ -775,7 +787,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("CustomerCareNumber")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<int?>("CustomerId")
                         .HasColumnType("int");
@@ -804,7 +816,7 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("OwnerName")
                         .HasColumnType("longtext");
 
-                    b.Property<int>("PartnerId")
+                    b.Property<int?>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<string>("PartnerName")
@@ -846,6 +858,9 @@ namespace ServerLibrary.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PartnerId");
+
+                    b.HasIndex("CustomerCareNumber", "PartnerId")
+                        .IsUnique();
 
                     b.ToTable("CustomerCares");
                 });
@@ -980,11 +995,17 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("OfficePhone")
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("OpportunityId")
+                        .HasColumnType("int");
+
                     b.Property<int>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("QuoteId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("Resignation")
                         .HasColumnType("datetime(6)");
@@ -1005,7 +1026,11 @@ namespace ServerLibrary.Migrations
 
                     b.HasIndex("CustomerCareId");
 
+                    b.HasIndex("OpportunityId");
+
                     b.HasIndex("PartnerId");
+
+                    b.HasIndex("QuoteId");
 
                     b.HasIndex("SupportTicketId");
 
@@ -1024,7 +1049,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal?>("AmountSummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<string>("BankAccount")
                         .HasColumnType("longtext");
@@ -1078,7 +1103,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("InvoiceRequestName")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("InvoiceTypeId")
                         .HasColumnType("longtext");
@@ -1104,7 +1129,7 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("OwnerTaskExecuteName")
                         .HasColumnType("longtext");
 
-                    b.Property<int>("PartnerId")
+                    b.Property<int?>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<string>("PaymentTypeId")
@@ -1132,13 +1157,13 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("double");
 
                     b.Property<decimal?>("ToCurrencyAfterDiscountSummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal?>("ToCurrencySummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal?>("TotalSummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.HasKey("Id");
 
@@ -1147,6 +1172,9 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("PartnerId");
+
+                    b.HasIndex("InvoiceRequestName", "PartnerId")
+                        .IsUnique();
 
                     b.ToTable("Invoices");
                 });
@@ -1271,6 +1299,140 @@ namespace ServerLibrary.Migrations
                     b.ToTable("Missions");
                 });
 
+            modelBuilder.Entity("Data.Entities.Opportunity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<DateTime?>("ClosingDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("ContactId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ContactName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CountryID")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CustomerName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("DistrictID")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal?>("ExpectedRevenue")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<bool?>("IsPublic")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("LeadSourceID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LeadSourceIDText")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("OpportunityName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("OpportunityNo")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int?>("OwnerTaskExecuteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OwnerTaskExecuteName")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<float>("Probability")
+                        .HasColumnType("float");
+
+                    b.Property<string>("ProvinceID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ReasonWinLostID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ReasonWinLostIDText")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("StageID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("StageIDText")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Street")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TagID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TagIDText")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TypeID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TypeIDText")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("WardID")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerId");
+
+                    b.HasIndex("OpportunityNo", "PartnerId")
+                        .IsUnique();
+
+                    b.ToTable("Opportunities");
+                });
+
+            modelBuilder.Entity("Data.Entities.OpportunityContacts", b =>
+                {
+                    b.Property<int>("OpportunityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ContactId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("OpportunityId", "ContactId", "PartnerId");
+
+                    b.HasIndex("ContactId");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("OpportunityContacts");
+                });
+
             modelBuilder.Entity("Data.Entities.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -1280,7 +1442,7 @@ namespace ServerLibrary.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal?>("BalanceReceiptAmount")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<int?>("BillingAccountID")
                         .HasColumnType("int");
@@ -1340,10 +1502,10 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<decimal?>("DiscountAfterTaxSummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal?>("DiscountSummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime(6)");
@@ -1358,7 +1520,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<decimal?>("InvoicedAmount")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<bool?>("IsContractPartner")
                         .HasColumnType("tinyint(1)");
@@ -1382,7 +1544,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<decimal?>("LiquidateAmount")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
@@ -1394,9 +1556,12 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<decimal?>("NotPaidAmountSummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<int?>("NumberOfDaysOwed")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OpportunityId")
                         .HasColumnType("int");
 
                     b.Property<int?>("OwnerId")
@@ -1412,12 +1577,12 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<decimal?>("PaidAmountSummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<DateTime?>("PaidDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("PartnerId")
+                    b.Property<int?>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<string>("PayStatusID")
@@ -1429,6 +1594,9 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("QuoteId")
+                        .HasColumnType("int");
+
                     b.Property<string>("RecordedSale")
                         .HasColumnType("longtext");
 
@@ -1439,13 +1607,13 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<decimal?>("RemainingAmount")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal?>("ReturnedSummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal?>("RevenueAccountingAmount")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<DateTime?>("RevenueRecognitionDate")
                         .HasColumnType("datetime(6)");
@@ -1454,7 +1622,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<decimal>("SaleOrderAmount")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<DateTime>("SaleOrderDate")
                         .HasColumnType("datetime(6)");
@@ -1463,7 +1631,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("SaleOrderNo")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<double>("SaleOrderProcessCost")
                         .HasColumnType("double");
@@ -1505,20 +1673,23 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("double");
 
                     b.Property<decimal?>("ToCurrencySummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal?>("TotalReceiptedAmount")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal?>("TotalSummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal?>("UnInvoicedAmount")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PartnerId");
+
+                    b.HasIndex("SaleOrderNo", "PartnerId")
+                        .IsUnique();
 
                     b.ToTable("Orders");
                 });
@@ -1686,13 +1857,13 @@ namespace ServerLibrary.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal?>("AmountSummary")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<string>("Avatar")
                         .HasColumnType("longtext");
 
                     b.Property<decimal?>("ConversionRate")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<string>("ConversionUnit")
                         .HasColumnType("longtext");
@@ -1748,7 +1919,7 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("OwnerIDName")
                         .HasColumnType("longtext");
 
-                    b.Property<int>("PartnerId")
+                    b.Property<int?>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<bool>("PriceAfterTax")
@@ -1773,7 +1944,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<decimal>("PurchasedPrice")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<int?>("QuantityDemanded")
                         .HasColumnType("int");
@@ -1812,19 +1983,19 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<decimal>("UnitCost")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal>("UnitPrice1")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal>("UnitPrice2")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal>("UnitPriceFixed")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<string>("UsageUnitID")
                         .HasColumnType("longtext");
@@ -1848,6 +2019,9 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("ProductCategoryId");
 
                     b.HasIndex("SupplierId");
+
+                    b.HasIndex("ProductCode", "PartnerId")
+                        .IsUnique();
 
                     b.HasIndex(new[] { "ProductCode", "PartnerId" }, "Unique_ProductCode_PartnerId")
                         .IsUnique();
@@ -1893,11 +2067,11 @@ namespace ServerLibrary.Migrations
                     b.Property<int?>("ParentProductCategoryID")
                         .HasColumnType("int");
 
-                    b.Property<int>("PartnerId")
+                    b.Property<int?>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<string>("ProductCategoryCode")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("ProductCategoryName")
                         .HasColumnType("longtext");
@@ -1907,6 +2081,9 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("ParentProductCategoryID");
 
                     b.HasIndex("PartnerId");
+
+                    b.HasIndex("ProductCategoryCode", "PartnerId")
+                        .IsUnique();
 
                     b.ToTable("ProductCategories");
                 });
@@ -1963,6 +2140,9 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime?>("ExpirationDate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("InventoryCode")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<decimal>("InventoryValue")
                         .HasColumnType("decimal(65,30)");
 
@@ -1975,7 +2155,7 @@ namespace ServerLibrary.Migrations
                     b.Property<int?>("OrderQuantity")
                         .HasColumnType("int");
 
-                    b.Property<int>("PartnerId")
+                    b.Property<int?>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<string>("ProductCode")
@@ -2016,6 +2196,9 @@ namespace ServerLibrary.Migrations
 
                     b.HasIndex("SupplierId");
 
+                    b.HasIndex("InventoryCode", "PartnerId")
+                        .IsUnique();
+
                     b.ToTable("ProductInventories");
                 });
 
@@ -2040,7 +2223,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(65,30)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
@@ -2053,6 +2236,111 @@ namespace ServerLibrary.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductPrices");
+                });
+
+            modelBuilder.Entity("Data.Entities.Quote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountTel")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("ApproverID")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ContactId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ContactName")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CurrencyTypeID")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CustomerName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal>("DiscountSummary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("ExpiredDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("OfficeEmail")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("OpportunityID")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OwnerTaskExecuteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OwnerTaskExecuteName")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("QuoteDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("QuoteNo")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int?>("RelatedUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SaleProjectID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("StageID")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TaxCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal>("TaxSummary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ToCurrencySummary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalSummary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerId");
+
+                    b.HasIndex("QuoteNo", "PartnerId")
+                        .IsUnique();
+
+                    b.ToTable("Quotes");
                 });
 
             modelBuilder.Entity("Data.Entities.RefreshTokenInfo", b =>
@@ -2171,7 +2459,7 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("OwnerName")
                         .HasColumnType("longtext");
 
-                    b.Property<int>("PartnerId")
+                    b.Property<int?>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<string>("PriorityID")
@@ -2211,11 +2499,14 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("TicketNumber")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PartnerId");
+
+                    b.HasIndex("TicketNumber", "PartnerId")
+                        .IsUnique();
 
                     b.ToTable("SupportTickets");
                 });
@@ -2427,9 +2718,7 @@ namespace ServerLibrary.Migrations
                 {
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PartnerId");
 
                     b.Navigation("Partner");
                 });
@@ -2494,11 +2783,19 @@ namespace ServerLibrary.Migrations
                         .WithMany("Employees")
                         .HasForeignKey("CustomerCareId");
 
+                    b.HasOne("Data.Entities.Opportunity", null)
+                        .WithMany("Employees")
+                        .HasForeignKey("OpportunityId");
+
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
                         .HasForeignKey("PartnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Data.Entities.Quote", null)
+                        .WithMany("Employees")
+                        .HasForeignKey("QuoteId");
 
                     b.HasOne("Data.Entities.SupportTicket", null)
                         .WithMany("Employees")
@@ -2519,9 +2816,7 @@ namespace ServerLibrary.Migrations
 
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PartnerId");
 
                     b.Navigation("Partner");
                 });
@@ -2609,13 +2904,47 @@ namespace ServerLibrary.Migrations
                     b.Navigation("Activity");
                 });
 
+            modelBuilder.Entity("Data.Entities.Opportunity", b =>
+                {
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId");
+
+                    b.Navigation("Partner");
+                });
+
+            modelBuilder.Entity("Data.Entities.OpportunityContacts", b =>
+                {
+                    b.HasOne("Data.Entities.Contact", "Contact")
+                        .WithMany("OpportunityContacts")
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Opportunity", "Opportunity")
+                        .WithMany("OpportunityContacts")
+                        .HasForeignKey("OpportunityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany("OpportunityContacts")
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Contact");
+
+                    b.Navigation("Opportunity");
+
+                    b.Navigation("Partner");
+                });
+
             modelBuilder.Entity("Data.Entities.Order", b =>
                 {
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PartnerId");
 
                     b.Navigation("Partner");
                 });
@@ -2697,9 +3026,7 @@ namespace ServerLibrary.Migrations
                 {
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PartnerId");
 
                     b.HasOne("Data.Entities.ProductCategory", "ProductCategory")
                         .WithMany()
@@ -2726,9 +3053,7 @@ namespace ServerLibrary.Migrations
 
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PartnerId");
 
                     b.Navigation("ParentCategory");
 
@@ -2766,9 +3091,7 @@ namespace ServerLibrary.Migrations
                 {
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PartnerId");
 
                     b.HasOne("Data.Entities.Product", "Product")
                         .WithMany("ProductInventories")
@@ -2799,13 +3122,20 @@ namespace ServerLibrary.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Data.Entities.Quote", b =>
+                {
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId");
+
+                    b.Navigation("Partner");
+                });
+
             modelBuilder.Entity("Data.Entities.SupportTicket", b =>
                 {
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PartnerId");
 
                     b.Navigation("Partner");
                 });
@@ -2848,6 +3178,8 @@ namespace ServerLibrary.Migrations
 
                     b.Navigation("CustomerContacts");
 
+                    b.Navigation("OpportunityContacts");
+
                     b.Navigation("OrderContacts");
                 });
 
@@ -2887,6 +3219,13 @@ namespace ServerLibrary.Migrations
                     b.Navigation("InvoiceOrders");
                 });
 
+            modelBuilder.Entity("Data.Entities.Opportunity", b =>
+                {
+                    b.Navigation("Employees");
+
+                    b.Navigation("OpportunityContacts");
+                });
+
             modelBuilder.Entity("Data.Entities.Order", b =>
                 {
                     b.Navigation("InvoiceOrders");
@@ -2912,6 +3251,8 @@ namespace ServerLibrary.Migrations
 
                     b.Navigation("JobTitleGroup");
 
+                    b.Navigation("OpportunityContacts");
+
                     b.Navigation("OrderContacts");
 
                     b.Navigation("ProductEmployees");
@@ -2927,6 +3268,11 @@ namespace ServerLibrary.Migrations
             modelBuilder.Entity("Data.Entities.ProductCategory", b =>
                 {
                     b.Navigation("SubCategories");
+                });
+
+            modelBuilder.Entity("Data.Entities.Quote", b =>
+                {
+                    b.Navigation("Employees");
                 });
 
             modelBuilder.Entity("Data.Entities.Supplier", b =>

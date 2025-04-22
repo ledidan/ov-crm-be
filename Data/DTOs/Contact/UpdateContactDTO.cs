@@ -4,7 +4,8 @@ using System.ComponentModel.DataAnnotations;
 namespace Data.DTOs.Contact
 {
     public class UpdateContactDTO
-    {
+    {   
+        public int Id { get; set; }
         public string? ContactCode { get; set; } = string.Empty;
         // [Required(ErrorMessage = "Tên liên hệ không được để trống !")]
         public string? ContactName { get; set; }

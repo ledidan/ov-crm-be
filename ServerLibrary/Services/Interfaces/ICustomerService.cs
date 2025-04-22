@@ -7,13 +7,16 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface ICustomerService
     {
+
+        Task<DataObjectResponse?> GenerateCustomerCodeAsync(Partner partner);
+        Task<DataObjectResponse?> CheckCustomerCodeAsync(string code, Employee employee, Partner partner);
         Task<DataStringResponse> CreateAsync(CreateCustomer customer, Employee employee, Partner partner);
         Task<GeneralResponse?> UpdateAsync(int id, CustomerDTO updateCustomer, Employee employee, Partner partner);
 
         Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateCustomerDTO updateCustomer, Employee employee, Partner partner);
         Task<List<Customer?>> GetAllAsync(Employee employee, Partner partner);
         Task<GeneralResponse?> DeleteBulkCustomers(string ids, Employee employee, Partner partner);
-        Task<Customer?> GetCustomerByIdAsync(int id, Employee employee, Partner partner);
+        Task<OptionalCustomerDTO?> GetCustomerByIdAsync(int id, Employee employee, Partner partner);
 
         Task<GeneralResponse> DeleteAsync(int customerId, Employee employee, Partner partner);
 
@@ -29,7 +32,7 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<GeneralResponse?> UnassignInvoiceFromCustomer(int id, int invoiceId, Partner partner);
 
-        
+
         //  ** Bulk Get Customer Relationship
 
         Task<List<ContactDTO>> GetAllContactsByIdAsync(int id, Partner partner);

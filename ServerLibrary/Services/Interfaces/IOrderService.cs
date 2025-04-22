@@ -8,6 +8,10 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IOrderService
     {
+
+        Task<DataObjectResponse?> GenerateOrderCodeAsync(Partner partner);
+        Task<DataObjectResponse?> CheckOrderCodeAsync(string code, Employee employee, Partner partner);
+
         Task<List<OrderDTO>> GetAllOrdersAsync(Employee employee, Partner partner);
 
         Task<OrderDTO?> GetOrderByIdAsync(int id, Employee employee, Partner partner);

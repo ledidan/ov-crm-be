@@ -369,6 +369,39 @@ namespace Server.Controllers
             );
             return Ok(stats);
         }
+        [HttpPost("check-code")]
+        public async Task<IActionResult> CheckOrderCode([FromBody] string code)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
 
+            var result = await _ordersService.CheckOrderCodeAsync(code, employee, partner);
+
+            if (!result.Flag)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("generate-code")]
+        public async Task<IActionResult> GenerateOrderCode()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await _ordersService.GenerateOrderCodeAsync(partner);
+
+            if (!result.Flag)
+                return BadRequest(result.Message);
+
+            return Ok(result);
+        }
     }
 }

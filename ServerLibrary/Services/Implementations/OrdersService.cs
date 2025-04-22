@@ -335,6 +335,10 @@ namespace ServerLibrary.Services.Implementations
                     {
                         return new GeneralResponse(false, "Hàng hoá không được để trống.");
                     }
+                    var checkCodeExisted = await CheckOrderCodeAsync(orderDto.SaleOrderNo, employee, partner);
+
+                    if (checkCodeExisted != null && !checkCodeExisted.Flag)
+                        return new GeneralResponse(false, "Mã Đơn hàng đã tồn tại !");
 
                     var order = _mapper.Map<Order>(orderDto);
                     if (string.IsNullOrEmpty(order.SaleOrderNo))
@@ -423,6 +427,8 @@ namespace ServerLibrary.Services.Implementations
             Console.WriteLine(
                 $"Starting UpdateOrderAsync for Order ID: {id}, Employee ID: {employee?.Id}, Partner ID: {partner?.Id}"
             );
+            var codeGenerator = new GenerateNextCode(_appDbContext);
+
             return await strategy.ExecuteAsync(async () =>
             {
                 await using var transaction = await _appContext.Database.BeginTransactionAsync();
@@ -445,6 +451,20 @@ namespace ServerLibrary.Services.Implementations
                     {
                         Console.WriteLine($"Order with ID {id} not found.");
                         return new GeneralResponse(false, "Không tìm thấy đơn hàng");
+                    }
+
+                    if (string.IsNullOrEmpty(existingOrder.SaleOrderNo))
+                    {
+                        string originalCode = existingOrder.SaleOrderNo;
+                        bool exists = await _appDbContext.Orders.AnyAsync(c =>
+             c.SaleOrderNo == existingOrder.SaleOrderNo &&
+             c.PartnerId == partner.Id &&
+             c.Id != id);
+                        if (exists)
+                        {
+                            existingOrder.SaleOrderNo = await codeGenerator.GenerateNextCodeAsync<Order>("ĐH", c => c.SaleOrderNo, c => c.PartnerId == partner.Id);
+                            Console.WriteLine($"SaleOrderNo '{originalCode}' already existed. Replaced with '{existingOrder.SaleOrderNo}' for SaleOrderNo ID {id}.");
+                        }
                     }
                     Console.WriteLine(
                         $"Order found: ID {existingOrder.Id}, OwnerId {existingOrder.OwnerId}"
@@ -1301,6 +1321,52 @@ namespace ServerLibrary.Services.Implementations
                 PurchasedItems = orderCustomer.SelectMany(o => o.OrderDetails).ToList(),
             };
             return stats;
+        }
+
+        private async Task<OptionalOrderDTO> GetOrderByCode(string code, Partner partner)
+        {
+            var existingOrder = await _appDbContext.Orders
+                .FirstOrDefaultAsync(c => c.SaleOrderNo == code && c.PartnerId == partner.Id);
+            if (existingOrder == null)
+                return null;
+
+            return new OptionalOrderDTO
+            {
+                Id = existingOrder.Id,
+                SaleOrderNo = existingOrder.SaleOrderNo,
+                SaleOrderName = existingOrder.SaleOrderName,
+            };
+        }
+
+        public async Task<DataObjectResponse?> GenerateOrderCodeAsync(Partner partner)
+        {
+            var codeGenerator = new GenerateNextCode(_appDbContext);
+
+            var orderCode = await codeGenerator
+            .GenerateNextCodeAsync<Order>(prefix: "ĐH",
+                codeSelector: c => c.SaleOrderNo,
+                filter: c => c.PartnerId == partner.Id);
+
+            return new DataObjectResponse(true, "Tạo mã đơn hàng thành công", orderCode);
+        }
+
+        public async Task<DataObjectResponse?> CheckOrderCodeAsync(string code, Employee employee, Partner partner)
+        {
+            var orderDetail = await GetOrderByCode(code, partner);
+
+            if (orderDetail == null)
+            {
+                return new DataObjectResponse(true, "Mã đơn hàng có thể sử dụng", null);
+            }
+            else
+            {
+                return new DataObjectResponse(false, "Mã đơn hàng đã tồn tại", new
+                {
+                    orderDetail.SaleOrderNo,
+                    orderDetail.SaleOrderName,
+                    orderDetail.Id
+                });
+            }
         }
     }
 }
