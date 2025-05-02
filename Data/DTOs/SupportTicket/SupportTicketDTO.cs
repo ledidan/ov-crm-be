@@ -48,6 +48,8 @@ namespace Data.DTOs
 
         public int? CustomerCareCardId { get; set; }
 
+        public string? CustomerCareCardName { get; set; }
+
         public string? RequirementTypeID { get; set; }
 
         public DateTime? ProcessStartDate { get; set; }

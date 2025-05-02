@@ -1,6 +1,5 @@
 using AutoMapper;
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Enums;
 using Data.MongoModels;
@@ -270,108 +269,55 @@ namespace ServerLibrary.Services.Implementations
             throw new NotImplementedException();
         }
 
-        public async Task<List<OptionalOpportunityDTO>> GetAllOpportunitiesAsync(Employee employee, Partner partner)
+        public async Task<PagedResponse<List<OptionalOpportunityDTO>>> GetAllOpportunitiesAsync(Employee employee, Partner partner, int pageNumber = 1, int pageSize = 10)
         {
-            if (employee == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(employee),
-                    "Vui lòng không để trống ID Employee."
-                );
-            }
-            if (partner == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(partner),
-                    "Vui lòng không để trống đối tác."
-                );
-            }
             try
             {
-                IQueryable<Opportunity> query = _appContext
-                    .Opportunities.Where(o => o.Partner == partner)
-                    .AsNoTracking();
-                if (!IsOwner)
+                // Check null inputs
+                if (employee == null)
                 {
-                    query = query
-                        .Where(o =>
-                            o.OwnerTaskExecuteId == employee.Id
-                        // || o.OrderEmployees.Any(oe => oe.EmployeeId == employee.Id)
-                        );
-                    // .Include(o => o.OrderEmployees);
+                    throw new ArgumentNullException(nameof(employee), "Employee null là toang đó nha! 😜");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Partner null cũng không ổn đâu! 😎");
                 }
 
-                var opportunities = await query.ToListAsync();
-                if (opportunities.Count == 0)
-                    return new List<OptionalOpportunityDTO>();
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10; // Default page size
 
-                // var opportunityIds = opportunities.Select(o => o.Id).Where(id => id != null).ToList();
+                // Build query
+                var query = _appContext.Opportunities
+                    .Where(o => o.Partner.Id == partner.Id)
+                    .AsNoTracking();
 
-                // // 🔹 Truy vấn OrderDetails từ MongoDB
-                // var opportunityDetailsList = await _opportunityProductDetails
-                //     .Find(d => opportunityIds.Contains(d.OpportunityId.Value))
-                //     .ToListAsync();
-
-                // var opportunityDetailsDict = opportunityDetailsList
-                //     .GroupBy(d => d.OpportunityId)
-                //     .ToDictionary(g => g.Key, g => g.ToList());
-
-                // // 🔹 Ánh xạ sang DTO
-                // var opportunityDto = opportunities
-                //     .Select(opportunity =>
-                //     {
-                //         var dto = _mapper.Map<OpportunityDTO>(opportunity);
-                //         dto.OpportunityProductDetails = opportunityDetailsDict.TryGetValue(opportunity.Id, out var details)
-                //             ? details
-                //                 .Select(d => new OpportunityProductDetails
-                //                 {
-                //                     Id = d.Id,
-                //                     OpportunityId = d.OpportunityId,
-                //                     OpportunityNo = d.OpportunityNo,
-                //                     OpportunityName = d.OpportunityName,
-                //                     PartnerId = d.PartnerId,
-                //                     ProductId = d.ProductId,
-                //                     CustomerId = d.CustomerId,
-                //                     CustomerName = d.CustomerName,
-                //                     PartnerName = d.PartnerName,
-                //                     ProductCode = d.ProductCode,
-                //                     ProductName = d.ProductName,
-                //                     TaxID = d.TaxID,
-                //                     TaxAmount = d.TaxAmount,
-                //                     Avatar = d.Avatar,
-                //                     TaxIDText = d.TaxIDText,
-                //                     DiscountRate = d.DiscountRate,
-                //                     DiscountAmount = d.DiscountAmount,
-                //                     UnitPrice = d.UnitPrice,
-                //                     QuantityInstock = d.QuantityInstock,
-                //                     Total = d.Total,
-                //                     UsageUnitID = d.UsageUnitID,
-                //                     UsageUnitIDText = d.UsageUnitIDText,
-                //                     Quantity = d.Quantity,
-                //                     AmountSummary = d.AmountSummary,
-                //                     CreatedAt = d.CreatedAt,
-                //                     UpdatedAt = d.UpdatedAt,
-                //                 })
-                //                 .ToList()
-                //             : new List<OpportunityProductDetails>();
-
-                //         return dto;
-                //     })
-                //     .ToList();
-                return opportunities.Select(opportunity =>
+                if (!IsOwner)
                 {
-                    var dto = _mapper.Map<OptionalOpportunityDTO>(opportunity);
-                    return dto;
-                })
-                    .ToList();
-            }
-            catch (ArgumentNullException ex)
-            {
-                throw new ArgumentException($"Lỗi tham số đầu vào: {ex.Message}", ex);
+                    query = query.Where(o => o.OwnerTaskExecuteId == employee.Id);
+                }
+
+                var totalRecords = await query.CountAsync();
+
+                var opportunities = await query
+                    .OrderBy(o => o.Id) 
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                // Map to DTOs
+                var opportunityDtos = _mapper.Map<List<OptionalOpportunityDTO>>(opportunities);
+
+                // Return paged response
+                return new PagedResponse<List<OptionalOpportunityDTO>>(
+                    data: opportunityDtos ?? new List<OptionalOpportunityDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
             }
             catch (Exception ex)
             {
-                throw new Exception($"Lỗi khi lấy thông tin đơn hàng: {ex.Message}", ex);
+                throw new Exception($"Lấy danh sách opportunities fail: {ex.Message}", ex);
             }
         }
 

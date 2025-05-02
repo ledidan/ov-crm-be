@@ -1,6 +1,5 @@
 using AutoMapper;
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Enums;
 using Data.MongoModels;
@@ -20,12 +19,13 @@ namespace ServerLibrary.Services.Implementations
         private readonly AppDbContext _appContext;
         private readonly IMapper _mapper;
         private readonly IMongoCollection<OrderDetails> _ordersDetailsCollection;
-
+        private readonly IProductInventoryService _productInventory;
         private readonly ICustomerService _customerService;
 
         public OrdersService(
             MongoDbContext dbContext,
             AppDbContext appContext,
+            IProductInventoryService productInventory,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             ICustomerService customerService
@@ -36,6 +36,7 @@ namespace ServerLibrary.Services.Implementations
             _appContext = appContext;
             _mapper = mapper;
             _customerService = customerService;
+            _productInventory = productInventory;
         }
 
         public async Task<List<OrderDTO>> GetFullOrdersByCustomerIdAsync(
@@ -100,7 +101,7 @@ namespace ServerLibrary.Services.Implementations
                                     Id = d.Id,
                                     OrderId = d.OrderId,
                                     PartnerId = d.PartnerId,
-                                    ProductId = d.ProductId,
+                                    ProductId = d.ProductId ?? 0,
                                     CustomerId = d.CustomerId,
                                     Avatar = d.Avatar,
                                     CustomerName = d.CustomerName,
@@ -113,6 +114,7 @@ namespace ServerLibrary.Services.Implementations
                                     TaxIDText = d.TaxIDText,
                                     DiscountRate = d.DiscountRate,
                                     DiscountAmount = d.DiscountAmount,
+                                    InventoryItemID = d.InventoryItemID,
                                     UnitPrice = d.UnitPrice,
                                     QuantityInstock = d.QuantityInstock,
                                     Total = d.Total,
@@ -142,106 +144,60 @@ namespace ServerLibrary.Services.Implementations
             }
         }
 
-        public async Task<List<OrderDTO>> GetAllOrdersAsync(Employee employee, Partner partner)
+        public async Task<PagedResponse<List<OrderDTO>>> GetAllOrdersAsync(Employee employee, Partner partner, int pageNumber = 1, int pageSize = 10)
         {
-            if (employee == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(employee),
-                    "Vui lòng không để trống ID Employee."
-                );
-            }
-            if (partner == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(partner),
-                    "Vui lòng không để trống đối tác."
-                );
-            }
             try
             {
-                IQueryable<Order> query = _appContext
-                    .Orders.Where(o => o.Partner == partner)
+                // Check null inputs
+                if (employee == null)
+                {
+                    throw new ArgumentNullException(nameof(employee), "Vui lòng không để trống ID Employee.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Vui lòng không để trống đối tác.");
+                }
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10; // Default page size
+
+                // Build query
+                var query = _appContext.Orders
+                    .Where(o => o.Partner.Id == partner.Id)
                     .AsNoTracking();
+
                 if (!IsOwner)
                 {
                     query = query
                         .Where(o =>
-                            o.OwnerId == employee.Id
-                            || o.OrderEmployees.Any(oe => oe.EmployeeId == employee.Id)
-                        )
+                            o.OwnerId == employee.Id ||
+                            o.OrderEmployees.Any(oe => oe.EmployeeId == employee.Id))
                         .Include(o => o.OrderEmployees);
                 }
 
-                var orders = await query.ToListAsync();
-                if (orders.Count == 0)
-                    return new List<OrderDTO>();
+                var totalRecords = await query.CountAsync();
 
-                var orderIds = orders.Select(o => o.Id).Where(id => id != null).ToList();
-
-                // 🔹 Truy vấn OrderDetails từ MongoDB
-                var orderDetailsList = await _ordersDetailsCollection
-                    .Find(d => orderIds.Contains(d.OrderId.Value))
+                var orders = await query
+                    .OrderBy(o => o.Id) // Add sorting for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
                     .ToListAsync();
 
-                var orderDetailsDict = orderDetailsList
-                    .GroupBy(d => d.OrderId)
-                    .ToDictionary(g => g.Key, g => g.ToList());
+                // Map to DTOs
+                var orderDtos = _mapper.Map<List<OrderDTO>>(orders);
 
-                // 🔹 Ánh xạ sang DTO
-                var orderDtos = orders
-                    .Select(order =>
-                    {
-                        var dto = _mapper.Map<OrderDTO>(order);
-                        dto.OrderDetails = orderDetailsDict.TryGetValue(order.Id, out var details)
-                            ? details
-                                .Select(d => new OrderDetailDTO
-                                {
-                                    Id = d.Id,
-                                    OrderId = d.OrderId,
-                                    PartnerId = d.PartnerId,
-                                    ProductId = d.ProductId,
-                                    CustomerId = d.CustomerId,
-                                    CustomerName = d.CustomerName,
-                                    PartnerName = d.PartnerName,
-                                    SaleOrderNo = d.SaleOrderNo,
-                                    ProductCode = d.ProductCode,
-                                    ProductName = d.ProductName,
-                                    TaxID = d.TaxID,
-                                    TaxAmount = d.TaxAmount,
-                                    Avatar = d.Avatar,
-                                    TaxIDText = d.TaxIDText,
-                                    DiscountRate = d.DiscountRate,
-                                    DiscountAmount = d.DiscountAmount,
-                                    UnitPrice = d.UnitPrice,
-                                    QuantityInstock = d.QuantityInstock,
-                                    Total = d.Total,
-                                    UsageUnitID = d.UsageUnitID,
-                                    UsageUnitIDText = d.UsageUnitIDText,
-                                    Quantity = d.Quantity,
-                                    AmountSummary = d.AmountSummary,
-                                    CreatedAt = d.CreatedAt,
-                                    UpdatedAt = d.UpdatedAt,
-                                })
-                                .ToList()
-                            : new List<OrderDetailDTO>();
-
-                        return dto;
-                    })
-                    .ToList();
-
-                return orderDtos;
-            }
-            catch (ArgumentNullException ex)
-            {
-                throw new ArgumentException($"Lỗi tham số đầu vào: {ex.Message}", ex);
+                return new PagedResponse<List<OrderDTO>>(
+                    data: orderDtos ?? new List<OrderDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
             }
             catch (Exception ex)
             {
-                throw new Exception($"Lỗi khi lấy thông tin đơn hàng: {ex.Message}", ex);
+                throw new Exception($"Lấy danh sách đơn hàng thất bại: {ex.Message}", ex);
             }
         }
-
         public async Task<OrderDTO> GetOrderByIdAsync(int id, Employee employee, Partner partner)
         {
             try
@@ -283,7 +239,7 @@ namespace ServerLibrary.Services.Implementations
                         Id = d.Id,
                         OrderId = d.OrderId,
                         PartnerId = d.PartnerId,
-                        ProductId = d.ProductId,
+                        ProductId = d.ProductId ?? 0,
                         Avatar = d.Avatar,
                         ProductCode = d.ProductCode,
                         ProductName = d.ProductName,
@@ -294,6 +250,7 @@ namespace ServerLibrary.Services.Implementations
                         DiscountAmount = d.DiscountAmount,
                         UnitPrice = d.UnitPrice,
                         QuantityInstock = d.QuantityInstock,
+                        InventoryItemID = d.InventoryItemID,
                         UsageUnitID = d.UsageUnitID,
                         Total = d.Total,
                         UsageUnitIDText = d.UsageUnitIDText,
@@ -355,6 +312,19 @@ namespace ServerLibrary.Services.Implementations
                     _appContext.Orders.Add(order);
                     await _appContext.SaveChangesAsync();
 
+                    
+                    foreach (var detailDto in orderDto.OrderDetails)
+                    {
+                        var response = await _productInventory.CheckAndUpdateStockAsync(
+                            detailDto.ProductId,
+                            detailDto.Quantity
+                        );
+                        if (!response.Flag)
+                        {   
+                            await transaction.RollbackAsync();
+                            return new GeneralResponse(false, response.Message);
+                        }
+                    }
                     var orderDetails = orderDto
                         .OrderDetails.Select(detailDto => new OrderDetails
                         {
@@ -368,6 +338,7 @@ namespace ServerLibrary.Services.Implementations
                             ProductId = detailDto.ProductId,
                             ProductCode = detailDto.ProductCode,
                             ProductName = detailDto.ProductName,
+                            InventoryItemID = detailDto.InventoryItemID,
                             TaxID = detailDto.TaxID,
                             TaxAmount = detailDto.TaxAmount,
                             TaxIDText = detailDto.TaxIDText,
@@ -511,6 +482,7 @@ namespace ServerLibrary.Services.Implementations
                             existingDetail.DiscountAmount = detailDto.DiscountAmount;
                             existingDetail.UnitPrice = detailDto.UnitPrice;
                             existingDetail.QuantityInstock = detailDto.QuantityInstock;
+                            existingDetail.InventoryItemID = detailDto.InventoryItemID;
                             existingDetail.UsageUnitID = detailDto.UsageUnitID;
                             existingDetail.UsageUnitIDText = detailDto.UsageUnitIDText;
                             existingDetail.Quantity = detailDto.Quantity;
@@ -540,6 +512,7 @@ namespace ServerLibrary.Services.Implementations
                                 PartnerId = partner.Id,
                                 PartnerName = existingOrder.Partner.Name,
                                 ProductId = detailDto.ProductId,
+                                InventoryItemID = detailDto.InventoryItemID,
                                 ProductCode = detailDto.ProductCode,
                                 ProductName = detailDto.ProductName,
                                 TaxID = detailDto.TaxID,
@@ -878,9 +851,32 @@ namespace ServerLibrary.Services.Implementations
             });
         }
 
+        public async Task<OrderDTO> SimplyOrderDetailAsync(int id, Partner Partner)
+        {
+            try
+            {
+                var order = await _appContext.Orders
+                 .Where(o =>
+                     o.Id == id &&
+                         o.PartnerId == Partner.Id
+                 )
+                 .FirstOrDefaultAsync();
+
+                if (order == null)
+                {
+                    throw new KeyNotFoundException($"Đơn hàng ID {id} không tồn tại");
+                }
+                var orderDto = _mapper.Map<OrderDTO>(order);
+                return orderDto;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi check đơn hàng: {ex.Message}.");
+            }
+        }
         public async Task<GeneralResponse?> BulkAddContactsIntoOrder(
             List<int> ContactIds,
-            int OrderId,
+            int id,
             Employee employee,
             Partner Partner
         )
@@ -888,7 +884,7 @@ namespace ServerLibrary.Services.Implementations
             if (ContactIds == null || !ContactIds.Any())
                 return new GeneralResponse(false, "Danh sách liên hệ không được để trống!");
 
-            var order = await GetOrderByIdAsync(OrderId, employee, Partner);
+            var order = await SimplyOrderDetailAsync(id, Partner);
 
             if (order == null)
                 return new GeneralResponse(false, "Không tìm thấy đơn hàng!");
@@ -948,39 +944,58 @@ namespace ServerLibrary.Services.Implementations
             return activities.Any() ? activities : new List<Activity>();
         }
 
-        public async Task<List<ContactDTO>> GetAllContactsAvailableByIdAsync(
+        public async Task<PagedResponse<List<ContactDTO>>> GetAllContactsAvailableByIdAsync(
             int id,
             Employee employee,
-            Partner partner
+            Partner partner,
+            int pageNumber,
+            int pageSize
         )
         {
-            if (id == null)
+            try
             {
-                throw new ArgumentException("ID khách hàng không được để trống !");
-            }
-            if (partner == null)
-            {
-                throw new ArgumentException("Thông tin tổ chức không được bỏ trống");
-            }
-
-            var result = await _appDbContext
-                .Contacts.Where(c =>
-                    !c.OrderContacts.Any(cc => cc.OrderId == id && cc.PartnerId == partner.Id)
-                )
-                .Select(c => new ContactDTO
+                // Check inputs
+                if (id <= 0)
                 {
-                    Id = c.Id,
-                    ContactCode = c.ContactCode,
-                    ContactName = c.ContactName,
-                    FullName = $"{c.LastName} {c.FirstName}",
-                    SalutationID = c.SalutationID,
-                    OfficeEmail = c.OfficeEmail,
-                    TitleID = c.TitleID,
-                    Mobile = c.Mobile,
-                    Email = c.Email,
-                })
-                .ToListAsync();
-            return result;
+                    throw new ArgumentException("ID đơn hàng phải lớn hơn 0.");
+                }
+                if (employee == null)
+                {
+                    throw new ArgumentNullException(nameof(employee), "Vui lòng không để trống ID Employee.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                var query = _appDbContext.Contacts
+                    .Where(c => !c.OrderContacts.Any(cc => cc.OrderId == id && cc.PartnerId == partner.Id))
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                var contacts = await query
+                    .OrderBy(c => c.Id) // Add sorting for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var contactDtos = _mapper.Map<List<ContactDTO>>(contacts);
+
+                return new PagedResponse<List<ContactDTO>>(
+                    data: contactDtos ?? new List<ContactDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách liên hệ thất bại: {ex.Message}", ex);
+            }
         }
 
         public async Task<List<ContactDTO>> GetAllContactsLinkedIdAsync(
@@ -1366,6 +1381,95 @@ namespace ServerLibrary.Services.Implementations
                     orderDetail.SaleOrderName,
                     orderDetail.Id
                 });
+            }
+        }
+
+        public async Task<List<OrderDTO>> GetOrdersStatsCalculation(Employee employee, Partner partner)
+        {
+            {
+                if (employee == null || !IsOwner)
+                {
+                    throw new ArgumentNullException(nameof(employee), "Vui lòng không để trống ID Employee.");
+                }
+                if (partner == null || !IsOwner)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Vui lòng không để trống đối tác.");
+                }
+                try
+                {
+                    IQueryable<Order> query = _appContext.Orders
+                        .Where(o => o.Partner == partner)
+                        .AsNoTracking();
+                    if (!IsOwner)
+                    {
+                        query = query.Where(o =>
+                            o.OwnerId == employee.Id ||
+                            o.OrderEmployees.Any(oe => oe.EmployeeId == employee.Id))
+                            .Include(o => o.OrderEmployees);
+                    }
+
+                    var orders = await query.ToListAsync();
+                    if (orders.Count == 0) return new List<OrderDTO>();
+
+                    var orderIds = orders.Select(o => o.Id).Where(id => id != null).ToList();
+
+                    // 🔹 Truy vấn OrderDetails từ MongoDB
+                    var orderDetailsList = await _ordersDetailsCollection
+                        .Find(d => orderIds.Contains(d.OrderId.Value))
+                        .ToListAsync();
+
+
+                    var orderDetailsDict = orderDetailsList
+                        .GroupBy(d => d.OrderId)
+                        .ToDictionary(g => g.Key, g => g.ToList());
+
+                    // 🔹 Ánh xạ sang DTO
+                    var orderDtos = orders.Select(order =>
+                    {
+                        var dto = _mapper.Map<OrderDTO>(order);
+                        dto.OrderDetails = orderDetailsDict.TryGetValue(order.Id, out var details)
+                            ? details.Select(d => new OrderDetailDTO
+                            {
+                                Id = d.Id,
+                                OrderId = d.OrderId,
+                                PartnerId = d.PartnerId,
+                                ProductId = d.ProductId ?? 0,
+                                CustomerId = d.CustomerId,
+                                CustomerName = d.CustomerName,
+                                PartnerName = d.PartnerName,
+                                SaleOrderNo = d.SaleOrderNo,
+                                ProductCode = d.ProductCode,
+                                ProductName = d.ProductName,
+                                TaxID = d.TaxID,
+                                TaxAmount = d.TaxAmount,
+                                TaxIDText = d.TaxIDText,
+                                DiscountRate = d.DiscountRate,
+                                DiscountAmount = d.DiscountAmount,
+                                UnitPrice = d.UnitPrice,
+                                QuantityInstock = d.QuantityInstock,
+                                Total = d.Total,
+                                UsageUnitID = d.UsageUnitID,
+                                UsageUnitIDText = d.UsageUnitIDText,
+                                Quantity = d.Quantity,
+                                AmountSummary = d.AmountSummary,
+                                CreatedAt = d.CreatedAt,
+                                UpdatedAt = d.UpdatedAt
+                            }).ToList()
+                            : new List<OrderDetailDTO>();
+
+                        return dto;
+                    }).ToList();
+
+                    return orderDtos;
+                }
+                catch (ArgumentNullException ex)
+                {
+                    throw new ArgumentException($"Lỗi tham số đầu vào: {ex.Message}", ex);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Lỗi khi lấy thông tin đơn hàng: {ex.Message}", ex);
+                }
             }
         }
     }

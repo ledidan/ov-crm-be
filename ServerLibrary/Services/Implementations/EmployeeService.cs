@@ -3,6 +3,7 @@ using Data.DTOs;
 using Data.Entities;
 using Data.Enums;
 using Data.Responses;
+using Mapper.EmployeeMapper;
 using Microsoft.EntityFrameworkCore;
 using MySqlX.XDevAPI.Common;
 using ServerLibrary.Data;
@@ -62,14 +63,34 @@ namespace ServerLibrary.Services.Implementations
             }
             return employee;
         }
-        public async Task<List<Employee>> GetAllAsync(Partner partner)
+        public async Task<PagedResponse<List<EmployeeDTO>>> GetAllAsync(Partner partner, int pageNumber, int pageSize)
         {
-            //check partner
-            var partnerDetail = await partnerService.FindById(partner.Id);
-            if (partnerDetail == null) return new List<Employee>();
+            if (partner == null)
+            {
+                throw new ArgumentNullException(nameof(partner), "Partner null là không được");
+            }
 
-            var result = await appDbContext.Employees.Where(_ => _.PartnerId == partnerDetail.Id).Include(c => c.Contacts).ToListAsync();
-            return result;
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var query = appDbContext.Employees
+                .Where(e => e.PartnerId == partner.Id)
+                .Include(e => e.Contacts);
+
+            var totalRecords = await query.CountAsync();
+
+            var employees = await query
+                .OrderBy(e => e.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResponse<List<EmployeeDTO>>(
+                data: employees.Select(x => x.ToAllEmployeeDTO()).ToList(),
+                pageNumber: pageNumber,
+                pageSize: pageSize,
+                totalRecords: totalRecords
+            );
         }
 
         public async Task<GeneralResponse> UpdateAsync(Employee employee)

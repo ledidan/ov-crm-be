@@ -8,10 +8,8 @@ namespace Data.Responses
         public int PageSize { get; set; }
         public int TotalPages { get; set; }
         public int TotalRecords { get; set; }
-        public bool Success { get; set; }
-        public string Message { get; set; }
 
-        public PagedResponse(T data, int pageNumber, int pageSize, int totalRecords, bool success, string message)
+        public PagedResponse(T data, int pageNumber, int pageSize, int totalRecords)
         {
             Data = data;
             PageNumber = pageNumber;
@@ -19,8 +17,6 @@ namespace Data.Responses
             TotalRecords = totalRecords;
             // Calculate total pages
             TotalPages = totalRecords > 0 ? (int)Math.Ceiling(totalRecords / (double)pageSize) : 0;
-            Success = success;
-            Message = message;
         }
     }
 }

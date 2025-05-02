@@ -22,6 +22,43 @@ namespace ServerLibrary.Services.Implementations
             _mapper = mapper;
         }
 
+        public async Task<GeneralResponse> BulkAddSupportTicketFromId(List<int> supportTicketIds, int id, Employee employee, Partner partner)
+        {
+            if (supportTicketIds == null || !supportTicketIds.Any())
+                return new GeneralResponse(false, "Danh sách thẻ tư vấn không được để trống!");
+
+            var customerCare = await GetCustomerCareTicketById(id, partner);
+
+            if (customerCare == null)
+                return new GeneralResponse(false, "Không tìm thấy thẻ chăm sóc!");
+
+            var supportTickets = await _appDbContext.SupportTickets
+                .Where(c => supportTicketIds.Contains(c.Id) && c.PartnerId == partner.Id)
+                .ToListAsync();
+
+            if (!supportTickets.Any())
+                return new GeneralResponse(false, "Không tìm thấy thẻ tư vấn!");
+
+            // var existingTicketIds = customerCare..Select(oc => oc.ContactId).ToHashSet();
+            // var newCustomerContacts = contacts
+            //     .Where(c => !existingContactIds.Contains(c.Id))
+            //     .Select(c => new CustomerContacts
+            //     {
+            //         CustomerId = customer.Id,
+            //         ContactId = c.Id,
+            //         PartnerId = partner.Id
+            //     })
+            //     .ToList();
+
+            // if (!newCustomerContacts.Any())
+            //     return new GeneralResponse(false, "Liên hệ đã liên kết với khách hàng !");
+
+            // _appDbContext.CustomerContacts.AddRange(newCustomerContacts);
+            await _appDbContext.SaveChangesAsync();
+
+            return new GeneralResponse(true, "Thêm liên hệ vào thông tin khách hàng thành công!");
+        }
+
         public async Task<DataObjectResponse?> CheckCustomerCareCodeAsync(string code, Employee employee, Partner partner)
         {
             var customerTicketDetail = await GetCustomerTicketByCode(code, partner);
@@ -175,11 +212,42 @@ namespace ServerLibrary.Services.Implementations
             return _mapper.Map<List<ActivityDTO>>(activities);
         }
 
-        public async Task<List<CustomerCareTicketDTO>> GetAllCustomerCareTickets()
+        public async Task<PagedResponse<List<CustomerCareTicketDTO>>> GetAllCustomerCareTickets(Partner partner, int pageNumber, int pageSize)
         {
-            var customerCareTickets = await _appDbContext.CustomerCares.ToListAsync();
+            // Validate input
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10; // Default page size
+
+            // Query with pagination
+            var query = _appDbContext.CustomerCares.AsQueryable();
+            // Optional: Filter by partner if needed
+            if (partner != null)
+            {
+                query = query.Where(cc => cc.PartnerId == partner.Id);
+            }
+            var totalRecords = await query.CountAsync();
+
+            var customerCareTickets = await query
+                .OrderBy(cc => cc.Id) // Optional: Add sorting, adjust as needed
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Map to DTOs
             var customerCareTicketDTOs = _mapper.Map<List<CustomerCareTicketDTO>>(customerCareTickets);
-            return customerCareTicketDTOs;
+
+            // Return paged response
+            return new PagedResponse<List<CustomerCareTicketDTO>>(
+                data: customerCareTicketDTOs,
+                pageNumber: pageNumber,
+                pageSize: pageSize,
+                totalRecords: totalRecords
+            );
+        }
+
+        public Task<List<SupportTicketDTO>> GetAllSupportTicketsByCustomerCareTickets(int id, Partner partner)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<CustomerCareTicketDTO> GetCustomerCareTicketById(int id, Partner partner)
@@ -233,6 +301,12 @@ namespace ServerLibrary.Services.Implementations
                 }
             });
         }
+
+        public Task<GeneralResponse> UnassignSupportTicketFromId(int id, int supportTicketId, Partner partner)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<GeneralResponse> UpdateCustomerCareTicket(int id,
         CustomerCareTicketDTO customerCareTicketDTO, Employee employee, Partner partner)
         {

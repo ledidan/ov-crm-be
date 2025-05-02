@@ -11,6 +11,8 @@ namespace Data.DTOs
         public int Id { get; set; }
         public int ProductId { get; set; } // Khóa ngoại liên kết với Product
 
+        public string? InventoryCode { get; set; }
+
         public string? ProductCode { get; set; } // Mã hàng hóa (Product Code/ID) - Đồng bộ với Product
 
         public string? ProductName { get; set; } // Tên hàng hóa (Product Name) - Đồng bộ với Product

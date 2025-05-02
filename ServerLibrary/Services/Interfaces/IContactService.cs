@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Enums;
 using Data.Responses;
@@ -8,7 +7,7 @@ using Data.Responses;
 namespace ServerLibrary.Services.Interfaces
 {
     public interface IContactService
-    {   
+    {
         Task<DataObjectResponse?> GenerateContactCodeAsync(Partner partner);
         Task<DataObjectResponse?> CheckContactCodeAsync(string code, Employee employee, Partner partner);
 
@@ -16,7 +15,7 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<Contact?> GetByIdAsync(int id, Employee employee, Partner partner);
 
-        Task<List<Contact>> GetAllAsync(Employee employee, Partner partner);
+        Task<PagedResponse<List<ContactDTO>>> GetAllAsync(Employee employee, Partner partner, int pageNumber, int pageSize);
 
         Task<GeneralResponse?> UpdateContactIdAsync(int id, UpdateContactDTO updateContact, Employee employee, Partner partner);
 

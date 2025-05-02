@@ -11,7 +11,9 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<GeneralResponse> CreateAsync(CreateProductDTO product, Employee employee, Partner partner);
 
-        Task<List<ProductDTO>> GetAllAsync(Employee employee, Partner partner);
+        Task<PagedResponse<List<ProductDTO>>> GetAllAsync(Employee employee, Partner partner, int pageNumber, int pageSize);
+
+        Task<PagedResponse<List<ProductDTO>>> GetAllProductsWithInventoryAsync(Employee employee, Partner partner, int pageNumber, int pageSize);
 
         Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateProductDTO product, Employee employee, Partner partner);
 
@@ -19,9 +21,9 @@ namespace ServerLibrary.Services.Interfaces
         Task<GeneralResponse> UpdateAsync(int id, UpdateProductDTO product, Partner partner, Employee employee);
 
 
-        Task<List<OrderDetailDTO>> GetOrdersByProductIdAsync(int productId, Partner partner);
+        Task<PagedResponse<List<OrderDetailDTO>>> GetOrdersByProductIdAsync(int productId, Partner partner, int pageNumber, int pageSize);
 
-        Task<List<InvoiceDetailDTO>> GetInvoicesByProductIdAsync(int productId, Partner partner);
+        Task<PagedResponse<List<InvoiceDetailDTO>>> GetInvoicesByProductIdAsync(int productId, Partner partner, int pageNumber, int pageSize);
         Task<GeneralResponse> RemoveBulkIdsAsync(string ids, Partner partner);
         // Task<GeneralResponse> UpdateSellingPriceAsync(Product product, double sellingPrice);
     }

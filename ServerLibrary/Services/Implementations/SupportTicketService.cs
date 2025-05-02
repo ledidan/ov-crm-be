@@ -177,11 +177,48 @@ namespace ServerLibrary.Services.Implementations
             return _mapper.Map<List<ActivityDTO>>(activities);
         }
 
-        public async Task<List<SupportTicketDTO>> GetAllSupportTickets(Partner partner)
+        public async Task<PagedResponse<List<SupportTicketDTO>>> GetAllSupportTickets(Partner partner, int pageNumber, int pageSize)
         {
-            var supportTickets = await _appDbContext.SupportTickets.Where(s => s.Partner.Id == partner.Id).ToListAsync();
-            var supportTicketDTOs = _mapper.Map<List<SupportTicketDTO>>(supportTickets);
-            return supportTicketDTOs;
+            try
+            {
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                var query = _appDbContext.SupportTickets
+                    .Where(s => s.Partner.Id == partner.Id)
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                var supportTickets = await query
+                    .OrderBy(s => s.Id) // Sort for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                // Map to DTOs
+                var supportTicketDtos = _mapper.Map<List<SupportTicketDTO>>(supportTickets);
+
+                return new PagedResponse<List<SupportTicketDTO>>(
+                    data: supportTicketDtos ?? new List<SupportTicketDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
+            }
+            catch (ArgumentNullException ex)
+            {
+                throw new ArgumentException($"Lỗi tham số đầu vào: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách ticket hỗ trợ thất bại: {ex.Message}", ex);
+            }
         }
 
         public async Task<SupportTicketDTO> GetSupportTicketById(int id, Partner partner)

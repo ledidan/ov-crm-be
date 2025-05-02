@@ -1,5 +1,4 @@
 ﻿using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Responses;
 
@@ -14,7 +13,7 @@ namespace ServerLibrary.Services.Interfaces
         Task<GeneralResponse?> UpdateAsync(int id, CustomerDTO updateCustomer, Employee employee, Partner partner);
 
         Task<GeneralResponse?> UpdateFieldIdAsync(int id, UpdateCustomerDTO updateCustomer, Employee employee, Partner partner);
-        Task<List<Customer?>> GetAllAsync(Employee employee, Partner partner);
+        Task<PagedResponse<List<CustomerDTO?>>> GetAllAsync(Employee employee, Partner partner, int pageNumber, int pageSize);
         Task<GeneralResponse?> DeleteBulkCustomers(string ids, Employee employee, Partner partner);
         Task<OptionalCustomerDTO?> GetCustomerByIdAsync(int id, Employee employee, Partner partner);
 
@@ -33,17 +32,25 @@ namespace ServerLibrary.Services.Interfaces
         Task<GeneralResponse?> UnassignInvoiceFromCustomer(int id, int invoiceId, Partner partner);
 
 
+        Task<GeneralResponse?> UnassignTicketFromCustomer(int id, int ticketId, Partner partner);
+
+        Task<GeneralResponse?> UnassignQuoteFromCustomer(int id, int quoteId, Partner partner);
+
+        Task<GeneralResponse?> UnassignCustomerCareTicketFromCustomer(int id, int customerCareTicketId, Partner partner);
+
         //  ** Bulk Get Customer Relationship
 
         Task<List<ContactDTO>> GetAllContactsByIdAsync(int id, Partner partner);
 
-        Task<List<ContactDTO>> GetAllContactAvailableByCustomer(int id, Partner partner);
-        Task<List<Activity>> GetAllActivitiesByIdAsync(int id, Partner partner);
+        Task<PagedResponse<List<ContactDTO>>> GetAllContactAvailableByCustomer(int id, Partner partner, int pageNumber, int pageSize);
+        Task<PagedResponse<List<ActivityDTO>>> GetAllActivitiesByIdAsync(int id, Partner partner, int pageNumber, int pageSize);
 
-        Task<List<OptionalOrderDTO>> GetAllOrdersByIdAsync(int id, Partner partner);
+        Task<PagedResponse<List<OptionalOrderDTO>>> GetAllOrdersByIdAsync(int id, Partner partner, int pageNumber, int pageSize);
 
-        Task<List<Invoice>> GetAllInvoicesByIdAsync(int id, Partner partner);
+        Task<PagedResponse<List<InvoiceDTO>>> GetAllInvoicesByIdAsync(int id, Partner partner, int pageNumber, int pageSize);
 
-
+        Task<PagedResponse<List<QuoteDTO>>> GetAllQuotesByIdAsync(int id, Partner partner, int pageNumber, int pageSize);
+        Task<PagedResponse<List<SupportTicketDTO>>> GetAllTicketsByIdAsync(int id, Partner partner, int pageNumber, int pageSize);
+        Task<PagedResponse<List<CustomerCareTicketDTO>>> GetAllCustomerCaresByIdAsync(int id, Partner partner, int pageNumber, int pageSize);
     }
 }

@@ -62,17 +62,16 @@ namespace Server.Controllers
 
         [HttpGet("employees")]
         [Authorize]
-        public async Task<IActionResult> GetAllEmployeeAsync()
+        public async Task<IActionResult> GetAllEmployeeAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
-            var employees = await _employeeService.GetAllAsync(partner);
-            if (employees == null || !employees.Any())
+            var employees = await _employeeService.GetAllAsync(partner, pageNumber, pageSize);
+            if (employees == null || !employees.Data.Any())
             {
                 return NotFound("No employees found for the specified PartnerId.");
             }
-            var employeeDTO = employees.Select(e => e.ToAllEmployeeDTO()).ToList();
-            return Ok(employeeDTO);
+            return Ok(employees);
         }
 
         [HttpGet("{id:int}")]

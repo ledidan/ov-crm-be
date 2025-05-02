@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using AutoMapper;
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Enums;
 using Data.Responses;
@@ -258,26 +257,73 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Xoá liên hệ thành công");
         }
 
-        public async Task<List<Contact>> GetAllAsync(Employee employee, Partner partner)
+        public async Task<PagedResponse<List<ContactDTO>>> GetAllAsync(Employee employee, 
+        Partner partner, int pageNumber, int pageSize)
         {
-            var result = await _appDbContext.Contacts
-    .Where(c => c.PartnerId == partner.Id)
-    .ToListAsync();
 
-            if (!IsOwner)
+            if (pageNumber <= 0) pageNumber = 1;
+            if (pageSize <= 0) pageSize = 20; // Default page size
+
+            try
             {
-                var employeeData = await _employeeService.FindByIdAsync(employee.Id);
-                if (employeeData == null)
+                // Base query
+                var query = _appDbContext.Contacts
+                    .AsNoTracking()
+                    .Where(c => c.PartnerId == partner.Id);
+
+                // Apply ownership filter
+                if (!IsOwner)
                 {
-                    throw new ArgumentException($"Employee with ID {employee.Id} does not exist.");
+                    // Kiểm tra employee tồn tại
+                    var employeeExists = await _appDbContext.Employees
+                        .AnyAsync(e => e.Id == employee.Id);
+                    if (!employeeExists)
+                    {
+                        throw new ArgumentException($"Employee với ID {employee.Id} không tồn tại.");
+                    }
+
+                    query = query
+                        .Include(c => c.ContactEmployees)
+                        .Where(c => c.ContactEmployees.Any(ce => ce.EmployeeId == employee.Id));
                 }
-                result = await _appDbContext.Contacts
-                    .Include(c => c.ContactEmployees)
-                    .Where(c => c.PartnerId == partner.Id
-                                && c.ContactEmployees.Any(ce => ce.EmployeeId == employee.Id))
+
+                // Get total count before pagination
+                int totalRecords = await query.CountAsync();
+
+                if (totalRecords == 0)
+                {
+                    return new PagedResponse<List<ContactDTO>>(
+                        data: new List<ContactDTO>(),
+                        pageNumber: pageNumber,
+                        pageSize: pageSize,
+                        totalRecords: 0
+                    );
+                }
+
+                // Apply pagination
+                var pagedContacts = await query
+                    .OrderBy(c => c.Id)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
                     .ToListAsync();
+
+                // Create and return paged response
+                return new PagedResponse<List<ContactDTO>>(
+                    data: pagedContacts.Select(contact =>
+                    {
+                        var dto = _mapper.Map<ContactDTO>(contact);
+                        return dto;
+                    }).ToList(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
             }
-            return result.Any() ? result : new List<Contact>();
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi không xác định khi lấy danh sách liên hệ: {ex.Message}", ex);
+            }
+
         }
 
         public async Task<GeneralResponse?> DeleteBulkContacts(string ids, Employee employee, Partner partner)

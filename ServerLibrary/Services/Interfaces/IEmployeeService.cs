@@ -14,7 +14,7 @@ namespace ServerLibrary.Services.Interfaces
         Task<bool> EmployeeExists(int id, int partnerId);
 
         Task<GeneralResponse> UpdateAsync(Employee employee);
-        Task<List<Employee>> GetAllAsync(Partner partner);
+        Task<PagedResponse<List<EmployeeDTO>>> GetAllAsync(Partner partner, int pageNumber, int pageSize);
 
         Task<Employee?> FindByClaim(ClaimsIdentity? claimsIdentity);
 

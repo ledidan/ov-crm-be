@@ -10,7 +10,7 @@ namespace ServerLibrary.Services.Interfaces
          Task<DataObjectResponse?> GenerateInvoiceCodeAsync(Partner partner);
         Task<DataObjectResponse?> CheckInvoiceCodeAsync(string code, Employee employee, Partner partner);
 
-        Task<List<InvoiceDTO>> GetAllInvoicesAsync(Employee employee, Partner partner);
+        Task<PagedResponse<List<InvoiceDTO>>> GetAllInvoicesAsync(Employee employee, Partner partner, int pageNumber, int pageSize);
 
         Task<InvoiceDTO?> GetInvoiceByIdAsync(int id, Employee employee, Partner partner);
 

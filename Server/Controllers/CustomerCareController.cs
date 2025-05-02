@@ -25,9 +25,11 @@ namespace Server.Controllers
         }
 
         [HttpGet("customer-care-tickets")]
-        public async Task<IActionResult> GetAllCustomerCareTickets()
+        public async Task<IActionResult> GetAllCustomerCareTickets([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
-            var customerCareTickets = await _customerCareService.GetAllCustomerCareTickets();
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var customerCareTickets = await _customerCareService.GetAllCustomerCareTickets(partner, pageNumber, pageSize);
             return Ok(customerCareTickets);
         }
 
@@ -108,7 +110,7 @@ namespace Server.Controllers
             {
                 return BadRequest(result.Message);
             }
-            return Ok(result); 
+            return Ok(result);
         }
 
 

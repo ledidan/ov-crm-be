@@ -40,6 +40,8 @@ namespace Data.DTOs
 
         public int? OpportunityID { get; set; }
 
+        public string? OpportunityNo { get; set; }
+
         public string? Address { get; set; }
 
         public string? AccountTel { get; set; }

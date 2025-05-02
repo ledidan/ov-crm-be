@@ -7,6 +7,7 @@ namespace Data.DTOs
     public class CreateInventoryDTO
     {
         public int ProductId { get; set; } // Khóa ngoại liên kết với Product
+        public string? InventoryCode { get; set; } // Mã tồn kho (Inventory Code)
 
         public string? ProductCode { get; set; } // Mã hàng hóa (Product Code/ID) - Đồng bộ với Product
 

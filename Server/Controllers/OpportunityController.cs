@@ -17,12 +17,12 @@ namespace Server.Controllers
         IEmployeeService employeeService) : ControllerBase
     {
         [HttpGet("opportunities")]
-        public async Task<IActionResult> GetAllOpportunities()
+        public async Task<IActionResult> GetAllOpportunities([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);
             var employee = await employeeService.FindByClaim(identity);
-            var result = await opportunityService.GetAllOpportunitiesAsync(employee, partner);
+            var result = await opportunityService.GetAllOpportunitiesAsync(employee, partner, pageNumber, pageSize);
             return Ok(result);
         }
 

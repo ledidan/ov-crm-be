@@ -1,5 +1,4 @@
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.MongoModels;
 using Data.Responses;
@@ -11,7 +10,7 @@ namespace ServerLibrary.Services.Interfaces
         Task<DataObjectResponse?> GenerateQuoteCodeAsync(Partner partner);
         Task<DataObjectResponse?> CheckQuoteCodeAsync(string code, Employee employee, Partner partner);
 
-        Task<List<OptionalQuoteDTO>> GetAllQuotesAsync(Employee employee, Partner partner);
+        Task<PagedResponse<List<OptionalQuoteDTO>>> GetAllQuotesAsync(Employee employee, Partner partner, int pageNumber, int pageSize);
 
         Task<QuoteDTO?> GetQuoteByIdAsync(int id, Employee employee, Partner partner);
 

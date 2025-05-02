@@ -1,5 +1,4 @@
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -26,8 +25,7 @@ namespace Server.Controllers
 
 
         [HttpGet("activities")]
-
-        public async Task<IActionResult> GetAllActivities()
+        public async Task<IActionResult> GetAllActivities([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -35,9 +33,9 @@ namespace Server.Controllers
                 return BadRequest("Model is empty");
             try
             {
-                var result = await _activityService.GetAllActivityAsync(partner);
-                var resultDTO = result.ToList();
-                return Ok(resultDTO);
+                var result = await _activityService.GetAllActivityAsync(partner, pageNumber, pageSize);
+                // var resultDTO = result.ToList();
+                return Ok(result);
             }
             catch (ArgumentException ex)
             {

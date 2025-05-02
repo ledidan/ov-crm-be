@@ -1,5 +1,4 @@
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.MongoModels;
 using Data.Responses;
@@ -11,7 +10,7 @@ namespace ServerLibrary.Services.Interfaces
         Task<DataObjectResponse?> GenerateOpportunityCodeAsync(Partner partner);
         Task<DataObjectResponse?> CheckOpportunityCodeAsync(string code, Employee employee, Partner partner);
 
-        Task<List<OptionalOpportunityDTO>> GetAllOpportunitiesAsync(Employee employee, Partner partner);
+        Task<PagedResponse<List<OptionalOpportunityDTO>>> GetAllOpportunitiesAsync(Employee employee, Partner partner, int pageNumber, int pageSize);
 
         Task<OpportunityDTO?> GetOpportunityByIdAsync(int id, Employee employee, Partner partner);
 

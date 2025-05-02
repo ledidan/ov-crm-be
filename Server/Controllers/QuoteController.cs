@@ -17,12 +17,12 @@ namespace Server.Controllers
         IEmployeeService employeeService) : ControllerBase
     {
         [HttpGet("quotes")]
-        public async Task<IActionResult> GetAllQuotes()
+        public async Task<IActionResult> GetAllQuotes([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);
             var employee = await employeeService.FindByClaim(identity);
-            var result = await quoteService.GetAllQuotesAsync(employee, partner);
+            var result = await quoteService.GetAllQuotesAsync(employee, partner, pageNumber, pageSize);
             return Ok(result);
         }
         [HttpGet("{id}")]

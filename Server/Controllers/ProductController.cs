@@ -18,15 +18,15 @@ namespace Server.Controllers
     {
         [HttpGet("products")]
         [Authorize(Roles = "User,Admin")]
-        public async Task<List<ProductDTO>> GetProductsAsync()
+        public async Task<IActionResult> GetProductsAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);
             var employee = await employeeService.FindByClaim(identity);
-            if (partner == null) return new List<ProductDTO>();
+            if (partner == null) return NotFound("Không tìm thấy đối tác");
 
-            var result = await productService.GetAllAsync(employee, partner);
-            return result;
+            var result = await productService.GetAllAsync(employee, partner, pageNumber, pageSize);
+            return Ok(result);
         }
 
         [HttpPost("create")]
@@ -120,24 +120,24 @@ namespace Server.Controllers
         // }
 
         [HttpGet("{id:int}/orders")]
-        public async Task<IActionResult> GetOrdersByProductIdAsync(int id)
+        public async Task<IActionResult> GetOrdersByProductIdAsync(int id, [FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);
             if (partner == null) return BadRequest("Không tìm thấy đối tác");
 
-            var result = await productService.GetOrdersByProductIdAsync(id, partner);
+            var result = await productService.GetOrdersByProductIdAsync(id, partner, pageNumber, pageSize);
             return Ok(result);
         }
 
         [HttpGet("{id:int}/invoices")]
-        public async Task<IActionResult> GetInvoicesByProductIdAsync(int id)
+        public async Task<IActionResult> GetInvoicesByProductIdAsync(int id , [FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);
             if (partner == null) return BadRequest("Không tìm thấy đối tác");
 
-            var result = await productService.GetInvoicesByProductIdAsync(id, partner);
+            var result = await productService.GetInvoicesByProductIdAsync(id, partner, pageNumber, pageSize);
             return Ok(result);
         }
 
@@ -176,5 +176,18 @@ namespace Server.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("productsInventory")]
+        public async Task<IActionResult> GetProductsInventoryAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            var employee = await employeeService.FindByClaim(identity);
+            if (partner == null) return NotFound("Không tìm thấy đối tác");
+
+            var result = await productService.GetAllProductsWithInventoryAsync(employee, partner, pageNumber, pageSize);
+            return Ok(result);
+        }
+
     }
 }

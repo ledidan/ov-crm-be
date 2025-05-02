@@ -3,8 +3,8 @@
 namespace Data.DTOs
 {
     public class ProductDTO
-    {   
-        public int? Id { get; set;}
+    {
+        public int? Id { get; set; }
         public string? ProductCode { get; set; }
         public string? ProductGroupID { get; set; }
         public string? ProductGroupName { get; set; }
@@ -51,6 +51,5 @@ namespace Data.DTOs
         public int? OwnerID { get; set; }
         public string? OwnerIDName { get; set; }
         public int? ProductCategoryId { get; set; }
-
     }
 }

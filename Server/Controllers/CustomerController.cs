@@ -1,5 +1,4 @@
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Enums;
 using Mapper.ContactMapper;
@@ -41,7 +40,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("customers")]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -50,7 +49,7 @@ namespace Server.Controllers
                 return BadRequest("Model is empty");
             try
             {
-                var result = await _customerService.GetAllAsync(employee, partner);
+                var result = await _customerService.GetAllAsync(employee, partner, pageNumber, pageSize);
                 return Ok(result);
             }
             catch (Exception)
@@ -186,7 +185,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("{id:int}/contacts-available")]
-        public async Task<IActionResult> GetAllContactsAvailableByIdAsync(int id)
+        public async Task<IActionResult> GetAllContactsAvailableByIdAsync(int id, [FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
 
@@ -198,7 +197,7 @@ namespace Server.Controllers
             if (partner == null)
                 return NotFound("Không tìm thấy tổ chức!");
 
-            var response = await _customerService.GetAllContactAvailableByCustomer(id, partner);
+            var response = await _customerService.GetAllContactAvailableByCustomer(id, partner, pageNumber, pageSize);
             if (response == null)
                 return BadRequest(response);
 
@@ -207,7 +206,7 @@ namespace Server.Controllers
 
         [HttpGet("{id:int}/activities")]
 
-        public async Task<IActionResult> GetAllActivitiesByIdAsync(int id)
+        public async Task<IActionResult> GetAllActivitiesByIdAsync(int id, [FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
 
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -220,7 +219,7 @@ namespace Server.Controllers
             if (partner == null)
                 return NotFound("Không tìm thấy tổ chức!");
 
-            var response = await _customerService.GetAllActivitiesByIdAsync(id, partner);
+            var response = await _customerService.GetAllActivitiesByIdAsync(id, partner, pageNumber, pageSize);
 
             if (response == null)
                 return BadRequest(response);
@@ -229,7 +228,7 @@ namespace Server.Controllers
         }
         [HttpGet("{id:int}/orders")]
 
-        public async Task<IActionResult> GetAllOrdersByIdAsync(int id)
+        public async Task<IActionResult> GetAllOrdersByIdAsync(int id, [FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
 
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -242,7 +241,7 @@ namespace Server.Controllers
             if (partner == null)
                 return NotFound("Không tìm thấy tổ chức!");
 
-            var response = await _customerService.GetAllOrdersByIdAsync(id, partner);
+            var response = await _customerService.GetAllOrdersByIdAsync(id, partner, pageNumber, pageSize);
 
             if (response == null)
                 return BadRequest(response);
@@ -251,7 +250,7 @@ namespace Server.Controllers
         }
         [HttpGet("{id:int}/invoices")]
 
-        public async Task<IActionResult> GetAllInvoicesByIdAsync(int id)
+        public async Task<IActionResult> GetAllInvoicesByIdAsync(int id, [FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
 
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -264,7 +263,7 @@ namespace Server.Controllers
             if (partner == null)
                 return NotFound("Không tìm thấy tổ chức!");
 
-            var response = await _customerService.GetAllInvoicesByIdAsync(id, partner);
+            var response = await _customerService.GetAllInvoicesByIdAsync(id, partner, pageNumber, pageSize);
 
             if (response == null)
                 return BadRequest(response);
@@ -340,7 +339,7 @@ namespace Server.Controllers
         }
 
 
-         [HttpPost("check-code")]
+        [HttpPost("check-code")]
         public async Task<IActionResult> CheckCustomerCode([FromBody] string code)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -373,6 +372,101 @@ namespace Server.Controllers
                 return BadRequest(result.Message);
 
             return Ok(result);
+        }
+        [HttpGet("{id:int}/quotes")]
+        public async Task<IActionResult> GetAllQuotesByCustomer(int id, [FromQuery] int pageNumber, [FromQuery] int pageSize)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var response = await _customerService.GetAllQuotesByIdAsync(id, partner, pageNumber, pageSize);
+            if (response == null)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+
+        [HttpGet("{id:int}/supportTickets")]
+        public async Task<IActionResult> GetAllSupportTicketsByCustomer(int id, [FromQuery] int pageNumber, [FromQuery] int pageSize)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var response = await _customerService.GetAllTicketsByIdAsync(id, partner, pageNumber, pageSize);
+            if (response == null)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+
+        [HttpGet("{id:int}/customerCareTickets")]
+        public async Task<IActionResult> GetAllCustomerCareTicketsByCustomer(int id, [FromQuery] int pageNumber, [FromQuery] int pageSize)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var response = await _customerService.GetAllCustomerCaresByIdAsync(id, partner, pageNumber, pageSize);
+            if (response == null)
+                return BadRequest(response);
+
+            return Ok(response);
+        }
+
+        [HttpPut("{id:int}/quote/unassign")]
+        public async Task<IActionResult> UnassignQuoteFromCustomer(int id, [FromBody] int quoteId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+                return BadRequest("Danh sách liên hệ không được để trống!");
+
+            var response = await _customerService.UnassignQuoteFromCustomer(id, quoteId, partner);
+            if (response.Flag == false)
+                return BadRequest(response.Message);
+
+            return Ok(response);
+        }
+
+        [HttpPut("{id:int}/supportTicket/unassign")]
+        public async Task<IActionResult> UnassignSupportTicketFromCustomer(int id, [FromBody] int ticketId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+                return BadRequest("Danh sách liên hệ không được để trống!");
+
+            var response = await _customerService.UnassignTicketFromCustomer(id, ticketId, partner);
+            if (response.Flag == false)
+                return BadRequest(response.Message);
+
+            return Ok(response);
+        }
+
+        [HttpPut("{id:int}/customerCareTicket/unassign")]
+        public async Task<IActionResult> UnassignCustomerCareTicketFromCustomer(int id, [FromBody] int customerCareTicketId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (id == null)
+                return BadRequest("Danh sách liên hệ không được để trống!");
+
+            var response = await _customerService.UnassignCustomerCareTicketFromCustomer(id, customerCareTicketId, partner);
+            if (response.Flag == false)
+                return BadRequest(response.Message);
+
+            return Ok(response);
         }
     }
 }

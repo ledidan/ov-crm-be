@@ -1,5 +1,4 @@
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Enums;
 using Mapper.ContactMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -42,7 +41,7 @@ namespace Server.Controllers
         }
         [Authorize]
         [HttpGet("contacts")]
-        public async Task<IActionResult> GetAllContactAsync()
+        public async Task<IActionResult> GetAllContactAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -51,9 +50,9 @@ namespace Server.Controllers
                 return BadRequest("Model is empty");
             try
             {
-                var result = await _contactService.GetAllAsync(employee, partner);
-                var resultDTO = result.Select(x => x.ToContactDTO()).ToList();
-                return Ok(resultDTO);
+                var result = await _contactService.GetAllAsync(employee, partner, pageNumber, pageSize);
+                // var resultDTO = result.Select(x => x.ToContactDTO()).ToList();
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -115,8 +114,8 @@ namespace Server.Controllers
         [Authorize]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateContactAsync([FromRoute] int id,
-    [FromBody] UpdateContactDTO newUpdate
-)
+        [FromBody] UpdateContactDTO newUpdate
+        )
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -127,7 +126,8 @@ namespace Server.Controllers
             }
 
             var contact = await _contactService.UpdateContactIdAsync(id, newUpdate, employee, partner);
-            if(!contact.Flag) {
+            if (!contact.Flag)
+            {
                 return BadRequest(contact.Message);
             }
             return Ok(contact);

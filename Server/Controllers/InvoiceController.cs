@@ -27,12 +27,12 @@ namespace Server.Controllers
         }
 
         [HttpGet("invoices")]
-        public async Task<IActionResult> GetAllInvoiceAsync()
+        public async Task<IActionResult> GetAllInvoiceAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
             var employee = await _employeeService.FindByClaim(identity);
-            var result = await _invoiceService.GetAllInvoicesAsync(employee, partner);
+            var result = await _invoiceService.GetAllInvoicesAsync(employee, partner, pageNumber, pageSize);
 
             return Ok(result);
         }

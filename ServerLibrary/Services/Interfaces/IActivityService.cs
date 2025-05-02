@@ -7,7 +7,7 @@ namespace ServerLibrary.Services.Interfaces
     public interface IActivityService
     {
         // ** Handle for main Activity first
-        Task<List<Activity>> GetAllActivityAsync(Partner partner);
+        Task<PagedResponse<List<ActivityDTO>>> GetAllActivityAsync(Partner partner, int pageNumber, int pageSize);
         Task<ActivityResponseDTO?> GetByIdAsync(int id, Partner partner);
         Task<ActivityDTO> CreateActivityAsync(CreateActivityDTO dto, string ModuleType, Partner partner);
         Task<GeneralResponse?> UpdateActivityIdAsync(int id, UpdateActivityDTO dto, Partner partner);
@@ -17,15 +17,15 @@ namespace ServerLibrary.Services.Interfaces
         // ______   
 
         // ** Appointment
-        Task<GeneralResponse> CreateAppointmentAsync(CreateActivityDTO activityDto, CreateAppointmentDTO appointmentDto, Partner partner);
+        Task<DataObjectResponse> CreateAppointmentAsync(CreateActivityDTO activityDto, CreateAppointmentDTO appointmentDto, Partner partner);
         Task<GeneralResponse?> UpdateAppointmentByIdAsync(int activityId, UpdateActivityDTO activityDto, UpdateAppointmentDTO updateActivityDTO, Partner partner);
 
         // ** Mission
-        Task<GeneralResponse> CreateMissionAsync(CreateActivityDTO activityDto, CreateMissionDTO mission, Partner partner);
+        Task<DataObjectResponse> CreateMissionAsync(CreateActivityDTO activityDto, CreateMissionDTO mission, Partner partner);
         Task<GeneralResponse?> UpdateMissionByIdAsync(int activityId, UpdateActivityDTO activityDto, UpdateMissionDTO updateActivityDTO, Partner partner);
 
         // ** Call
-        Task<GeneralResponse> CreateCallAsync(CreateActivityDTO activityDto, CreateCallDTO callDTO, Partner partner);
+        Task<DataObjectResponse> CreateCallAsync(CreateActivityDTO activityDto, CreateCallDTO callDTO, Partner partner);
 
         Task<GeneralResponse?> UpdateCallByIdAsync(int activityId, UpdateActivityDTO activityDto, UpdateCallDTO updateActivityDTO, Partner partner);
 

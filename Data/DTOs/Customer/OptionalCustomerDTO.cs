@@ -67,6 +67,7 @@ namespace Data.DTOs
         public string? EmployeeCode { get; set; }
         public DateTime? CustomerSinceDate { get; set; }
         public ICollection<CustomerContacts> CustomerContacts { get; set; } = new List<CustomerContacts>();
+        public ICollection<CustomerEmployees> CustomerEmployees { get; set; } = new List<CustomerEmployees>();
 
     }
 }

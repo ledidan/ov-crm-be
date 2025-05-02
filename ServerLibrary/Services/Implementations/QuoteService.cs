@@ -1,6 +1,5 @@
 using AutoMapper;
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Enums;
 using Data.MongoModels;
@@ -275,104 +274,51 @@ namespace ServerLibrary.Services.Implementations
             return activitiesDtos;
         }
 
-        public async Task<List<OptionalQuoteDTO>> GetAllQuotesAsync(Employee employee, Partner partner)
+        public async Task<PagedResponse<List<OptionalQuoteDTO>>> GetAllQuotesAsync(Employee employee, Partner partner, int pageNumber, int pageSize)
         {
-            if (employee == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(employee),
-                    "Vui lòng không để trống ID Employee."
-                );
-            }
-            if (partner == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(partner),
-                    "Vui lòng không để trống đối tác."
-                );
-            }
             try
             {
-                IQueryable<Quote> query = _appContext
-                    .Quotes.Where(o => o.Partner == partner)
-                    .AsNoTracking();
-                if (!IsOwner)
+                if (employee == null)
                 {
-                    query = query
-                        .Where(o =>
-                            o.OwnerTaskExecuteId == employee.Id || o.PartnerId == partner.Id);
+                    throw new ArgumentNullException(nameof(employee), "Vui lòng không để trống ID Employee.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
                 }
 
-                var quotes = await query.ToListAsync();
-                if (quotes.Count == 0)
-                    return new List<OptionalQuoteDTO>();
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
 
-                var quoteIds = quotes.Select(o => o.Id).Where(id => id != null).ToList();
+                var query = _appDbContext.Quotes
+                    .Where(o => o.Partner.Id == partner.Id)
+                    .AsNoTracking();
 
-                // // 🔹 Truy vấn QuoteDetails từ MongoDB
-                // var quoteDetailsList = await _quotesDetailsCollection
-                //     .Find(d => quoteIds.Contains(d.QuoteId.Value))
-                //     .ToListAsync();
-
-                // var quoteDetailsDict = quoteDetailsList
-                //     .GroupBy(d => d.QuoteId)
-                //     .ToDictionary(g => g.Key, g => g.ToList());
-
-                // // 🔹 Ánh xạ sang DTO
-                // var quoteDtos = quotes
-                //     .Select(quote =>
-                //     {
-                //         var dto = _mapper.Map<QuoteDTO>(quote);
-                //         dto.QuoteDetails = quoteDetailsDict.TryGetValue(quote.Id, out var details)
-                //             ? details
-                //                 .Select(d => new QuoteDetailsDTO
-                //                 {
-                //                     Id = d.Id,
-                //                     QuoteId = d.QuoteId,
-                //                     PartnerId = d.PartnerId,
-                //                     ProductId = d.ProductId,
-                //                     CustomerId = d.CustomerId,
-                //                     CustomerName = d.CustomerName,
-                //                     PartnerName = d.PartnerName,
-                //                     QuoteNo = d.QuoteNo,
-                //                     ProductCode = d.ProductCode,
-                //                     ProductName = d.ProductName,
-                //                     TaxID = d.TaxID,
-                //                     TaxAmount = d.TaxAmount,
-                //                     Avatar = d.Avatar,
-                //                     TaxIDText = d.TaxIDText,
-                //                     DiscountRate = d.DiscountRate,
-                //                     DiscountAmount = d.DiscountAmount,
-                //                     UnitPrice = d.UnitPrice,
-                //                     QuantityInstock = d.QuantityInstock,
-                //                     Total = d.Total,
-                //                     UsageUnitID = d.UsageUnitID,
-                //                     UsageUnitIDText = d.UsageUnitIDText,
-                //                     Quantity = d.Quantity,
-                //                     AmountSummary = d.AmountSummary,
-                //                     CreatedAt = d.CreatedAt,
-                //                     UpdatedAt = d.UpdatedAt,
-                //                 })
-                //                 .ToList()
-                //             : new List<QuoteDetailsDTO>();
-
-                //         return dto;
-                //     })
-                //     .ToList();
-
-                return quotes.Select(quote =>
+                if (!IsOwner)
                 {
-                    var dto = _mapper.Map<OptionalQuoteDTO>(quote);
-                    return dto;
-                }).ToList();
-            }
-            catch (ArgumentNullException ex)
-            {
-                throw new ArgumentException($"Lỗi tham số đầu vào: {ex.Message}", ex);
+                    query = query.Where(o => o.OwnerTaskExecuteId == employee.Id || o.PartnerId == partner.Id);
+                }
+                // Get total records
+                var totalRecords = await query.CountAsync();
+
+                var quotes = await query
+                    .OrderBy(o => o.Id) // Add sorting for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var quoteDtos = _mapper.Map<List<OptionalQuoteDTO>>(quotes);
+
+                return new PagedResponse<List<OptionalQuoteDTO>>(
+                    data: quoteDtos ?? new List<OptionalQuoteDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
             }
             catch (Exception ex)
             {
-                throw new Exception($"Lỗi khi lấy thông tin đơn hàng: {ex.Message}", ex);
+                throw new Exception($"Lấy danh sách báo giá thất bại: {ex.Message}", ex);
             }
         }
 

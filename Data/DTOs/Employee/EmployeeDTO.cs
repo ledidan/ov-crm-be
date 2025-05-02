@@ -1,5 +1,4 @@
 
-using Data.DTOs.Contact;
 using Data.Enums;
 
 namespace Data.DTOs

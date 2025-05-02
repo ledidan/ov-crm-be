@@ -13,11 +13,12 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<DataObjectResponse?> GenerateCustomerCareCodeAsync(Partner partner);
         Task<DataObjectResponse?> CheckCustomerCareCodeAsync(string code, Employee employee, Partner partner);
-        Task<List<CustomerCareTicketDTO>> GetAllCustomerCareTickets();
+        Task<PagedResponse<List<CustomerCareTicketDTO>>> GetAllCustomerCareTickets(Partner partner, int pageNumber, int pageSize);
 
         Task<CustomerCareTicketDTO> GetCustomerCareTicketById(int id, Partner partner);
 
         Task<GeneralResponse> CreateCustomerCareTicket(CustomerCareTicketDTO customerCareTicketDTO, Employee employee, Partner partner);
+
 
         Task<GeneralResponse> UpdateCustomerCareTicket(int id, CustomerCareTicketDTO customerCareTicketDTO, Employee employee, Partner partner);
 
@@ -28,10 +29,16 @@ namespace ServerLibrary.Services.Interfaces
     Employee employee,
     Partner partner
 );
+        Task<GeneralResponse> BulkAddSupportTicketFromId(List<int> supportTicketIds, int id, Employee employee, Partner partner);
         Task<GeneralResponse> UnassignActivityFromId(int id, int activityId, Partner partner);
+
+        Task<GeneralResponse> UnassignSupportTicketFromId(int id, int supportTicketId, Partner partner);
 
         //  ** Activity
         Task<List<ActivityDTO>> GetAllActivitiesByCustomerCareTickets(int id, Partner partner);
         Task<List<ActivityDTO>> GetAllActivitiesDoneByCustomerCareTickets(int id, Partner partner);
+
+        Task<List<SupportTicketDTO>> GetAllSupportTicketsByCustomerCareTickets(int id, Partner partner);
+
     }
 }

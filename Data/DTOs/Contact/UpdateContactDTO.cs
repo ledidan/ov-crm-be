@@ -1,7 +1,7 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace Data.DTOs.Contact
+namespace Data.DTOs
 {
     public class UpdateContactDTO
     {   

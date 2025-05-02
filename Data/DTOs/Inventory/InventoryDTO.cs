@@ -9,6 +9,7 @@ namespace Data.DTOs
     {
         public int Id { get; set; } // Khóa chính cho Inventory
 
+          public string? InventoryCode { get; set; } 
         public int ProductId { get; set; } // Khóa ngoại liên kết với Product
 
         public string? ProductCode { get; set; } // Mã hàng hóa (Product Code/ID) - Đồng bộ với Product
@@ -42,7 +43,7 @@ namespace Data.DTOs
         public string? Brand { get; set; } // Thương hiệu (Brand)
         public int? ReturnedQuantity { get; set; } // Số lượng trả hàng (Returned Quantity)
         public string? SupplierName { get; set; } // Tên nhà cung cấp (Supplier Name)
-
+    
         public int PartnerId { get; set; }
         public int? SupplierId { get; set; }
 

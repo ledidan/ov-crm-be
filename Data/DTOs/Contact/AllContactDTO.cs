@@ -1,16 +1,15 @@
 
-using System.ComponentModel.DataAnnotations;
+using Data.Entities;
 
 namespace Data.DTOs
 {
-    public class CreateContact
+    public class AllContactDTO
     {
-
+        public int Id { get; set; }
         public string? ContactCode { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Tên liên hệ không được để trống !")]
         public string? ContactName { get; set; }
-        [Required(ErrorMessage = "Tên không được để trống !")]
         public string? FirstName { get; set; } = string.Empty;
+        public string? FullName { get; set; }
         public string? LastName { get; set; }
         public string? Email { get; set; }
         public string? OfficeTel { get; set; }
@@ -39,12 +38,13 @@ namespace Data.DTOs
         public bool? IsPublic { get; set; } = false;
         public bool? EmailOptOut { get; set; } = false;
         public bool? PhoneOptOut { get; set; } = false;
-        public int PartnerId { get; set; }
-        public int? EmployeeId { get; set; }
-        public string? EmployeeName { get; set; }
         public int? OwnerID { get; set; }
         public string? OwnerIDName { get; set; }
         public int? CustomerId { get; set; }
         public string? CustomerName { get; set; }
+        public int? PartnerId { get; set; }
+        public string? PartnerName { get; set; }
+        public int? EmployeeId { get; set; }
+        public string? EmployeeName { get; set; }
     }
 }

@@ -156,16 +156,49 @@ namespace ServerLibrary.Services.Implementations
             );
         }
 
-        public async Task<List<ProductDTO>> GetAllAsync(Employee employee, Partner partner)
+        public async Task<PagedResponse<List<ProductDTO>>> GetAllAsync(Employee employee, Partner partner, int pageNumber, int pageSize)
         {
-            if (partner == null)
-                return new List<ProductDTO>();
+            try
+            {
+                if (employee == null)
+                {
+                    throw new ArgumentNullException(nameof(employee), "Vui lòng không để trống ID Employee.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
 
-            var products = await appDbContext
-                .Products.Where(p => p.Partner.Id == partner.Id)
-                .ToListAsync();
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
 
-            return _mapper.Map<List<ProductDTO>>(products);
+                // Build query
+                var query = appDbContext.Products
+                    .Where(p => p.Partner.Id == partner.Id)
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                var products = await query
+                    .OrderBy(p => p.Id) // Add sorting for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                // Map to DTOs
+                var productDtos = _mapper.Map<List<ProductDTO>>(products);
+
+                return new PagedResponse<List<ProductDTO>>(
+                    data: productDtos ?? new List<ProductDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách sản phẩm thất bại: {ex.Message}", ex);
+            }
         }
 
         public async Task<GeneralResponse> UpdateAsync(
@@ -397,94 +430,148 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, $"{products.Count} product(s) marked as deleted");
         }
 
-        public async Task<List<OrderDetailDTO>> GetOrdersByProductIdAsync(
+        public async Task<PagedResponse<List<OrderDetailDTO>>> GetOrdersByProductIdAsync(
             int productId,
-            Partner partner
+            Partner partner,
+            int pageNumber,
+            int pageSize
         )
         {
-            var orderIds = await appDbContext
-                .Orders.Where(o => o.Partner.Id == partner.Id)
-                .Select(o => o.Id)
-                .ToListAsync();
-
-            if (!orderIds.Any())
-                return new List<OrderDetailDTO>();
-
-            var orderDetails = await _ordersDetailsCollection
-                .Find(od => orderIds.Contains(od.OrderId ?? 0) && od.ProductId == productId)
-                .ToListAsync();
-
-            // Step 3: Convert to DTOs
-            return orderDetails
-                .Select(od => new OrderDetailDTO
+            try
+            {
+                // Check inputs
+                if (productId <= 0)
                 {
-                    Id = od.Id,
-                    OrderId = od.OrderId ?? 0,
-                    ProductId = od.ProductId,
-                    ProductName = od.ProductName,
-                    SaleOrderNo = od.SaleOrderNo,
-                    PartnerName = od.PartnerName,
-                    CustomerId = od.CustomerId,
-                    CustomerName = od.CustomerName,
-                    Quantity = od.Quantity,
-                    UnitPrice = od.UnitPrice,
-                    Total = od.Total,
-                    AmountSummary = od.AmountSummary,
-                    DiscountAmount = od.DiscountAmount,
-                    DiscountRate = od.DiscountRate,
-                    TaxAmount = od.TaxAmount,
-                    TaxID = od.TaxID,
-                    TaxIDText = od.TaxIDText,
-                    UsageUnitID = od.UsageUnitID,
-                    CreatedAt = od.CreatedAt,
-                    UpdatedAt = od.UpdatedAt,
-                })
-                .ToList();
+                    throw new ArgumentException("ID sản phẩm phải lớn hơn 0.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
+
+                // Validate pagination params
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                // Step 1: Get order IDs from SQL
+                var orderIds = await appDbContext.Orders
+                    .AsNoTracking()
+                    .Where(o => o.Partner.Id == partner.Id)
+                    .Select(o => o.Id)
+                    .ToListAsync();
+
+                // If no orders, return empty paged response
+                if (!orderIds.Any())
+                {
+                    return new PagedResponse<List<OrderDetailDTO>>(
+                        data: new List<OrderDetailDTO>(),
+                        pageNumber: pageNumber,
+                        pageSize: pageSize,
+                        totalRecords: 0
+                    );
+                }
+                // var orderIdsString = orderIds.Select(id => id.ToString()).ToList();
+
+                // Step 2: Query OrderDetails from MongoDB
+                var filter = Builders<OrderDetails>.Filter
+                    .And(
+                        Builders<OrderDetails>.Filter.In(nameof(OrderDetails.OrderId), orderIds),
+                        Builders<OrderDetails>.Filter.Eq(od => od.ProductId, productId)
+                    );
+
+                var totalRecords = await _ordersDetailsCollection
+                    .CountDocumentsAsync(filter);
+
+                var orderDetails = await _ordersDetailsCollection
+                    .Find(filter)
+                    .SortBy(od => od.Id) // ObjectId tự động được MongoDB hiểu
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Limit(pageSize)
+                    .ToListAsync();
+
+                // Step 3: Map to DTOs
+                var orderDetailDtos = _mapper.Map<List<OrderDetailDTO>>(orderDetails);
+
+                // Step 4: Return paged response
+                return new PagedResponse<List<OrderDetailDTO>>(
+                    data: orderDetailDtos ?? new List<OrderDetailDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: (int)totalRecords
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách chi tiết đơn hàng thất bại: {ex.Message}", ex);
+            }
         }
 
-        public async Task<List<InvoiceDetailDTO>> GetInvoicesByProductIdAsync(
+        public async Task<PagedResponse<List<InvoiceDetailDTO>>> GetInvoicesByProductIdAsync(
             int productId,
-            Partner partner
+            Partner partner,
+            int pageNumber,
+            int pageSize
         )
         {
-            var invoiceIds = await appDbContext
-                .Invoices.Where(o => o.Partner.Id == partner.Id)
-                .Select(o => o.Id)
-                .ToListAsync();
-
-            if (!invoiceIds.Any())
-                return new List<InvoiceDetailDTO>();
-
-            var invoiceDetails = await _invoicesDetailsCollection
-                .Find(od => invoiceIds.Contains(od.InvoiceId ?? 0) && od.ProductId == productId)
-                .ToListAsync();
-
-            return invoiceDetails
-                .Select(od => new InvoiceDetailDTO
+            try
+            {
+                if (productId <= 0)
                 {
-                    Id = od.Id,
-                    InvoiceId = od.InvoiceId ?? 0,
-                    InvoiceRequestName = od.InvoiceRequestName,
-                    ProductId = od.ProductId,
-                    ProductName = od.ProductName,
-                    SaleOrderNo = od.SaleOrderNo,
-                    PartnerName = od.PartnerName,
-                    CustomerId = od.CustomerId,
-                    CustomerName = od.CustomerName,
-                    Quantity = od.Quantity,
-                    UnitPrice = od.UnitPrice,
-                    Total = od.Total,
-                    AmountSummary = od.AmountSummary,
-                    DiscountAmount = od.DiscountAmount,
-                    DiscountRate = od.DiscountRate,
-                    TaxAmount = od.TaxAmount,
-                    TaxID = od.TaxID,
-                    TaxIDText = od.TaxIDText,
-                    UsageUnitID = od.UsageUnitID,
-                    CreatedAt = od.CreatedAt,
-                    UpdatedAt = od.UpdatedAt,
-                })
-                .ToList();
+                    throw new ArgumentException("ID sản phẩm phải lớn hơn 0.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                var invoiceIds = await appDbContext.Invoices
+                    .AsNoTracking()
+                    .Where(o => o.Partner.Id == partner.Id)
+                    .Select(o => o.Id)
+                    .ToListAsync();
+
+                if (!invoiceIds.Any())
+                {
+                    return new PagedResponse<List<InvoiceDetailDTO>>(
+                        data: new List<InvoiceDetailDTO>(),
+                        pageNumber: pageNumber,
+                        pageSize: pageSize,
+                        totalRecords: 0
+                    );
+                }
+
+                var filter = Builders<InvoiceDetails>.Filter
+                    .And(
+                        Builders<InvoiceDetails>.Filter.In(nameof(InvoiceDetails.InvoiceId), invoiceIds),
+                        Builders<InvoiceDetails>.Filter.Eq(od => od.ProductId, productId)
+                    );
+
+                var totalRecords = await _invoicesDetailsCollection
+                    .CountDocumentsAsync(filter);
+
+                var invoiceDetails = await _invoicesDetailsCollection
+                    .Find(filter)
+                    .SortBy(od => od.Id) // Giả sử Id là string
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Limit(pageSize)
+                    .ToListAsync();
+
+                var invoiceDetailDtos = _mapper.Map<List<InvoiceDetailDTO>>(invoiceDetails);
+
+                return new PagedResponse<List<InvoiceDetailDTO>>(
+                    data: invoiceDetailDtos ?? new List<InvoiceDetailDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: (int)totalRecords
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách chi tiết hóa đơn thất bại: {ex.Message}", ex);
+            }
         }
 
 
@@ -530,6 +617,60 @@ namespace ServerLibrary.Services.Implementations
                     productDetail.ProductName,
                     productDetail.Id
                 });
+            }
+        }
+
+        public async Task<PagedResponse<List<ProductDTO>>> GetAllProductsWithInventoryAsync(Employee employee, Partner partner, int pageNumber, int pageSize)
+        {
+            try
+            {
+                if (employee == null)
+                {
+                    throw new ArgumentNullException(nameof(employee), "Vui lòng không để trống ID Employee.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                var query = appDbContext.Products
+                    .Where(p => p.Partner.Id == partner.Id)
+                    .Include(p => p.ProductInventories.Where(i => i.Partner.Id == partner.Id)) // Lấy ProductInventory của Partner
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                var products = await query
+                    .OrderBy(p => p.Id)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var productDtos = new List<ProductDTO>();
+                foreach (var product in products)
+                {
+                    var inventory = product.ProductInventories.FirstOrDefault();
+
+                    var productDto = _mapper.Map<ProductDTO>(product);
+                    productDto.QuantityInstock = inventory != null ? inventory.QuantityInStock : 0;
+                    productDto.InventoryItemID = inventory != null ? inventory.InventoryCode : "";
+
+                    productDtos.Add(productDto);
+                }
+
+                return new PagedResponse<List<ProductDTO>>(
+                    data: productDtos,
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách sản phẩm thất bại: {ex.Message}", ex);
             }
         }
     }

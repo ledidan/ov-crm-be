@@ -10,5 +10,8 @@ public class ProductCategoryProfile : Profile
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
         CreateMap<ProductCategory, ProductCategoryDTO>();
+
+
+        CreateMap<ProductCategory, AllProductCategoryDTO>();
     }
 }

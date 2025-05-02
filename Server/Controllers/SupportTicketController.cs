@@ -23,11 +23,11 @@ namespace Server.Controllers
             _employeeService = employeeService;
         }
         [HttpGet("support-tickets")]
-        public async Task<IActionResult> GetAllSupportTickets()
+        public async Task<IActionResult> GetAllSupportTickets([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
-            var supportTickets = await _supportTicketService.GetAllSupportTickets(partner);
+            var supportTickets = await _supportTicketService.GetAllSupportTickets(partner, pageNumber, pageSize);
             return Ok(supportTickets);
         }
 

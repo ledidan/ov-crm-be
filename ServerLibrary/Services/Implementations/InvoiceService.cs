@@ -343,68 +343,62 @@ namespace ServerLibrary.Services.Implementations
             });
         }
 
-        public async Task<List<InvoiceDTO>> GetAllInvoicesAsync(Employee employee, Partner partner)
+        public async Task<PagedResponse<List<InvoiceDTO>>> GetAllInvoicesAsync(Employee employee, Partner partner, int pageNumber, int pageSize)
         {
             try
             {
+                // Check null inputs
                 if (employee == null)
                 {
-                    throw new ArgumentNullException(nameof(employee), "Employee cannot be null.");
+                    throw new ArgumentNullException(nameof(employee), "Employee không được bỏ trống");
                 }
-                var invoices = await _appContext.Invoices
-                      .Where(o =>
-                          o.Partner == partner && o.OwnerId == employee.Id ||
-                          o.InvoiceEmployees.Any(oe => oe.EmployeeId == employee.Id))
-                          .Include(oce => oce.InvoiceEmployees)
-                      .ToListAsync();
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Partner không được bỏ trống");
+                }
+
+                // Validate pagination params
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10; // Default page size
+
+                // Build query for invoices
+                var query = _appContext.Invoices
+                    .Where(o =>
+                        o.Partner.Id == partner.Id && o.OwnerId == employee.Id ||
+                        o.InvoiceEmployees.Any(oe => oe.EmployeeId == employee.Id))
+                    .Include(o => o.InvoiceEmployees);
+
+                // Get total records
+                var totalRecords = await query.CountAsync();
+
+                // Apply pagination
+                var invoices = await query
+                    .OrderBy(o => o.Id) // Add sorting for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
 
                 if (!invoices.Any())
                 {
-                    return new List<InvoiceDTO>();
+                    return new PagedResponse<List<InvoiceDTO>>(
+                        data: new List<InvoiceDTO>(),
+                        pageNumber: pageNumber,
+                        pageSize: pageSize,
+                        totalRecords: 0
+                    );
                 }
-                var invoiceIds = invoices.Select(o => o.Id.ToString()).ToList();
-                var orderDetailsDict = (await _invoicesDetailsCollection
-                    .Find(d => invoiceIds.Contains(d.InvoiceId.ToString()))
-                    .ToListAsync())
-                    .GroupBy(d => d.InvoiceId)
-                    .ToDictionary(g => g.Key, g => g.ToList());
+                var invoiceDtos = _mapper.Map<List<InvoiceDTO>>(invoices);
 
-                var invoiceDtos = invoices.Select(invoice =>
-                {
-                    var dto = _mapper.Map<InvoiceDTO>(invoice);
-                    dto.InvoiceDetails = orderDetailsDict.ContainsKey(invoice.Id)
-                        ? orderDetailsDict[invoice.Id].Select(d => new InvoiceDetailDTO
-                        {
-                            Id = d.Id,
-                            OrderId = d.OrderId,
-                            InvoiceId = d.InvoiceId,
-                            PartnerId = d.PartnerId,
-                            ProductId = d.ProductId,
-                            ProductCode = d.ProductCode,
-                            ProductName = d.ProductName,
-                            TaxID = d.TaxID,
-                            TaxAmount = d.TaxAmount,
-                            TaxIDText = d.TaxIDText,
-                            DiscountRate = d.DiscountRate,
-                            DiscountAmount = d.DiscountAmount,
-                            UnitPrice = d.UnitPrice,
-                            QuantityInstock = d.QuantityInstock,
-                            Total = d.Total,
-                            UsageUnitID = d.UsageUnitID,
-                            UsageUnitIDText = d.UsageUnitIDText,
-                            Quantity = d.Quantity,
-                            AmountSummary = d.AmountSummary
-                        }).ToList()
-                        : new List<InvoiceDetailDTO>();
-
-                    return dto;
-                }).ToList();
-
-                return invoiceDtos;
+                return new PagedResponse<List<InvoiceDTO>>(
+                    data: invoiceDtos ?? new List<InvoiceDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
             }
             catch (Exception ex)
             {
-                throw new Exception($"Failed to retrieve invoices: {ex.Message}");
+                throw new Exception($"Lấy danh sách invoices fail: {ex.Message}", ex);
             }
         }
 
@@ -427,7 +421,7 @@ namespace ServerLibrary.Services.Implementations
 
                 if (invoice == null)
                 {
-                    throw new KeyNotFoundException($"Order with ID {id} not found for this employee.");
+                    throw new KeyNotFoundException($"Không tìm thấy hóa đơn có ID {id} cho nhân viên này.");
                 }
 
                 var invoiceDetails = await _invoicesDetailsCollection
@@ -462,7 +456,7 @@ namespace ServerLibrary.Services.Implementations
             }
             catch (Exception ex)
             {
-                throw new Exception($"Failed to retrieve order: {ex.Message}");
+                throw new Exception($"Failed to retrieve invoice: {ex.Message}");
             }
         }
 

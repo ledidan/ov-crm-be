@@ -5,11 +5,11 @@ namespace Mapper.CustomerMapper
 {
     public static class CustomerMapper
     {
-        public static CustomerDTO ToCustomerDTO(this Customer customerModel)
+        public static OptionalCustomerDTO ToCustomerDTO(this Customer customerModel)
         {
-            return new CustomerDTO
+            return new OptionalCustomerDTO
             {
-                Id = customerModel.Id, 
+                Id = customerModel.Id,
                 AccountName = customerModel.AccountName,
                 AccountNumber = customerModel.AccountNumber,
                 AccountReferredID = customerModel.AccountReferredID,
@@ -51,10 +51,20 @@ namespace Mapper.CustomerMapper
                 IsOldCustomer = customerModel.IsOldCustomer,
                 IsDistributor = customerModel.IsDistributor,
                 OwnerIDName = customerModel.OwnerIDName,
-                EmployeeCode = customerModel.Employee.EmployeeCode,
-                EmployeeName = customerModel.Employee.FullName,
-                PartnerId = customerModel.Partner.Id,
-                PartnerName = customerModel.Partner.Name
+                EmployeeCode = customerModel.Employee?.EmployeeCode,
+                EmployeeName = customerModel.Employee?.FullName,
+                CustomerEmployees = customerModel.CustomerEmployees?.Select(e => new CustomerEmployees
+                {
+                    CustomerId = e.CustomerId,
+                    EmployeeId = e.EmployeeId,
+                    PartnerId = e.PartnerId
+                }).ToList() ?? new List<CustomerEmployees>(),
+                CustomerContacts = customerModel.CustomerContacts?.Select(e => new CustomerContacts
+                {
+                    CustomerId = e.CustomerId,
+                    ContactId = e.ContactId,
+                    PartnerId = e.PartnerId
+                }).ToList() ?? new List<CustomerContacts>()
             };
         }
         public static Customer ToCustomerFromUpdateDTO(this UpdateCustomerDTO customerModel)
@@ -75,6 +85,8 @@ namespace Mapper.CustomerMapper
                 BillingStreet = customerModel.BillingStreet,
                 BillingWardID = customerModel.BillingWardID,
                 BudgetCode = customerModel.BudgetCode,
+                Debt = customerModel.Debt,
+                DebtLimit = customerModel.DebtLimit,
                 RevenueDetail = customerModel.RevenueDetail,
                 BusinessTypeID = customerModel.BusinessTypeID,
                 CelebrateDate = customerModel.CelebrateDate,

@@ -25,7 +25,7 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<OrderStats> GetOrderStatsForAllOrders(Employee employee, Partner partner)
         {
-            var allOrders = await _orderService.GetAllOrdersAsync(employee, partner);
+            var allOrders = await _orderService.GetOrdersStatsCalculation(employee, partner);
 
             if (allOrders == null || !allOrders.Any())
             {

@@ -9,7 +9,7 @@ using ServerLibrary.Services.Interfaces;
 namespace Server.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/[controller]")] 
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _ordersService;
@@ -50,12 +50,12 @@ namespace Server.Controllers
         }
 
         [HttpGet("orders")]
-        public async Task<IActionResult> GetAllOrders()
+        public async Task<IActionResult> GetAllOrders([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
             var employee = await _employeeService.FindByClaim(identity);
-            var result = await _ordersService.GetAllOrdersAsync(employee, partner);
+            var result = await _ordersService.GetAllOrdersAsync(employee, partner, pageNumber, pageSize);
 
             return Ok(result);
         }
@@ -232,7 +232,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("{id:int}/contacts-available")]
-        public async Task<IActionResult> GetAllContactsAvailable(int id)
+        public async Task<IActionResult> GetAllContactsAvailable(int id, [FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             if (id == null)
             {
@@ -247,7 +247,9 @@ namespace Server.Controllers
             var response = await _ordersService.GetAllContactsAvailableByIdAsync(
                 id,
                 employee,
-                partner
+                partner,
+                pageNumber,
+                pageSize
             );
             return Ok(response);
         }

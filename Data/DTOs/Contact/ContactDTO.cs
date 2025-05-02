@@ -1,5 +1,5 @@
 
-namespace Data.DTOs.Contact
+namespace Data.DTOs
 {
     public class ContactDTO
     {
@@ -44,7 +44,6 @@ namespace Data.DTOs.Contact
         public string? PartnerName { get; set; }
         public int? EmployeeId { get; set; }
         public string? EmployeeName { get; set; }
-        // public List<EmployeeDTO> Employees { get; set; }
-        // public List<int> EmployeeIds { get; set; } = new List<int>();
+
     }
 }

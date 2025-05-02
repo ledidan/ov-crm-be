@@ -66,36 +66,55 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Tạo loại hàng hoá thành công");
         }
 
-        public async Task<List<AllProductCategoryDTO>> GetAllAsync(
+        public async Task<PagedResponse<List<AllProductCategoryDTO>>> GetAllAsync(
             Employee employee,
-            Partner partner
+            Partner partner,
+            int pageNumber,
+            int pageSize
         )
         {
-            var categories = await appDbContext
-                .ProductCategories.Where(pc =>
-                    pc.Partner.Id == partner.Id
-                )
-                .ToListAsync();
-
-            List<AllProductCategoryDTO> flattenedCategories = new List<AllProductCategoryDTO>();
-
-            foreach (var category in categories)
+            try
             {
-                var categoryDTO = new AllProductCategoryDTO
+                // Check inputs
+                if (employee == null)
                 {
-                    Id = category.Id,
-                    ProductCategoryCode = category.ProductCategoryCode,
-                    ProductCategoryName = category.ProductCategoryName,
-                    ParentProductCategoryID = category.ParentProductCategoryID,
-                    InActive = category.InActive,
-                    Description = category.Description,
-                    Avatar = category.Avatar,
-                };
+                    throw new ArgumentNullException(nameof(employee), "Vui lòng không để trống ID Employee.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
 
-                flattenedCategories.Add(categoryDTO);
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                // Build query
+                var query = appDbContext.ProductCategories
+                    .Where(pc => pc.Partner.Id == partner.Id)
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                // Apply paginationx
+                var categories = await query
+                    .OrderBy(pc => pc.ProductCategoryName) // Sort for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var flattenedCategories = mapper.Map<List<AllProductCategoryDTO>>(categories);
+
+                return new PagedResponse<List<AllProductCategoryDTO>>(
+                    data: flattenedCategories ?? new List<AllProductCategoryDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
             }
-
-            return flattenedCategories;
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách danh mục sản phẩm thất bại: {ex.Message}", ex);
+            }
         }
 
         public async Task<GeneralResponse> UpdateAsync(

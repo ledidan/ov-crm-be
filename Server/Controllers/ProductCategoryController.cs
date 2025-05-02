@@ -39,7 +39,7 @@ namespace Server.Controllers
 
         [HttpGet("productCategories")]
         [Authorize(Roles = "User,Admin")]
-        public async Task<List<AllProductCategoryDTO>> GetProductCategoriesAsync()
+        public async Task<IActionResult> GetProductCategoriesAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
 
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -48,10 +48,10 @@ namespace Server.Controllers
 
             if (partner == null || employee == null)
             {
-                return new List<AllProductCategoryDTO>();
+                return BadRequest("Invalid partner or employee.");
             }
-            var result = await _productCategoryService.GetAllAsync(employee, partner);
-            return result;
+            var result = await _productCategoryService.GetAllAsync(employee, partner, pageNumber, pageSize);
+            return Ok(result);
         }
 
         [HttpGet("{id:int}")]

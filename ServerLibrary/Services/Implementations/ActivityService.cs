@@ -1,6 +1,5 @@
 using AutoMapper;
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Enums;
 using Data.Responses;
@@ -100,23 +99,56 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Xóa hoạt động thành công");
         }
 
-        public async Task<List<Activity>> GetAllActivityAsync(Partner partner)
+        public async Task<PagedResponse<List<ActivityDTO>>> GetAllActivityAsync(Partner partner, int pageNumber, int pageSize)
         {
             if (partner == null)
             {
                 throw new ArgumentNullException("Partner không được null.");
             }
+
+            // Validate pagination parameters
+            if (pageNumber <= 0) pageNumber = 1;
+            if (pageSize <= 0) pageSize = 20; // Default page size
+
             try
             {
-                var activities = await _appDbContext.Activities
-             .Include(a => a.Appointment)
-             .Include(a => a.Mission)
-             .Include(a => a.Call)
-             .Where(a => a.PartnerId == partner.Id &&
-                         (a.Appointment != null || a.Mission != null || a.Call != null))
-             .ToListAsync();
+                var query = _appDbContext.Activities
+                     .AsNoTracking() // Good practice for read operations
+                     .Include(a => a.Appointment)
+                     .Include(a => a.Mission)
+                     .Include(a => a.Call)
+                     .Where(a => a.PartnerId == partner.Id &&
+                                 (a.Appointment != null || a.Mission != null || a.Call != null));
 
-                return activities.Any() ? activities : new List<Activity>();
+                // Get total count before pagination
+                int totalRecords = await query.CountAsync();
+
+                if (totalRecords == 0)
+                {
+                    return new PagedResponse<List<ActivityDTO>>(
+                        data: new List<ActivityDTO>(),
+                        pageNumber: pageNumber,
+                        pageSize: pageSize,
+                        totalRecords: 0
+                    );
+                }
+                // Apply pagination
+                var pagedActivities = await query
+                    .OrderByDescending(a => a.Id)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                // Map entities to DTOs (using ActivityDTO for consistency)
+                var activityResponseDtos = pagedActivities.Select(activity =>
+                {
+                    var activityDTO = _mapper.Map<ActivityDTO>(activity);
+                    return activityDTO;
+                }).ToList();
+
+                // Create and return the paged response 
+                return new PagedResponse<List<ActivityDTO>>(activityResponseDtos, pageNumber, pageSize, totalRecords);
+
 
             }
             catch (Exception ex)
@@ -308,7 +340,7 @@ namespace ServerLibrary.Services.Implementations
             return new ActivityDTO { Id = activity.Id, ActivityName = activity.ActivityName };
         }
 
-        public async Task<GeneralResponse> CreateAppointmentAsync(CreateActivityDTO activityDto, CreateAppointmentDTO appointmentDto, Partner partner)
+        public async Task<DataObjectResponse> CreateAppointmentAsync(CreateActivityDTO activityDto, CreateAppointmentDTO appointmentDto, Partner partner)
         {
             var ModuleType = ActivityModuleType.Appointment.ToString();
             var createdActivity = await CreateActivityAsync(activityDto, ModuleType, partner);
@@ -322,10 +354,10 @@ namespace ServerLibrary.Services.Implementations
             await _appDbContext.Appointments.AddAsync(appointment);
             await _appDbContext.SaveChangesAsync();
 
-            return new GeneralResponse(true, "Tạo lịch hẹn thành công");
+            return new DataObjectResponse(true, "Tạo lịch hẹn thành công", createdActivity.Id);
         }
 
-        public async Task<GeneralResponse> CreateMissionAsync(CreateActivityDTO activityDto, CreateMissionDTO mission, Partner partner)
+        public async Task<DataObjectResponse> CreateMissionAsync(CreateActivityDTO activityDto, CreateMissionDTO mission, Partner partner)
         {
             var ModuleType = ActivityModuleType.Mission.ToString();
             var createdActivity = await CreateActivityAsync(activityDto, ModuleType, partner);
@@ -339,10 +371,10 @@ namespace ServerLibrary.Services.Implementations
             await _appDbContext.Missions.AddAsync(Mission);
             await _appDbContext.SaveChangesAsync();
 
-            return new GeneralResponse(true, "Tạo nhiệm vụ thành công");
+            return new DataObjectResponse(true, "Tạo nhiệm vụ thành công", createdActivity.Id);
         }
 
-        public async Task<GeneralResponse> CreateCallAsync(CreateActivityDTO activityDto, CreateCallDTO callDTO, Partner partner)
+        public async Task<DataObjectResponse> CreateCallAsync(CreateActivityDTO activityDto, CreateCallDTO callDTO, Partner partner)
         {
             var ModuleType = ActivityModuleType.Call.ToString();
             var createdActivity = await CreateActivityAsync(activityDto, ModuleType, partner);
@@ -367,9 +399,9 @@ namespace ServerLibrary.Services.Implementations
             await _appDbContext.Calls.AddAsync(Call);
             await _appDbContext.SaveChangesAsync();
 
-            return new GeneralResponse(true, "Tạo cuộc gọi thành công");
+            return new DataObjectResponse(true, "Tạo cuộc gọi thành công", createdActivity.Id);
         }
 
-      
+
     }
 }

@@ -16,17 +16,21 @@ namespace Server.Controllers
 
         private readonly IPartnerService _partnerService;
 
+        private readonly IEmployeeService _employeeService;
+
         public InventoryController(
             IProductInventoryService inventoryService,
-            IPartnerService partnerService
+            IPartnerService partnerService,
+            IEmployeeService employeeService
         )
         {
             _inventoryService = inventoryService;
             _partnerService = partnerService;
+            _employeeService = employeeService;
         }
         // GET: api/inventory
         [HttpGet]
-        public async Task<IActionResult> GetAllInventories()
+        public async Task<IActionResult> GetAllInventories([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
@@ -36,7 +40,7 @@ namespace Server.Controllers
                 return BadRequest("Đối tác không tồn tại");
             }
 
-            var response = await _inventoryService.GetAllInventoriesAsync(partner);
+            var response = await _inventoryService.GetAllInventoriesAsync(partner, pageNumber, pageSize);
             return Ok(response);
         }
 
@@ -134,6 +138,52 @@ namespace Server.Controllers
                 return NotFound(response);
             }
             return Ok(response);
+        }
+        [HttpPost("receive")]
+        public async Task<IActionResult> ReceiveStock([FromBody] ReceiveStockDto stockDto)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var (Flag, Message) = await _inventoryService.ReceiveStockAsync(stockDto.ProductId, stockDto.Quantity, partner);
+            if (!Flag)
+                return BadRequest(Message);
+
+            return Ok(new { Message = $"Nhập {stockDto.Quantity} cái cho sản phẩm {stockDto.ProductId} thành công" });
+        }
+
+        [HttpPost("check-code")]
+        public async Task<IActionResult> CheckInventoryCode([FromBody] string code)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await _inventoryService.CheckInventoryCodeAsync(code, employee, partner);
+
+            if (!result.Flag)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("generate-code")]
+        public async Task<IActionResult> GenerateInventoryCode()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await _inventoryService.GenerateInventoryCodeAsync(partner);
+
+            if (!result.Flag)
+                return BadRequest(result.Message);
+
+            return Ok(result);
         }
     }
 }

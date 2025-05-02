@@ -57,6 +57,9 @@ namespace Data.MongoModels
         [BsonElement("Quantity")]
         public int Quantity { get; set; }
 
+        [BsonElement("InventoryItemID")]
+        public string? InventoryItemID { get; set; }
+
         [BsonElement("Total")]
         public decimal? Total { get; set; }
 

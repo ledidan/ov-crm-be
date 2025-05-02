@@ -16,19 +16,33 @@ namespace ServerLibrary.Helpers
         {
             _dbContext = dbContext;
         }
-        public async Task<string> GenerateNextCodeAsync<T>(string prefix, Expression<Func<T, string>> codeSelector,  Expression<Func<T, bool>> filter) where T : class
+        public async Task<string> GenerateNextCodeAsync<T>(string prefix, Expression<Func<T, string>> codeSelector, Expression<Func<T, bool>> filter) where T : class
         {
             var dbSet = _dbContext.Set<T>();
-            
-            var latestEntity = await dbSet.Where(filter)
-        .OrderByDescending(codeSelector)
-        .FirstOrDefaultAsync();
+            var parameter = codeSelector.Parameters[0]; // Lấy parameter của codeSelector (thường là 'x')
+            var codeProperty = codeSelector.Body; // Lấy phần body (ví dụ: x => x.ProductCode)
+
+            var notNullExpression = Expression.NotEqual(codeProperty, Expression.Constant(null));
+
+            var startsWithMethod = typeof(string).GetMethod("StartsWith", new[] { typeof(string) });
+            var startsWithExpression = Expression.Call(codeProperty, startsWithMethod, Expression.Constant(prefix));
+
+            // Kết hợp: code != null && code.StartsWith(prefix)
+            var combinedExpression = Expression.AndAlso(notNullExpression, startsWithExpression);
+
+            var whereExpression = Expression.Lambda<Func<T, bool>>(combinedExpression, parameter);
+
+            var latestEntity = await dbSet
+                .Where(filter)
+                .Where(whereExpression)
+                .OrderByDescending(codeSelector)
+                .FirstOrDefaultAsync();
 
             if (latestEntity == null)
             {
                 return $"{prefix}0000001"; // Start from 0000001 if no records exist
             }
-
+    
             // Extract the code value dynamically
             var propertyInfo = (codeSelector.Body as MemberExpression)?.Member as PropertyInfo;
             if (propertyInfo == null)

@@ -1,5 +1,4 @@
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.MongoModels;
 using Data.Responses;
@@ -12,8 +11,8 @@ namespace ServerLibrary.Services.Interfaces
         Task<DataObjectResponse?> GenerateOrderCodeAsync(Partner partner);
         Task<DataObjectResponse?> CheckOrderCodeAsync(string code, Employee employee, Partner partner);
 
-        Task<List<OrderDTO>> GetAllOrdersAsync(Employee employee, Partner partner);
-
+        Task<PagedResponse<List<OrderDTO>>> GetAllOrdersAsync(Employee employee, Partner partner, int pageNumber, int pageSize);
+        Task<List<OrderDTO>> GetOrdersStatsCalculation(Employee employee, Partner partner);
         Task<OrderDTO?> GetOrderByIdAsync(int id, Employee employee, Partner partner);
 
         Task<GeneralResponse?> CreateOrderAsync(
@@ -46,7 +45,7 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<GeneralResponse?> BulkAddContactsIntoOrder(
             List<int> ContactIds,
-            int OrderId,
+            int id,
             Employee employee,
             Partner Partner
         );
@@ -57,10 +56,12 @@ namespace ServerLibrary.Services.Interfaces
             Partner partner
         );
 
-        Task<List<ContactDTO>> GetAllContactsAvailableByIdAsync(
+        Task<PagedResponse<List<ContactDTO>>> GetAllContactsAvailableByIdAsync(
             int id,
             Employee employee,
-            Partner partner
+            Partner partner,
+            int pageNumber,
+            int pageSize
         );
 
         Task<List<ContactDTO>> GetAllContactsLinkedIdAsync(

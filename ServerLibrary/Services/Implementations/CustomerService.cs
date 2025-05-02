@@ -1,10 +1,10 @@
 ﻿using System.Runtime.ConstrainedExecution;
 using AutoMapper;
 using Data.DTOs;
-using Data.DTOs.Contact;
 using Data.Entities;
 using Data.Enums;
 using Data.Responses;
+using Mapper.CustomerMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
@@ -246,79 +246,159 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Customers deleted successfully");
         }
 
-        public async Task<List<Activity>> GetAllActivitiesByIdAsync(int id, Partner partner)
+        public async Task<PagedResponse<List<ActivityDTO>>> GetAllActivitiesByIdAsync(int id, Partner partner, int pageNumber, int pageSize)
         {
-            if (id == null)
+            try
             {
-                throw new ArgumentException("ID Khách hàng không được để trống");
-            }
-
-            if (partner == null)
-            {
-                throw new ArgumentException("Thông tin tổ chức không được bỏ trống");
-            }
-
-            var result = await _appDbContext.Activities
-            .Where(c => c.CustomerId == id && partner.Id == partner.Id)
-            .ToListAsync();
-
-            if (result == null)
-            {
-                return new List<Activity>();
-            }
-            return result;
-        }
-
-        public async Task<List<Customer?>> GetAllAsync(Employee employee, Partner partner)
-        {
-            var result = await _appDbContext.Customers
-   .Where(c => c.PartnerId == partner.Id)
-   .ToListAsync();
-            if (!IsOwner)
-            {
-
-                var employeeData = await _employeeService.FindByIdAsync(employee.Id);
-                if (employeeData == null)
+                if (id <= 0)
                 {
-                    throw new ArgumentException($"Employee with ID {employee.Id} does not exist.");
+                    throw new ArgumentException("ID khách hàng phải lớn hơn 0.");
                 }
-                result = await _appDbContext.Customers
-          .Include(c => c.CustomerEmployees)
-          .Where(c => c.PartnerId == partner.Id
-                      && c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id))
-          .ToListAsync();
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
 
-                return result.Any() ? result : new List<Customer>();
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                // Build query
+                var query = _appDbContext.Activities
+                    .Where(c => c.CustomerId == id && c.PartnerId == partner.Id)
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                var activities = await query
+                    .OrderBy(c => c.CreatedDate) // Sort for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var activityDtos = _mapper.Map<List<ActivityDTO>>(activities);
+
+                return new PagedResponse<List<ActivityDTO>>(
+                    data: activityDtos ?? new List<ActivityDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
             }
-            return result.Any() ? result : new List<Customer>();
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách hoạt động thất bại: {ex.Message}", ex);
+            }
         }
 
-        public async Task<List<ContactDTO>> GetAllContactAvailableByCustomer(int id, Partner partner)
+        public async Task<PagedResponse<List<CustomerDTO>>> GetAllAsync(Employee employee,
+         Partner partner, int pageNumber, int pageSize)
         {
-            if (id == null)
-            {
-                throw new ArgumentException("ID khách hàng không được để trống !");
-            }
-            if (partner == null)
-            {
-                throw new ArgumentException("Thông tin tổ chức không được bỏ trống");
-            }
+            if (pageNumber <= 0) pageNumber = 1;
+            if (pageSize <= 0) pageSize = 20; // Default page size
 
-            var result = await _appDbContext.Contacts
-         .Where(c => !c.CustomerContacts.Any(cc => cc.CustomerId == id && cc.PartnerId == partner.Id))
-         .Select(c => new ContactDTO
-         {
-             Id = c.Id,
-             ContactCode = c.ContactCode,
-             ContactName = c.ContactName,
-             FullName = $"{c.LastName} {c.FirstName}",
-             SalutationID = c.SalutationID,
-             OfficeEmail = c.OfficeEmail,
-             TitleID = c.TitleID,
-             Mobile = c.Mobile,
-             Email = c.Email,
-         }).ToListAsync();
-            return result;
+            try
+            {
+                // Base query
+                var query = _appDbContext.Customers
+                    .AsNoTracking()
+                    .Where(c => c.PartnerId == partner.Id);
+
+                // Apply ownership filter
+                // if (!IsOwner)
+                // {
+                //     // Kiểm tra employee tồn tại
+                //     var employeeExists = await _appDbContext.Employees
+                //         .AnyAsync(e => e.Id == employee.Id);
+                //     if (!employeeExists)
+                //     {
+                //         throw new ArgumentException($"Employee với ID {employee.Id} không tồn tại.");
+                //     }
+
+                query = query
+                    .Include(c => c.CustomerEmployees)
+                    .Where(c => c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id));
+                // }
+
+                // Get total count before pagination
+                int totalRecords = await query.CountAsync();
+
+                // Return empty response if no data
+                if (totalRecords == 0)
+                {
+                    return new PagedResponse<List<CustomerDTO>>(
+                        data: new List<CustomerDTO>(),
+                        pageNumber: pageNumber,
+                        pageSize: pageSize,
+                        totalRecords: 0
+                    );
+                }
+                var pagedCustomers = await query
+                    .OrderBy(c => c.Id) // Default sort, có thể thêm sortBy nếu cần
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var customerDtos = _mapper.Map<List<CustomerDTO>>(pagedCustomers);
+
+                return new PagedResponse<List<CustomerDTO>>(
+                    data: customerDtos.Select(customer =>
+                    {
+                        var dto = _mapper.Map<CustomerDTO>(customer);
+                        return dto;
+                    }).ToList(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi không xác định khi lấy danh sách khách hàng: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<PagedResponse<List<ContactDTO>>> GetAllContactAvailableByCustomer(int id, Partner partner, int pageNumber, int pageSize)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    throw new ArgumentException("ID khách hàng phải lớn hơn 0.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10; // Default page size
+
+                // Build query
+                var query = _appDbContext.Contacts
+                    .Where(c => !c.CustomerContacts.Any(cc => cc.CustomerId == id && cc.PartnerId == partner.Id))
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                var contacts = await query
+                    .OrderBy(c => c.Id) // Add sorting for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var contactDtos = _mapper.Map<List<ContactDTO>>(contacts);
+
+                return new PagedResponse<List<ContactDTO>>(
+                    data: contactDtos ?? new List<ContactDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách contacts thất bại: {ex.Message}", ex);
+            }
         }
 
         public async Task<List<ContactDTO>> GetAllContactsByIdAsync(int id, Partner partner)
@@ -349,69 +429,116 @@ namespace ServerLibrary.Services.Implementations
             return result;
         }
 
-        public async Task<List<Invoice>> GetAllInvoicesByIdAsync(int id, Partner partner)
+        public async Task<PagedResponse<List<InvoiceDTO>>> GetAllInvoicesByIdAsync(int id, Partner partner, int pageNumber, int pageSize)
         {
-            if (id == null)
+            try
             {
-                throw new ArgumentException("ID khách hàng không được để trống !");
+                // Check inputs
+                if (id <= 0)
+                {
+                    throw new ArgumentException("ID khách hàng phải lớn hơn 0.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                // Build query
+                var query = _appDbContext.Invoices
+                    .Where(o => o.CustomerId == id && o.Partner.Id == partner.Id)
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                var invoices = await query
+                    .OrderBy(o => o.Id) // Sort for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var invoiceDtos = _mapper.Map<List<InvoiceDTO>>(invoices);
+
+                return new PagedResponse<List<InvoiceDTO>>(
+                    data: invoiceDtos ?? new List<InvoiceDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
             }
-            if (partner == null)
+            catch (ArgumentException ex)
             {
-                throw new ArgumentException("Thông tin tổ chức không được bỏ trống");
+                throw new ArgumentException($"Lỗi tham số đầu vào: {ex.Message}", ex);
             }
-
-            var result = await _appDbContext.Invoices
-          .Where(o => o.CustomerId == id && o.Partner.Id == partner.Id)
-          .ToListAsync();
-
-
-            if (result == null) return new List<Invoice>();
-            return result;
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách hóa đơn thất bại: {ex.Message}", ex);
+            }
         }
 
-        public async Task<List<OptionalOrderDTO>> GetAllOrdersByIdAsync(int id, Partner partner)
+        public async Task<PagedResponse<List<OptionalOrderDTO>>> GetAllOrdersByIdAsync(int id, Partner partner, int pageNumber, int pageSize)
         {
-            if (id == null)
+            try
             {
-                throw new ArgumentException("ID khách hàng không được để trống !");
-            }
-            if (partner == null)
-            {
-                throw new ArgumentException("Thông tin tổ chức không được bỏ trống");
-            }
+                if (id <= 0)
+                {
+                    throw new ArgumentException("ID khách hàng phải lớn hơn 0.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
 
-            var orders = await _appDbContext.Orders
-            .Where(o => o.CustomerId == id && o.Partner.Id == partner.Id)
-            .ToListAsync();
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
 
-            if (!orders.Any())
-            {
-                return new List<OptionalOrderDTO>();
+                var query = _appDbContext.Orders
+                    .Where(o => o.CustomerId == id && o.Partner.Id == partner.Id)
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                var orders = await query
+                    .OrderBy(o => o.Id) // Sort for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var orderDtos = _mapper.Map<List<OptionalOrderDTO>>(orders);
+
+                return new PagedResponse<List<OptionalOrderDTO>>(
+                    data: orderDtos ?? new List<OptionalOrderDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
             }
-            var orderDtos = orders.Select(order =>
+            catch (ArgumentException ex)
             {
-                var dto = _mapper.Map<OptionalOrderDTO>(order);
-                return dto;
-            }).ToList();
-
-            return orderDtos;
+                throw new ArgumentException($"Lỗi tham số đầu vào: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách đơn hàng thất bại: {ex.Message}", ex);
+            }
         }
 
         public async Task<OptionalCustomerDTO?> GetCustomerByIdAsync(int id, Employee employee, Partner partner)
         {
             var customer = await _appDbContext.Customers
-                .Include(c => c.CustomerEmployees)
-                .FirstOrDefaultAsync(c =>
-                    c.Id == id &&
-                    c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id && ce.Employee.PartnerId == partner.Id));
+                  .Include(c => c.CustomerEmployees)
+                  .FirstOrDefaultAsync(c =>
+                      c.Id == id &&
+                      c.CustomerEmployees.Any(ce => ce.EmployeeId == employee.Id && ce.Employee.PartnerId == partner.Id));
 
             if (customer == null)
             {
                 return null;
             }
-            var customerDto = _mapper.Map<OptionalCustomerDTO>(customer);
 
-            return customerDto;
+            return customer.ToCustomerDTO();
         }
 
         public async Task<GeneralResponse?> RemoveContactFromCustomer(int id, int contactId, Partner partner)
@@ -709,6 +836,289 @@ namespace ServerLibrary.Services.Implementations
                     customerDetail.AccountName,
                     customerDetail.Id
                 });
+            }
+        }
+
+
+        public async Task<GeneralResponse?> UnassignTicketFromCustomer(int id, int ticketId, Partner partner)
+        {
+            var strategy = _appDbContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _appDbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Execution strategy started.");
+                    var customer = await _appDbContext.Customers
+                        .FirstOrDefaultAsync(c => c.Id == id && c.Partner.Id == partner.Id);
+
+                    if (customer == null)
+                    {
+                        Console.WriteLine($"No Customer found for ID {id}.");
+                        return new GeneralResponse(true, $"ID {id} không liên kết với khách hàng nào.");
+                    }
+
+                    var ticket = await _appDbContext.SupportTickets
+                        .FirstOrDefaultAsync(o => o.Id == ticketId && o.CustomerId == id && o.Partner.Id == partner.Id);
+
+                    if (ticket == null)
+                    {
+                        Console.WriteLine($"No Ticket found for ID {ticketId}.");
+                        return new GeneralResponse(true, $"ID {ticketId} không liên kết với khách hàng nào.");
+                    }
+                    ticket.CustomerId = null;
+                    _appDbContext.SupportTickets.Update(ticket);
+                    await _appDbContext.SaveChangesAsync();
+
+                    Console.WriteLine("Ticket removed successfully.");
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Đã xóa thẻ tư vấn khỏi khách hàng ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Transaction rolled back.");
+                    return new GeneralResponse(false, $"Lỗi khi xóa thẻ tư vấn khỏi khách hàng ID {id}: {ex.Message}");
+                }
+            });
+        }
+
+        public async Task<GeneralResponse?> UnassignQuoteFromCustomer(int id, int quoteId, Partner partner)
+        {
+            var strategy = _appDbContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _appDbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Execution strategy started.");
+                    var customer = await _appDbContext.Customers
+                        .FirstOrDefaultAsync(c => c.Id == id && c.Partner.Id == partner.Id);
+
+                    if (customer == null)
+                    {
+                        Console.WriteLine($"No Customer found for ID {id}.");
+                        return new GeneralResponse(true, $"ID {id} không liên kết với khách hàng nào.");
+                    }
+
+                    var quote = await _appDbContext.Quotes
+                        .FirstOrDefaultAsync(o => o.Id == quoteId && o.CustomerId == id && o.Partner.Id == partner.Id);
+
+                    if (quote == null)
+                    {
+                        Console.WriteLine($"No Quote found for ID {quoteId}.");
+                        return new GeneralResponse(true, $"ID {quoteId} không liên kết với khách hàng nào.");
+                    }
+                    quote.CustomerId = null;
+                    _appDbContext.Quotes.Update(quote);
+                    await _appDbContext.SaveChangesAsync();
+
+                    Console.WriteLine("Quote removed successfully.");
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Đã xóa báo giá khỏi khách hàng ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Transaction rolled back.");
+                    return new GeneralResponse(false, $"Lỗi khi xóa báo giá khỏi khách hàng ID {id}: {ex.Message}");
+                }
+            });
+        }
+
+        public async Task<GeneralResponse?> UnassignCustomerCareTicketFromCustomer(int id, int customerCareTicketId, Partner partner)
+        {
+            var strategy = _appDbContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _appDbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    Console.WriteLine("Execution strategy started.");
+                    var customer = await _appDbContext.Customers
+                        .FirstOrDefaultAsync(c => c.Id == id && c.Partner.Id == partner.Id);
+
+                    if (customer == null)
+                    {
+                        Console.WriteLine($"No Customer found for ID {id}.");
+                        return new GeneralResponse(true, $"ID {id} không liên kết với khách hàng nào.");
+                    }
+
+                    var customerCareTicket = await _appDbContext.CustomerCares
+                        .FirstOrDefaultAsync(o => o.Id == customerCareTicketId && o.CustomerId == id && o.Partner.Id == partner.Id);
+
+                    if (customerCareTicket == null)
+                    {
+                        Console.WriteLine($"No Customer Care Ticket found for ID {customerCareTicketId}.");
+                        return new GeneralResponse(true, $"ID {customerCareTicketId} không liên kết với khách hàng nào.");
+                    }
+                    customerCareTicket.CustomerId = null;
+                    _appDbContext.CustomerCares.Update(customerCareTicket);
+                    await _appDbContext.SaveChangesAsync();
+
+                    Console.WriteLine("Customer Care Ticket removed successfully.");
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Đã xóa thẻ chăm sóc khỏi khách hàng ID {id}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Transaction rolled back.");
+                    return new GeneralResponse(false, $"Lỗi khi xóa thẻ chăm sóc khỏi khách hàng ID {id}: {ex.Message}");
+                }
+            });
+        }
+
+        public async Task<PagedResponse<List<QuoteDTO>>> GetAllQuotesByIdAsync(int id, Partner partner, int pageNumber, int pageSize)
+        {
+            try
+            {
+                // Check inputs
+                if (id <= 0)
+                {
+                    throw new ArgumentException("ID khách hàng phải lớn hơn 0.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                // Build query
+                var query = _appDbContext.Quotes
+                    .Where(o => o.CustomerId == id && o.Partner.Id == partner.Id)
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                var invoices = await query
+                    .OrderBy(o => o.Id) // Sort for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var quoteDtos = _mapper.Map<List<QuoteDTO>>(invoices);
+
+                return new PagedResponse<List<QuoteDTO>>(
+                    data: quoteDtos ?? new List<QuoteDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException($"Lỗi tham số đầu vào: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách báo giá thất bại: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<PagedResponse<List<SupportTicketDTO>>> GetAllTicketsByIdAsync(int id, Partner partner, int pageNumber, int pageSize)
+        {
+            try
+            {
+                // Check inputs
+                if (id <= 0)
+                {
+                    throw new ArgumentException("ID khách hàng phải lớn hơn 0.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                // Build query
+                var query = _appDbContext.SupportTickets
+                    .Where(o => o.CustomerId == id && o.Partner.Id == partner.Id)
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                var invoices = await query
+                    .OrderBy(o => o.Id) // Sort for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var ticketDtos = _mapper.Map<List<SupportTicketDTO>>(invoices);
+
+                return new PagedResponse<List<SupportTicketDTO>>(
+                    data: ticketDtos ?? new List<SupportTicketDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException($"Lỗi tham số đầu vào: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách thẻ tư vấn thất bại: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<PagedResponse<List<CustomerCareTicketDTO>>> GetAllCustomerCaresByIdAsync(int id, Partner partner, int pageNumber, int pageSize)
+        {
+            try
+            {
+                // Check inputs
+                if (id <= 0)
+                {
+                    throw new ArgumentException("ID khách hàng phải lớn hơn 0.");
+                }
+                if (partner == null)
+                {
+                    throw new ArgumentNullException(nameof(partner), "Thông tin tổ chức không được để trống.");
+                }
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                // Build query
+                var query = _appDbContext.CustomerCares
+                    .Where(o => o.CustomerId == id && o.Partner.Id == partner.Id)
+                    .AsNoTracking();
+
+                var totalRecords = await query.CountAsync();
+
+                var invoices = await query
+                    .OrderBy(o => o.Id) // Sort for consistency
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var customerCareTicketDtos = _mapper.Map<List<CustomerCareTicketDTO>>(invoices);
+
+                return new PagedResponse<List<CustomerCareTicketDTO>>(
+                    data: customerCareTicketDtos ?? new List<CustomerCareTicketDTO>(),
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    totalRecords: totalRecords
+                );
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException($"Lỗi tham số đầu vào: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lấy danh sách thẻ chăm sóc thất bại: {ex.Message}", ex);
             }
         }
     }
