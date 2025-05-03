@@ -39,7 +39,6 @@ namespace Server.Controllers
             }
             return Ok(result);
         }
-
         [HttpGet("test-s3")]
         public async Task<IActionResult> TestS3([FromServices] S3Service s3Service)
         {

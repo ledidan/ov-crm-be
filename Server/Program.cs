@@ -85,7 +85,7 @@ builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 
     return new MongoClient(settings.ConnectionString);
 });
-
+Console.WriteLine($"MongoDB: {builder.Configuration.GetSection("MongoDBSettings")}");
 builder.Services.AddScoped(sp =>
 {
     var mongoSettings = builder.Configuration.GetSection("MongoDBSettings").Get<MongoDBSettings>();
@@ -155,28 +155,20 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
     };
 });
-var clientUrls = new List<string>
-{
-    "http://localhost:3000"
-};
-var prodClientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL");
-
-if (!string.IsNullOrEmpty(prodClientUrl))
-{
-    clientUrls.Add(prodClientUrl);
-}
-
-// cors
+// CORS configuration
+var clientUrls = builder.Configuration.GetSection("ClientUrls").Get<List<string>>() ?? new List<string> { "http://localhost:3000" };
+Console.WriteLine($"CORS allowed origins: {string.Join(", ", clientUrls)}");
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("OVIE_CLIENT", policyBuilder =>
     {
-        policyBuilder.WithOrigins("http://localhost:3000", "https://app.autuna.com");
-        policyBuilder.AllowAnyHeader();
-        policyBuilder.AllowAnyMethod();
-        policyBuilder.AllowCredentials();
+        policyBuilder.WithOrigins(clientUrls.ToArray())
+                     .AllowAnyHeader()
+                     .AllowAnyMethod()
+                     .AllowCredentials();
     });
 });
+
 Console.WriteLine($"CORS allowed origins: {string.Join(", ", clientUrls)}");
 
 builder.Services.AddAuthorization();
