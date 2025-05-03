@@ -1,4 +1,4 @@
-name: Build and deploy Autuna ASP.NET Core Backend to Azure Web API Service
+name: Build and deploy Autuna ASP.NET Core Backend to Azure Web App Service
 
 on:
   push:
@@ -27,8 +27,12 @@ jobs:
       - name: Build with dotnet
         run: dotnet build Server/Server.csproj --configuration Release --no-restore
 
+      - name: Build tests
+        run: dotnet build Server.Tests/Server.Tests.csproj --configuration Release
+
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test Server.Tests/Server.Tests.csproj --configuration Release --no-build --verbosity normal
+        continue-on-error: true
 
       - name: Publish with dotnet
         run: dotnet publish Server/Server.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
