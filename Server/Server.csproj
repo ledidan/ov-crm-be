@@ -29,5 +29,7 @@
     <ProjectReference Include="..\Data\Data.csproj" />
     <ProjectReference Include="..\ServerLibrary\ServerLibrary.csproj" />
   </ItemGroup>
+  <ItemGroup>
+</ItemGroup>
 
 </Project>
