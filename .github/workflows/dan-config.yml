@@ -1,4 +1,4 @@
-name: Build and deploy Autuna ASP.NET Core Backend to Azure Web App Service
+name: Build and deploy ASP.Net Core app to Azure Web App - autuna
 
 on:
   push:
@@ -18,7 +18,10 @@ jobs:
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '8.0'
+
+      - name: Check DOTNET_ROOT
+        run: echo "DOTNET_ROOT is $DOTNET_ROOT"
 
       - name: Restore dependencies
         run: dotnet restore Server/Server.csproj
@@ -35,6 +38,12 @@ jobs:
 
       - name: Publish with dotnet
         run: dotnet publish Server/Server.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
+
+      - name: Copy ServerLibrary Templates
+        run: |
+          mkdir -p ${{env.DOTNET_ROOT}}/myapp/ServerLibrary/Templates
+          cp -r ServerLibrary/Templates/* ${{env.DOTNET_ROOT}}/myapp/ServerLibrary/Templates/
+          ls -la ${{env.DOTNET_ROOT}}/myapp/ServerLibrary/Templates/
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -58,17 +67,29 @@ jobs:
         with:
           name: .net-app
 
+      - name: Check Azure credentials
+        run: |
+          echo "Branch: ${GITHUB_REF}"
+          echo "Client ID: ${{ secrets.AZUREAPPSERVICE_CLIENTID_69603B037955431C8DE25AF9EE54B6D3 }}"
+          echo "Tenant ID: ${{ secrets.AZUREAPPSERVICE_TENANTID_F73FCCC454874E1596A8C0D638C4B2A9 }}"
+          echo "Subscription ID: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_1EAAA2C794B048B2B398BA7FB17DAE54 }}"
+        env:
+          GITHUB_REF: ${{ github.ref }}
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_B576AAC0C1574AC5B1F553CDBE6BA272 }}
-          tenant-id: ${{  secrets.AZUREAPPSERVICE_TENANTID_9C69D4EED4054507AB781E27046DE807 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_D3F84EC9F9B04CA88DE8FA704AFB87FC }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_69603B037955431C8DE25AF9EE54B6D3 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F73FCCC454874E1596A8C0D638C4B2A9 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_1EAAA2C794B048B2B398BA7FB17DAE54 }}
+          enable-AzPSSession: false
+          environment: azurecloud
+          allow-no-subscriptions: false
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'autuna'
-          slot-name: 'Production'
+          app-name: autuna
+          slot-name: Production
           package: .

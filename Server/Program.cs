@@ -174,7 +174,7 @@ Console.WriteLine($"CORS allowed origins: {string.Join(", ", clientUrls)}");
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication();
 
-builder.WebHost.UseUrls("http://0.0.0.0:5000");
+// builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 var app = builder.Build();
 
