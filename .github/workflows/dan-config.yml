@@ -69,6 +69,6 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ github.ref == 'refs/heads/develop' && 'autuna-g7atefbyardqe9gt' || 'myapp-prod' }}
+          app-name: 'autuna'
           slot-name: 'Production'
           package: .
