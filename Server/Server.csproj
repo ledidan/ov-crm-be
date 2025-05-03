@@ -30,6 +30,10 @@
     <ProjectReference Include="..\ServerLibrary\ServerLibrary.csproj" />
   </ItemGroup>
   <ItemGroup>
-</ItemGroup>
+    <Content Update="Server.Tests.runtimeconfig.json" CopyToPublishDirectory="Never" />
+    <Content Update="ServerLibrary.runtimeconfig.json" CopyToPublishDirectory="Never" />
+    <Content Update="Server.Tests.dll" CopyToPublishDirectory="Never" />
+    <Content Update="ServerLibrary.dll" CopyToPublishDirectory="Never" />
+  </ItemGroup>
 
 </Project>

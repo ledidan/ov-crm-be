@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Amazon;
+using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Configuration;
@@ -14,24 +15,37 @@ namespace ServerLibrary.Services
 
         public S3Service(IConfiguration configuration)
         {
-            _bucketName = configuration["AWS:BucketName"];
-            var accessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY") ?? configuration["AWS:AccessKey"];
-            var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_KEY") ?? configuration["AWS:SecretKey"];
-            var region = Environment.GetEnvironmentVariable("AWS_REGION") ?? "ap-southeast-1";
-            _bucketName = Environment.GetEnvironmentVariable("AWS_BUCKET") ?? "5p-technologies";
-
-            if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey) ||
-             string.IsNullOrEmpty(region) || string.IsNullOrEmpty(_bucketName))
+            var awsConfig = configuration.GetSection("AWS");
+            _bucketName = awsConfig["BucketName"];
+            var accessKey = awsConfig["AccessKey"];
+            var secretKey = awsConfig["SecretKey"];
+            var region = awsConfig["Region"];
+            if (string.IsNullOrEmpty(_bucketName))
             {
-                throw new InvalidOperationException("AWS credentials are missing. Make sure they are set in the .env file.");
+                throw new ArgumentNullException(nameof(_bucketName), "AWS S3 BucketName is missing in configuration (AWS:S3Bucket).");
             }
-            _s3Client = new AmazonS3Client(
-                accessKey,
-                secretKey,
-                RegionEndpoint.GetBySystemName(region)
-            );
+            if (string.IsNullOrEmpty(accessKey))
+            {
+                throw new ArgumentNullException(nameof(accessKey), "AWS AccessKey is missing in configuration (AWS:AccessKey).");
+            }
+            if (string.IsNullOrEmpty(secretKey))
+            {
+                throw new ArgumentNullException(nameof(secretKey), "AWS SecretKey is missing in configuration (AWS:SecretKey).");
+            }
+            if (string.IsNullOrEmpty(region))
+            {
+                throw new ArgumentNullException(nameof(region), "AWS Region is missing in configuration (AWS:Region).");
+            }
+            var credentials = new BasicAWSCredentials(accessKey, secretKey);
+            var s3Config = new AmazonS3Config { RegionEndpoint = RegionEndpoint.GetBySystemName(region) };
+            _s3Client = new AmazonS3Client(credentials, s3Config);
         }
-
+        public async Task<bool> TestConnectionAsync()
+        {
+            var request = new ListObjectsV2Request { BucketName = _bucketName };
+            await _s3Client.ListObjectsV2Async(request);
+            return true;
+        }
         public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType, string app, string userType,
          int userId, int partnerId)
         {

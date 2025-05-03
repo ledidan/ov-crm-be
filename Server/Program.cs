@@ -19,7 +19,11 @@ using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Env.Load("../.env");
+
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -68,18 +72,9 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 //** Mongodb database
-// builder.Services.Configure<MongoDBSettings>(
-//     builder.Configuration.GetSection("MongoDBSettings"));
-builder.Services.Configure<MongoDBSettings>(options =>
-{
-    options.ConnectionString = builder.Configuration.GetValue<string>("MongoDBSettings:ConnectionString")
-     ?? Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING");
+builder.Services.Configure<MongoDBSettings>(
+    builder.Configuration.GetSection("MongoDBSettings"));
 
-
-    options.DatabaseName = builder.Configuration.GetValue<string>("MongoDBSettings:DatabaseName")
-    ?? Environment.GetEnvironmentVariable("MONGODB_DATABASE");
-
-});
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
@@ -99,13 +94,6 @@ builder.Services.AddScoped(sp =>
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-// var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
-//     $"Server={Environment.GetEnvironmentVariable("DB_HOST")};" +
-//     $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
-//     $"User={Environment.GetEnvironmentVariable("DB_USER")};" +
-//     $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};" +
-//     $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
-//     "SslMode=Required;" ?? connectionString_1;
 
 
 Console.WriteLine($"Connection: {connectionString}");
