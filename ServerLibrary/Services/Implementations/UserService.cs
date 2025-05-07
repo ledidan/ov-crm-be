@@ -13,13 +13,33 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class UserService(IOptions<JwtSection> config, AppDbContext appDbContext,
-        IPartnerService partnerService, IEmployeeService employeeService, IEmailService emailService)
-        : IUserService
+    public class UserService : IUserService
     {
+        private readonly IOptions<JwtSection> config;
+        private readonly AppDbContext appDbContext;
+        private readonly IPartnerService partnerService;
+        private readonly IEmployeeService employeeService;
+        private readonly IEmailService emailService;
+        private readonly IOptions<FrontendConfig> _frontendConfig;
+
+        public UserService(IOptions<JwtSection> _config,
+        AppDbContext _appDbContext,
+        IPartnerService _partnerService,
+        IEmployeeService _employeeService,
+        IEmailService _emailService,
+        IOptions<FrontendConfig> frontendConfig)
+        {
+            config = _config;
+            appDbContext = _appDbContext;
+            partnerService = _partnerService;
+            employeeService = _employeeService;
+            emailService = _emailService;
+            _frontendConfig = frontendConfig;
+        }
         public async Task<GeneralResponse> CreateUnverifiedAdminAsync(RegisterAdmin user)
         {
             var checkingUser = await FindUserByEmail(user.Email);
@@ -38,20 +58,25 @@ namespace ServerLibrary.Services.Implementations
         await using var transaction = await appDbContext.Database.BeginTransactionAsync();
         try
         {
-
             var applicationUser = await appDbContext.InsertIntoDb(new ApplicationUser()
             {
                 Email = user.Email,
                 FullName = user.FullName,
                 AccountStatus = AccountStatus.WaitingVerification,
             });
+
             await appDbContext.InsertIntoDb(new UserRole() { Role = adminRole, User = applicationUser });
+
+            // Seed roles and create employee
+            var employee = await SeedDefaultEmployeeRolesAndAdminAsync(partner.Id, applicationUser);
+
             await appDbContext.InsertIntoDb(new PartnerUser()
             {
                 User = applicationUser,
                 Partner = partner,
-                EmployeeId = user.EmployeeId,
+                EmployeeId = employee.Id,
             });
+
             await transaction.CommitAsync();
             return await SendVerificationEmailAsync(applicationUser);
         }
@@ -66,6 +91,27 @@ namespace ServerLibrary.Services.Implementations
     });
         }
 
+
+        // public async Task<DataObjectResponse> AssignDefaultApplicationsToPartner(int partnerId, PartnerLicenseDTO partnerLicense)
+        // {
+        //     var now = DateTime.UtcNow;
+        //     var defaultApps = await appDbContext.Applications
+        //         .ToListAsync();
+
+        //     foreach (var app in defaultApps)
+        //     {
+        //         await appDbContext.AddAsync(new PartnerLicenseDTO()
+        //         {
+        //             PartnerId = partnerId,
+        //             ApplicationId = app.ApplicationId,
+        //             StartDate = now,
+        //             EndDate = now.AddDays(2),
+        //             LicenceType = "Monthly",
+        //             Status = "Active"
+        //         });
+        //     }
+        //     await appDbContext.SaveChangesAsync();
+        // }
         private async Task<SystemRole?> CheckSystemRole(string role)
         {
             return await appDbContext.SystemRoles.FirstOrDefaultAsync(r => r.Name!.ToLower().Equals(role.ToLower()));
@@ -131,45 +177,23 @@ namespace ServerLibrary.Services.Implementations
         {
             if (applicationUser == null) throw new ArgumentNullException(nameof(applicationUser));
             if (string.IsNullOrEmpty(role)) throw new ArgumentNullException(nameof(role));
+            var userClaims = new List<Claim>();
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.Value.Key!));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            List<Claim> userClaims = new();
+            // Thêm basic claims
+            userClaims.AddRange(BuildBasicClaims(applicationUser, role));
 
-            userClaims.Add(new Claim(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()));
-            if (!string.IsNullOrEmpty(applicationUser.FullName))
-                userClaims.Add(new Claim(ClaimTypes.Name, applicationUser.FullName));
-            if (!string.IsNullOrEmpty(applicationUser.Email))
-                userClaims.Add(new Claim(ClaimTypes.Email, applicationUser.Email));
-            if (!string.IsNullOrEmpty(applicationUser.Phone))
-                userClaims.Add(new Claim("Phone", applicationUser.Phone));
-            if (!string.IsNullOrEmpty(applicationUser.Avatar))
-                userClaims.Add(new Claim("Avatar", applicationUser.Avatar));
-            userClaims.Add(new Claim(ClaimTypes.Role, role));
-
+            // Thêm partner claims (nếu không phải SysAdmin)
             if (role != Constants.Role.SysAdmin)
             {
-                var partnerUser = await appDbContext.PartnerUsers
-                    .Include(_ => _.Partner)
-                    .FirstOrDefaultAsync(x => x.User.Id == applicationUser.Id);
-
-                userClaims.Add(new Claim("CompanyName", partnerUser.Partner.Name));
-                if (partnerUser == null) return string.Empty;
-
-                if (partnerUser.Partner != null)
-                    userClaims.Add(new Claim("PartnerId", partnerUser.Partner.Id.ToString()));
-
-                if (role == Constants.Role.Admin)
-                {
-                    userClaims.Add(new Claim("Owner", "true")); // Admins get Owner = true
-                    userClaims.Add(new Claim("EmployeeId", partnerUser.EmployeeId.ToString()));
-                }
-                else
-                {
-                    if (partnerUser.EmployeeId != null)
-                        userClaims.Add(new Claim("EmployeeId", partnerUser.EmployeeId.ToString()));
-                }
+                var partnerClaims = await BuildPartnerClaimsAsync(applicationUser, role);
+                if (!partnerClaims.Any()) // Nếu không tìm thấy partnerUser
+                    return string.Empty;
+                userClaims.AddRange(partnerClaims);
             }
+            // Tạo JWT token
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.Value.Key!));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
             var token = new JwtSecurityToken(
                 issuer: config.Value.Issuer,
                 audience: config.Value.Audience,
@@ -178,6 +202,42 @@ namespace ServerLibrary.Services.Implementations
                 signingCredentials: credentials
             );
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        public async Task<EmployeeDTO> SeedDefaultEmployeeRolesAndAdminAsync(int partnerId, ApplicationUser adminUser)
+        {
+            var allPermissions = await appDbContext.CRMPermissions.ToListAsync();
+
+            var roles = new List<CRMRole>
+    {
+        new CRMRole { Name = "Admin", PartnerId = partnerId },
+        new CRMRole { Name = "Employee", PartnerId = partnerId },
+        new CRMRole { Name = "Shipper", PartnerId = partnerId }
+    };
+            appDbContext.CRMRoles.AddRange(roles);
+            await appDbContext.SaveChangesAsync();
+
+            var adminRole = roles.First(r => r.Name == "Admin");
+
+            var rolePermissions = allPermissions.Select(p => new CRMRolePermission
+            {
+                RoleId = adminRole.Id,
+                PermissionId = p.Id
+            }).ToList();
+
+            appDbContext.CRMRolePermissions.AddRange(rolePermissions);
+            await appDbContext.SaveChangesAsync();
+
+            var employeeData = new CreateEmployee
+            {
+                // ** Manually Enter 
+                FullName = adminUser.FullName,
+                Email = adminUser.Email,
+                // ** Auto-generated
+                EmployeeCode = "NV0000001",
+                CRMRoleId = adminRole.Id,
+                PartnerId = partnerId
+            };
+            return await employeeService.CreateEmployeeAdminAsync(employeeData);
         }
 
         private async Task<RefreshTokenInfo?> FindRefreshTokenByUserId(int userId)
@@ -270,7 +330,10 @@ namespace ServerLibrary.Services.Implementations
         public async Task<GeneralResponse> ResendVerificationAsync(string email)
         {
 
-            var clientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL");
+            var clientUrl = _frontendConfig.Value.BaseUrl;
+            if (string.IsNullOrEmpty(clientUrl))
+                return new GeneralResponse(false, "Client URL is not configured");
+
             var user = await appDbContext.ApplicationUsers
          .FirstOrDefaultAsync(u => u.Email == email && u.IsActivateEmail == false);
 
@@ -368,7 +431,7 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<GeneralResponse> SendVerificationEmailAsync(ApplicationUser user)
         {
-            var clientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL");
+            var clientUrl = _frontendConfig.Value.BaseUrl;
             if (string.IsNullOrEmpty(clientUrl))
                 return new GeneralResponse(false, "Client URL is not configured");
 
@@ -393,7 +456,7 @@ namespace ServerLibrary.Services.Implementations
             string emailBody = await emailService.GetEmailTemplateAsync(user.FullName, verificationLink, templateName);
             try
             {
-                await emailService.SendEmailAsync(user.Email, "Xác minh email - Ovie Software", emailBody);
+                await emailService.SendEmailAsync(user.Email, "Xác minh email - Autuna Software", emailBody);
                 return new GeneralResponse(true, "Liên kết xác minh được gửi đến email của bạn. Vui lòng kiểm tra email");
             }
             catch (Exception ex)
@@ -445,7 +508,7 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<string> GeneratePasswordResetTokenAsync(string? email, string? phoneNumber = null)
         {
-            var clientUrl = Environment.GetEnvironmentVariable("NEXT_PUBLIC_CLIENT_URL");
+            var clientUrl = _frontendConfig.Value.BaseUrl;
             // Kiểm tra user có tồn tại không
             var user = await appDbContext.ApplicationUsers
                 .FirstOrDefaultAsync(u => u.Email == email || u.Phone == phoneNumber);
@@ -475,7 +538,7 @@ namespace ServerLibrary.Services.Implementations
 
             string emailBody = await emailService.GetEmailTemplateAsync(user.FullName, verificationLink, templateName);
 
-            await emailService.SendEmailAsync(user.Email, "Xác minh email - Ovie Software", emailBody);
+            await emailService.SendEmailAsync(user.Email, "Xác minh email - Autuna Software", emailBody);
 
             await appDbContext.PasswordResetTokens.AddAsync(resetToken);
             await appDbContext.SaveChangesAsync();
@@ -519,6 +582,81 @@ namespace ServerLibrary.Services.Implementations
                 });
             }
             return new GeneralResponse(true, $"{role} created");
+        }
+
+
+
+        // ** Claims Builder 
+
+        private List<Claim> BuildBasicClaims(ApplicationUser user, string role)
+        {
+            var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Role, role)
+        };
+            if (!string.IsNullOrEmpty(user.FullName))
+                claims.Add(new Claim(ClaimTypes.Name, user.FullName));
+            if (!string.IsNullOrEmpty(user.Email))
+                claims.Add(new Claim(ClaimTypes.Email, user.Email));
+            if (!string.IsNullOrEmpty(user.Phone))
+                claims.Add(new Claim("Phone", user.Phone));
+            if (!string.IsNullOrEmpty(user.Avatar))
+                claims.Add(new Claim("Avatar", user.Avatar));
+
+            return claims;
+        }
+
+        private async Task<List<Claim>> BuildPartnerClaimsAsync(ApplicationUser user, string? role)
+        {
+            var claims = new List<Claim>();
+
+            var partnerUser = await appDbContext.PartnerUsers
+                .Include(p => p.Partner)
+                .Include(pu => pu.Employee)
+                .ThenInclude(r => r.CRMRole)
+                .ThenInclude(r => r.RolePermissions)
+                .ThenInclude(rp => rp.Permission)
+                .FirstOrDefaultAsync(x => x.User.Id == user.Id);
+
+            if (partnerUser == null)
+                return claims;
+
+            claims.Add(new Claim("CompanyName", partnerUser.Partner.Name));
+            claims.Add(new Claim("PartnerId", partnerUser.Partner.Id.ToString()));
+
+            if (partnerUser.Employee?.CRMRole != null)
+            {
+                claims.Add(new Claim("CRMRoleId", partnerUser.Employee.CRMRole.Id.ToString()));
+                claims.Add(new Claim("CRMRoleName", partnerUser.Employee.CRMRole.Name));
+            }
+
+            if (partnerUser.EmployeeId != null)
+            {
+                claims.Add(new Claim("EmployeeId", partnerUser.EmployeeId.ToString()));
+            }
+
+            if (role == Constants.Role.Admin)
+            {
+                claims.Add(new Claim("Owner", "true"));
+            }
+
+            var licenses = await appDbContext.PartnerLicenses
+         .Where(l => l.PartnerId == partnerUser.Partner.Id
+                  && l.Status == "Active").Select(l => new { l.ApplicationId, l.EndDate, l.Application.Name })
+         .ToListAsync();
+
+            if (licenses.Any())
+            {
+                var apps = licenses.Select(l => new
+                {   
+                    AppName = l.Name, 
+                    AppId = l.ApplicationId.ToString(),
+                    AppExpiredAt = l.EndDate.ToString("o")
+                }).ToList();
+                claims.Add(new Claim("Apps", JsonSerializer.Serialize(apps)));
+            }
+            return claims;
         }
     }
 }

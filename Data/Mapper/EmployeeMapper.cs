@@ -21,6 +21,7 @@ namespace Mapper.EmployeeMapper
                 Address = employeeModel.Address,
                 OfficePhone = employeeModel.OfficePhone,
                 OfficeEmail = employeeModel.OfficeEmail,
+                CRMRoleId = employeeModel.CRMRoleId ?? 0,
                 TaxIdentificationNumber = employeeModel.TaxIdentificationNumber,
                 JobPositionGroupId = employeeModel.JobPositionGroupId,
                 JobTitleGroupId = employeeModel.JobTitleGroupId,

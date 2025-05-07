@@ -3,11 +3,13 @@ using System.Threading.Tasks;
 using Data.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServerLibrary.MiddleWare;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Interfaces;
 
 namespace Server.Controllers
 {
+    [RequireValidLicense]
     [ApiController]
     [Route("api/[controller]")]
     public class DashboardController : ControllerBase
@@ -39,6 +41,6 @@ namespace Server.Controllers
             var stats = await _dashboardService.GetOrderStatsForAllOrders(employee, partner);
             return Ok(stats);
         }
-        
+
     }
 }

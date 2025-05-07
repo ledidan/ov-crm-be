@@ -5,11 +5,13 @@ using Mapper.ContactMapper;
 using Mapper.CustomerMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServerLibrary.MiddleWare;
 using ServerLibrary.Services.Interfaces;
 using System.Security.Claims;
 
 namespace Server.Controllers
 {
+    [RequireValidLicense]
     [Route("api/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase
@@ -38,7 +40,7 @@ namespace Server.Controllers
 
             return Ok(result);
         }
-
+        [HasPermission("View", "Customer")]
         [HttpGet("customers")]
         public async Task<IActionResult> GetAllAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
         {

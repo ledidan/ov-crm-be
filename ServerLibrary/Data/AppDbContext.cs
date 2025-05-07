@@ -1,4 +1,6 @@
-﻿using Data.Entities;
+﻿using Data.DTOs;
+using Data.Entities;
+using Data.Enums;
 using Data.Interceptor;
 using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Helpers;
@@ -69,7 +71,7 @@ namespace ServerLibrary.Data
             //** Generate Unique Code for Category
             builder.Entity<ProductCategory>().HasIndex(c => new { c.ProductCategoryCode, c.PartnerId }).IsUnique(); ; // Or just ActivityCode if it's globally unique
             builder.Entity<CustomerCare>().HasIndex(c => new { c.CustomerCareNumber, c.PartnerId }).IsUnique(); ;
-            
+
             builder.Entity<SupportTicket>()
                 .HasIndex(st => new { st.TicketNumber, st.PartnerId })
                 .IsUnique();
@@ -89,6 +91,30 @@ namespace ServerLibrary.Data
                  new SystemRole { Id = 2, Name = Constants.Role.Admin },
                  new SystemRole { Id = 3, Name = Constants.Role.SysAdmin }
              );
+            // Seed CRMPermissions
+            builder.Entity<CRMPermission>().HasData(SeedData.Permissions);
+            builder.Entity<Application>().HasData(SeedData.Applications.ToArray());
+            // builder.Entity<CRMRole>().HasData(SeedData.Roles.ToArray());
+            builder.Entity<CRMRolePermission>()
+           .HasKey(rp => new { rp.RoleId, rp.PermissionId});
+
+            builder.Entity<PartnerLicense>(entity =>
+   {
+       entity.HasKey(pl => pl.Id);
+
+       entity.HasOne(pl => pl.Partner)
+           .WithMany(p => p.PartnerLicenses)
+           .HasForeignKey(pl => pl.PartnerId);
+
+       entity.HasOne(pl => pl.Application)
+           .WithMany(a => a.PartnerLicenses)
+           .HasForeignKey(pl => pl.ApplicationId);
+
+       entity.HasOne(pl => pl.ApplicationPlan)
+           .WithMany(ap => ap.PartnerLicenses)
+           .HasForeignKey(pl => pl.ApplicationPlanId)
+           .OnDelete(DeleteBehavior.SetNull);
+   });
 
             builder.Entity<ContactEmployees>()
         .Property(ce => ce.AccessLevel)
@@ -386,6 +412,14 @@ namespace ServerLibrary.Data
         public DbSet<JobTitleGroup> JobTitleGroups { get; set; }
 
         public DbSet<Supplier> Suppliers { get; set; }
+
+        public DbSet<Application> Applications { get; set; }
+        public DbSet<PartnerLicense> PartnerLicenses { get; set; }
+
+        public DbSet<ApplicationPlan> ApplicationPlans { get; set; }
+        public DbSet<CRMRole> CRMRoles { get; set; }
+        public DbSet<CRMPermission> CRMPermissions { get; set; }
+        public DbSet<CRMRolePermission> CRMRolePermissions { get; set; }
 
     }
 }

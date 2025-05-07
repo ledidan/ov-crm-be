@@ -2,19 +2,21 @@
 using Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServerLibrary.MiddleWare;
 using ServerLibrary.Services.Interfaces;
 using System.Security.Claims;
 
 namespace Server.Controllers
-{   
+{
+    [RequireValidLicense]
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class ProductController
-        (
-        IPartnerService partnerService,
-        IProductService productService,
-        IEmployeeService employeeService) : ControllerBase
+    (
+    IPartnerService partnerService,
+    IProductService productService,
+    IEmployeeService employeeService) : ControllerBase
     {
         [HttpGet("products")]
         [Authorize(Roles = "User,Admin")]
@@ -131,7 +133,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("{id:int}/invoices")]
-        public async Task<IActionResult> GetInvoicesByProductIdAsync(int id , [FromQuery] int pageNumber, [FromQuery] int pageSize)
+        public async Task<IActionResult> GetInvoicesByProductIdAsync(int id, [FromQuery] int pageNumber, [FromQuery] int pageSize)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await partnerService.FindByClaim(identity);

@@ -3,11 +3,13 @@ using Data.Enums;
 using Mapper.ContactMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServerLibrary.MiddleWare;
 using ServerLibrary.Services.Interfaces;
 using System.Security.Claims;
 
 namespace Server.Controllers
 {
+    [RequireValidLicense]
     [Route("api/[controller]")]
     [ApiController]
     public class ContactController : ControllerBase

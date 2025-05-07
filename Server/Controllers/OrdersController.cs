@@ -3,13 +3,15 @@ using System.Threading.Tasks;
 using Data.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServerLibrary.MiddleWare;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Interfaces;
 
 namespace Server.Controllers
 {
+    [RequireValidLicense]
     [ApiController]
-    [Route("api/[controller]")] 
+    [Route("api/[controller]")]
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _ordersService;

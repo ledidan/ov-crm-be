@@ -13,7 +13,6 @@ namespace ServerLibrary.Services.Interfaces
 
 
         // Task<GeneralResponse> SendRegisterTokenAsync(RegisterUserDTO user);
-
         Task<GeneralResponse> CreateUnverifiedUserAsync(RegisterUserDTO user);
         Task<GeneralResponse> SendVerificationEmailAsync(ApplicationUser user);
 
@@ -24,7 +23,7 @@ namespace ServerLibrary.Services.Interfaces
         Task<ApplicationUser?> FindUserByEmail(string? email);
         Task<GeneralResponse> ResendVerificationAsync(string email);
 
-        Task<List<ApplicationUser?>> GetAllMembersAsync(Partner partner);
+        // Task<List<ApplicationUser?>> GetAllMembersAsync(Partner partner);
 
         Task<bool> ResetPasswordAsync(ResetPasswordDTO request);
 
@@ -32,6 +31,8 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<bool> IsValidResetTokenAsync(string? email, string? phoneNumber, string token);
 
-    }
+        // Task<DataObjectResponse> AssignDefaultApplicationsToPartner(int partnerId, PartnerLicenseDTO partnerLicense);
+
+    };
 
 }

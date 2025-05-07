@@ -6,7 +6,8 @@ namespace Data.Entities
         public int Id { get; set; }
         public virtual required Partner Partner { get; set; }
         public virtual required ApplicationUser User { get; set; }
-
         public int? EmployeeId { get; set; }
+
+        public virtual Employee? Employee { get; set; }
     }
 }

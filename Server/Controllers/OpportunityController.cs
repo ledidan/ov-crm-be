@@ -2,19 +2,21 @@ using Data.DTOs;
 using Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServerLibrary.MiddleWare;
 using ServerLibrary.Services.Interfaces;
 using System.Security.Claims;
 
 namespace Server.Controllers
 {
+    [RequireValidLicense]
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class OpportunityController
-        (
-        IPartnerService partnerService,
-        IOpportunityService opportunityService,
-        IEmployeeService employeeService) : ControllerBase
+    (
+    IPartnerService partnerService,
+    IOpportunityService opportunityService,
+    IEmployeeService employeeService) : ControllerBase
     {
         [HttpGet("opportunities")]
         public async Task<IActionResult> GetAllOpportunities([FromQuery] int pageNumber, [FromQuery] int pageSize)

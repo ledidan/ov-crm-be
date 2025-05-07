@@ -14,6 +14,7 @@ namespace Data.DTOs
         public string? Email { get; set; }
         public string? Address { get; set; }
         public string? OfficePhone { get; set; }
+        public int CRMRoleId { get; set; }
         public string? OfficeEmail { get; set; }
         public string? TaxIdentificationNumber { get; set; }
         public int? JobPositionGroupId { get; set; }

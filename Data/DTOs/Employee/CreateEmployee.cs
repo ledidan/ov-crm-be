@@ -26,6 +26,8 @@ namespace Data.DTOs
         public DateTime? SignedContractDate { get; set; }
         public DateTime? SignedProbationaryContract { get; set; }
         public DateTime? Resignation { get; set; }
+
+        public int? CRMRoleId { get; set; }
         [Required]
         public int PartnerId { get; set; }
     }

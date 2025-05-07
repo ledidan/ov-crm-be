@@ -1,4 +1,5 @@
-﻿using Data.Enums;
+﻿using Data.DTOs;
+using Data.Enums;
 
 namespace Data.Entities
 {
@@ -26,6 +27,10 @@ namespace Data.Entities
         public int? JobPositionGroupId { get; set; }
         public int? JobTitleGroupId { get; set; }
         public virtual required Partner Partner { get; set; }
+        
+        public int? CRMRoleId { get; set; }
+
+        public CRMRole? CRMRole { get; set; }
 
         public List<Contact> Contacts { get; set; } = new List<Contact>();
         public List<Customer> Customers { get; set; } = new List<Customer>();

@@ -7,7 +7,7 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IEmployeeService
     {
-        Task<DataStringResponse> CreateEmployeeAdminAsync(CreateEmployee employee);
+        Task<EmployeeDTO> CreateEmployeeAdminAsync(CreateEmployee employee);
         Task<DataStringResponse> CreateEmployeeAsync(CreateEmployee employee, Partner partner);
         Task<Employee?> FindByIdAsync(int id);
 

@@ -11,10 +11,10 @@ using Data.Interceptor;
 using Data.MongoModels;
 using MongoDB.Driver;
 using Microsoft.Extensions.Options;
-using AutoMapper;
 using System.Text.Json.Serialization;
 using ServerLibrary.Services;
-using DotNetEnv;
+using ServerLibrary.Hubs;
+using ServerLibrary.MiddleWare;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,6 +40,14 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
+
+builder.Services.AddSignalR(options =>
+{
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15); // Ping client mỗi 15s
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30); // Timeout sau 30s
+    options.MaximumReceiveMessageSize = 32 * 1024; // Giới hạn message 32KB
+    options.EnableDetailedErrors = true; // Debug chi tiết (tắt trong production)
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -68,6 +76,22 @@ builder.Services.AddSwaggerGen(options =>
             new string[]{}
         }
     });
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "Autuna CRM API",
+        Description = "List of APIs for Autuna CRM",
+        Contact = new OpenApiContact
+        {
+            Name = "Trang chủ",
+            Url = new Uri("https://autuna.com/contact-us")
+        },
+        License = new OpenApiLicense
+        {
+            Name = "Phần mềm giải pháp ERP - CRM",
+            Url = new Uri("https://app.autuna.com")
+        }
+    });
     options.CustomSchemaIds(type => type.Name);
 });
 
@@ -85,7 +109,6 @@ builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 
     return new MongoClient(settings.ConnectionString);
 });
-Console.WriteLine($"MongoDB: {builder.Configuration.GetSection("MongoDBSettings")}");
 builder.Services.AddScoped(sp =>
 {
     var mongoSettings = builder.Configuration.GetSection("MongoDBSettings").Get<MongoDBSettings>();
@@ -96,7 +119,6 @@ builder.Services.AddScoped(sp =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 
-Console.WriteLine($"Connection: {connectionString}");
 //** Mysql database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -110,8 +132,8 @@ builder.Services.AddSingleton<TimestampInterceptor>();
 
 // services
 builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("JwtSection"));
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPartnerService, PartnerService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProductCategoryService, ProductCategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
@@ -129,8 +151,13 @@ builder.Services.AddScoped<ICustomerCareService, CustomerCareService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IQuoteService, QuoteService>();
 builder.Services.AddScoped<IOpportunityService, OpportunityService>();
+builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
+builder.Services.AddScoped<ILicenseCenterService, LicenseCenterService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<S3Service>();
+
+builder.Services.Configure<FrontendConfig>(
+    builder.Configuration.GetSection("Frontend"));
 
 // authentication
 var jwtKey = builder.Configuration["JwtSection:Key"];
@@ -160,7 +187,7 @@ var clientUrls = builder.Configuration.GetSection("ClientUrls").Get<List<string>
 Console.WriteLine($"CORS allowed origins: {string.Join(", ", clientUrls)}");
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("OVIE_CLIENT", policyBuilder =>
+    options.AddPolicy("AUTUNA_CRM", policyBuilder =>
     {
         policyBuilder.WithOrigins(clientUrls.ToArray())
                      .AllowAnyHeader()
@@ -174,25 +201,24 @@ Console.WriteLine($"CORS allowed origins: {string.Join(", ", clientUrls)}");
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication();
 
-// builder.WebHost.UseUrls("http://0.0.0.0:5000");
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 // if (app.Environment.IsDevelopment())
 // {
 app.UseSwagger();
-app.UseSwaggerUI(options => {
+app.UseSwaggerUI(options =>
+{
     options.DefaultModelsExpandDepth(-1);
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "API nội bộ Autuna");
 });
 // }
 
 // **  Enable Authentication & Authorization
-app.UseCors("OVIE_CLIENT");
+app.UseCors("AUTUNA_CRM");
 app.UseAuthentication();
 app.UseAuthorization();
-
-
 app.MapControllers();
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();

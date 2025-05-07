@@ -3,41 +3,47 @@
 using ServerLibrary.Services.Interfaces;
 using Xunit;
 using Moq;
+using Microsoft.AspNetCore.Hosting;
+using ServerLibrary.Services.Implementations;
+using RazorLight;
+using Data.DTOs;
 namespace Server.Tests
 
 {
     public class EmailServiceTests
     {
-        private readonly Mock<IEmailService> _emailServiceMock;
-
-        public EmailServiceTests()
-        {
-            _emailServiceMock = new Mock<IEmailService>();
-        }
         [Fact]
-        public async Task GetEmailTemplateAsync_ShouldReturn_ValidHtml()
+        public async Task GetEmailTemplateAsync_UsesRealTemplate_ReturnsExpectedHtml()
         {
             // Arrange
-            var fullName = "Nguyen Van A";
+            var mockEnv = new Mock<IWebHostEnvironment>();
+
+            string projectRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory));
+            string templatesPath = Path.Combine(projectRoot, "Templates");
+
+            Console.WriteLine("ContentRootPath: " + projectRoot);
+            Console.WriteLine("Template folder: " + templatesPath);
+
+            var templateName = "EmailVerificationTemplate.cshtml";
+            var templatePath = Path.Combine(templatesPath, templateName);
+
+            Assert.True(File.Exists(templatePath), $"Expected template not found at: {templatePath}");
+
+            mockEnv.Setup(e => e.ContentRootPath).Returns(projectRoot);
+
+            var service = new EmailService(mockEnv.Object);
+
+            var fullName = "John Doe";
             var verificationLink = "https://example.com/verify";
-            // var expectedHtml = $"<h2>Xác thực Email</h2><p>{fullName}</p><a href='{verificationLink}'>Verify</a>";
-            var expectedHtml = $"<p>Xin chào @Model.FullName,</p>";
-            var templateName = "GetEmailTemplateAsync.cshtml";
-            // Act
-            _emailServiceMock
-                .Setup(service => service.GetEmailTemplateAsync(fullName, verificationLink, templateName))
-                .ReturnsAsync(expectedHtml);
-
-            var emailService = _emailServiceMock.Object;
 
             // Act
-            var emailBody = await emailService.GetEmailTemplateAsync(fullName, verificationLink, templateName);
+            var result = await service.GetEmailTemplateAsync(fullName, verificationLink, templateName);
 
             // Assert
-            Assert.Contains(fullName, emailBody);
-            Assert.Contains(verificationLink, emailBody);
-            Assert.Contains("<h2>Xác thực Email</h2>", emailBody);
+            Assert.Contains(fullName, result);
+            Assert.Contains(verificationLink, result);
         }
+
     }
 }
 

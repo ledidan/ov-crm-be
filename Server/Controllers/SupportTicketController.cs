@@ -2,11 +2,13 @@ using Data.DTOs;
 using Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServerLibrary.MiddleWare;
 using ServerLibrary.Services.Interfaces;
 using System.Security.Claims;
 
 namespace Server.Controllers
 {
+    [RequireValidLicense]
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -116,7 +118,7 @@ namespace Server.Controllers
             return Ok(result);
         }
 
-          [HttpPost("check-code")]
+        [HttpPost("check-code")]
         public async Task<IActionResult> CheckSupportCode([FromBody] string code)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;

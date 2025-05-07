@@ -154,16 +154,16 @@ namespace Server.Controllers
             return BadRequest(response.Message);
         }
 
-        [HttpGet("Member/get-all")]
-        public async Task<IActionResult> GetAllMembersAsync()
-        {
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            var partner = await partnerService.FindByClaim(identity);
+        // [HttpGet("Member/get-all")]
+        // public async Task<IActionResult> GetAllMembersAsync()
+        // {
+        //     var identity = HttpContext.User.Identity as ClaimsIdentity;
+        //     var partner = await partnerService.FindByClaim(identity);
 
 
-            var result = await userService.GetAllMembersAsync(partner);
+        //     var result = await userService.GetAllMembersAsync(partner);
 
-            return Ok(result);
-        }
+        //     return Ok(result);
+        // }
     }
 }

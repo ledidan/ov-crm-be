@@ -2,19 +2,21 @@ using Data.DTOs;
 using Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServerLibrary.MiddleWare;
 using ServerLibrary.Services.Interfaces;
 using System.Security.Claims;
 
 namespace Server.Controllers
 {
+    [RequireValidLicense]
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class QuoteController
-        (
-        IPartnerService partnerService,
-        IQuoteService quoteService,
-        IEmployeeService employeeService) : ControllerBase
+    (
+    IPartnerService partnerService,
+    IQuoteService quoteService,
+    IEmployeeService employeeService) : ControllerBase
     {
         [HttpGet("quotes")]
         public async Task<IActionResult> GetAllQuotes([FromQuery] int pageNumber, [FromQuery] int pageSize)
@@ -74,7 +76,7 @@ namespace Server.Controllers
             }
             return StatusCode(500, result);
         }
-        
+
         [HttpPost("check-code")]
         public async Task<IActionResult> CheckQuoteCode([FromBody] string code)
         {

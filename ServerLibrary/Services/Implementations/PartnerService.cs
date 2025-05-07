@@ -14,10 +14,11 @@ namespace ServerLibrary.Services.Implementations
         private readonly ILogger<PartnerService> logger;
         private readonly IJobGroupService _jobGroupService;
 
-        public PartnerService(AppDbContext _appDbContext, IJobGroupService jobGroupService, ILogger<PartnerService> logger)
+        // !! Đéo bao giờ được thêm IUserService vào constructor PartnerService nha các bạn. Lỗi CircularityDependencyError 
+        public PartnerService(AppDbContext _appDbContext, ILogger<PartnerService> logger)
         {
             appDbContext = _appDbContext;
-            _jobGroupService = jobGroupService;
+            // _jobGroupService = jobGroupService;
             logger = logger;
         }
         public async Task<DataObjectResponse> CreateAsync(CreatePartner partner)
@@ -43,11 +44,22 @@ namespace ServerLibrary.Services.Implementations
             try
             {
                 await appDbContext.InsertIntoDb(newPartner);
-                // await Task.WhenAll(
-                //  _jobGroupService.CreateDefaultJobPosition(newPartner),
-                // _jobGroupService.CreateDefaultJobTitle(newPartner)
-                // );
-
+                // Thêm logic từ AssignDefaultApplicationsToPartner
+                var now = DateTime.UtcNow;
+                var defaultApps = await appDbContext.Applications.ToListAsync();
+                foreach (var app in defaultApps)
+                {
+                    await appDbContext.AddAsync(new PartnerLicense
+                    {
+                        PartnerId = newPartner.Id,
+                        ApplicationId = app.ApplicationId,
+                        StartDate = now,
+                        EndDate = now.AddDays(1),
+                        LicenceType = "FreeTrial",
+                        Status = "Active"
+                    });
+                }
+                await appDbContext.SaveChangesAsync();
                 logger?.LogInformation("Partner {Name} created successfully with ID: {Id}", newPartner.Name, newPartner.Id);
                 return new DataObjectResponse(true, "Tạo doanh nghiệp thành công", newPartner);
             }

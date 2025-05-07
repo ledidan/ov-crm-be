@@ -5,7 +5,6 @@ using Data.Enums;
 using Data.Responses;
 using Mapper.EmployeeMapper;
 using Microsoft.EntityFrameworkCore;
-using MySqlX.XDevAPI.Common;
 using ServerLibrary.Data;
 using ServerLibrary.Services.Interfaces;
 
@@ -14,18 +13,16 @@ namespace ServerLibrary.Services.Implementations
     public class EmployeeService(AppDbContext appDbContext,
         IPartnerService partnerService) : IEmployeeService
     {
-        public async Task<DataStringResponse> CreateEmployeeAdminAsync(CreateEmployee employee)
+        public async Task<EmployeeDTO> CreateEmployeeAdminAsync(CreateEmployee employee)
         {
-            if (employee == null) return new DataStringResponse(false, "Không tìm thấy nhân viên", null);
-
             //check partner
             var partner = await partnerService.FindById(employee.PartnerId);
-            if (partner == null) return new DataStringResponse(false, "Không tìm thấy tổ chức", null);
+            if (partner == null) throw new KeyNotFoundException("Partner not found");
 
             var checkEmployeeExist = await CheckMatchingEmployeeCode(employee.EmployeeCode, partner.Id);
             if (checkEmployeeExist == true)
             {
-                return new DataStringResponse(false, "Mã nhân viên đã tồn tại, vui lòng nhập mã khác");
+                throw new ArgumentException("Mã nhân viên đã tồn tại, vui lòng nhập mã khác");
             }
             var newEmployee = new Employee()
             {
@@ -45,11 +42,12 @@ namespace ServerLibrary.Services.Implementations
                 SignedProbationaryContract = employee.SignedProbationaryContract,
                 Resignation = employee.Resignation,
                 JobStatus = JobStatus.Active,
+                CRMRoleId = employee.CRMRoleId,
                 Partner = partner
             };
             await appDbContext.InsertIntoDb(newEmployee);
 
-            return new DataStringResponse(true, "Khởi tạo hồ nhân viên Admin thành công !", newEmployee.Id.ToString());
+            return newEmployee.ToEmployeeDTO();
         }
 
         public async Task<Employee?> FindByIdAsync(int id)
@@ -165,6 +163,7 @@ namespace ServerLibrary.Services.Implementations
                 SignedProbationaryContract = employee.SignedProbationaryContract,
                 Resignation = employee.Resignation,
                 JobStatus = JobStatus.Active,
+                CRMRoleId = employee.CRMRoleId,
                 Partner = partner
             };
             await appDbContext.InsertIntoDb(newEmployee);

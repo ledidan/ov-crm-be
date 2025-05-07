@@ -53,9 +53,8 @@ namespace Server.Controllers
                 return BadRequest("Không tìm thấy tổ chức");
             }
             var result = await _employeeService.CreateEmployeeAdminAsync(employee);
-            if (!result.Flag)
-            {
-                return BadRequest("Lỗi");
+            if(result == null) {
+                return BadRequest("Tạo nhân viên cho Admin không thành công");
             }
             return Ok(result);
         }

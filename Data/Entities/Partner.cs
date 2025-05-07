@@ -12,7 +12,7 @@
         public string? TotalEmployees { get; set; }
         public bool? IsOrganization { get; set; }
         public string? OwnerFullName { get; set; }
-
+        public ICollection<PartnerLicense> PartnerLicenses { get; set; }
         public ICollection<JobTitleGroup> JobTitleGroup { get; set; }
         public ICollection<JobPositionGroup> JobPositionGroup { get; set; }
         public ICollection<ContactEmployees> ContactEmployees { get; set; } = new List<ContactEmployees>();

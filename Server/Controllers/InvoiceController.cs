@@ -1,6 +1,7 @@
 using Data.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServerLibrary.MiddleWare;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Interfaces;
 using System.Security.Claims;
@@ -9,6 +10,7 @@ using ZstdSharp.Unsafe;
 
 namespace Server.Controllers
 {
+    [RequireValidLicense]
     [ApiController]
     [Route("api/[controller]")]
     public class InvoiceController : ControllerBase

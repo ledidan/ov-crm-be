@@ -19,6 +19,9 @@
       }
     },
     "AllowedHosts": "*",
+    "Frontend": {
+      "BaseUrl": "https://app.autuna.com"
+    },
     "JwtSection": {
       "Key": "TthlUMLddbON00TthlUMLddbON00TthlUMLddbON00",
       "Issuer": "https://head.autuna.com",
