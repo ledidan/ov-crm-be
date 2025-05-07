@@ -200,7 +200,9 @@ builder.Services.AddCors(options =>
                      .AllowCredentials();
     });
 });
-
+var httpClient = new HttpClient();
+var ip = await httpClient.GetStringAsync("https://api.ipify.org");
+Console.WriteLine($"Outbound IP: {ip}");
 Console.WriteLine($"CORS allowed origins: {string.Join(", ", clientUrls)}");
 
 builder.Services.AddAuthorization();
