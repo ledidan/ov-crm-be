@@ -118,7 +118,7 @@ builder.Services.AddScoped(sp =>
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-
+Console.WriteLine($"Connection string: {connectionString}");
 //** Mysql database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -158,6 +158,7 @@ builder.Services.AddScoped<S3Service>();
 
 builder.Services.Configure<FrontendConfig>(
     builder.Configuration.GetSection("Frontend"));
+var frontendSection = builder.Configuration.GetSection("Frontend");
 
 // authentication
 var jwtKey = builder.Configuration["JwtSection:Key"];
@@ -182,8 +183,12 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
     };
 });
+var baseUrl = frontendSection["BaseUrl"];
+var devUrl = frontendSection["DevUrl"];
+var clientUrls = new List<string>();
+if (!string.IsNullOrEmpty(baseUrl)) clientUrls.Add(baseUrl);
+if (!string.IsNullOrEmpty(devUrl)) clientUrls.Add(devUrl);
 // CORS configuration
-var clientUrls = builder.Configuration.GetSection("ClientUrls").Get<List<string>>() ?? new List<string> { "http://localhost:3000" };
 Console.WriteLine($"CORS allowed origins: {string.Join(", ", clientUrls)}");
 builder.Services.AddCors(options =>
 {
