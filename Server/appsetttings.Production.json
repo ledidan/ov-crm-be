@@ -6,6 +6,13 @@
     "ConnectionString": "mongodb+srv://ledidan:Binbon123@cluster0.7t87n.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
     "DatabaseName": "ov-crm"
   },
+  "VNPAY": {
+    "TmnCode": "your_tmn_code",
+    "HashSecret": "your_hash_secret",
+    "PaymentUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
+    "ReturnUrl": "https://yourdomain.com/payment/vnpay-return",
+    "IpnUrl": "https://yourdomain.com/api/Payment/webhook/vnpay"
+},
   "AWS": {
     "AccessKey": "AKIAQ4J5YKGFYVISUHIU",
     "SecretKey": "UwZCQviLSAKkHyHcWGzTkzovfb90ntjgSgDXRiVJ",

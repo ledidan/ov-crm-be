@@ -394,21 +394,15 @@ namespace ServerLibrary.Data
         public DbSet<Mission> Missions { get; set; }
         public DbSet<Call> Calls { get; set; }
         public DbSet<Contact> Contacts { get; set; }
-
         public DbSet<Invoice> Invoices { get; set; }
-
         public DbSet<Activity> Activities { get; set; }
-
         public DbSet<Order> Orders { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductCategory> ProductCategories { get; set; }
-
         public DbSet<ProductInventory> ProductInventories { get; set; }
         public DbSet<ProductPrice> ProductPrices { get; set; }
-
         public DbSet<CompanyJobPosition> CompanyJobPositions { get; set; }
         public DbSet<JobPositionGroup> JobPositionGroups { get; set; }
-
         public DbSet<JobTitleGroup> JobTitleGroups { get; set; }
 
         public DbSet<Supplier> Suppliers { get; set; }
@@ -421,5 +415,10 @@ namespace ServerLibrary.Data
         public DbSet<CRMPermission> CRMPermissions { get; set; }
         public DbSet<CRMRolePermission> CRMRolePermissions { get; set; }
 
+
+        // ** Payment Dbset
+        public DbSet<PaymentToken> PaymentTokens { get; set; }
+        public DbSet<Transactions> Transactions { get; set; }
+        
     }
 }

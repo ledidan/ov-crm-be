@@ -28,7 +28,7 @@ namespace ServerLibrary.Services
         Task<bool> ValidLicenseAsync(int appId, ClaimsPrincipal user, List<AppClaim>? cachedApps = null);
 
         Task<List<UserLicenseDto>> GetUsersWithLicensesAsync(int partnerId);
-        Task<UserLicenseDto> GetUserLicenseDetailsAsync(int userId, int? applicationId = null);
+        Task<UserLicenseDto> GetLicenseDetailsByUserAsync(int userId, int partnerId);
 
     }
 

@@ -66,7 +66,7 @@ namespace ServerLibrary.Services.Implementations
 
             // Check if role already exists
             var existingRole = await _context.CRMRoles
-                .FirstOrDefaultAsync(r => r.Name.Equals(createRoleDto.Name, StringComparison.OrdinalIgnoreCase) && r.PartnerId == partnerId);
+                .FirstOrDefaultAsync(r => r.Name == createRoleDto.Name && r.PartnerId == partnerId);
 
             if (existingRole != null)
                 return new GeneralResponse(false, "Role already exists.");
@@ -92,13 +92,11 @@ namespace ServerLibrary.Services.Implementations
                 RolePermissions = sourcePermissions.Any()
                     ? sourcePermissions.Select(rp => new CRMRolePermission
                     {
-                        RoleId = rp.RoleId,
                         PermissionId = rp.PermissionId,
                     }).ToList()
                     : new List<CRMRolePermission>()
             };
-            _context.CRMRoles.Add(role);
-            await _context.SaveChangesAsync();
+            await _context.InsertIntoDb(role);
             var message = createRoleDto.SourceRoleId.HasValue
                         ? $"Role '{role.Name}' created successfully with permissions copied from source role."
                         : $"Role '{role.Name}' created successfully.";
@@ -124,7 +122,7 @@ namespace ServerLibrary.Services.Implementations
 
             role.Name = updateRoleDto.Name;
             role.Description = updateRoleDto.Description;
-            await _context.SaveChangesAsync();
+            await _context.UpdateDb(role);
 
             return new GeneralResponse(true, $"Role '{updateRoleDto.Name}' updated successfully.");
         }
@@ -277,6 +275,21 @@ namespace ServerLibrary.Services.Implementations
             return new List<RolePermissionsResponse> { result };
         }
 
+        #endregion
+
+        #region Get All Permission
+
+        public async Task<List<CRMPermissionsDTO>> GetAllPermissionsAsync()
+        {
+            var list =  await _context.CRMPermissions.ToListAsync();
+
+            var result = list.Select(p => new CRMPermissionsDTO {
+                Id = p.Id,
+                Action = p.Action,
+                Resource = p.Resource
+            }).ToList();
+            return result;
+        }
 
         public async Task<List<CRMRoleDTO>> GetAllRolesAsync(Partner partner)
         {

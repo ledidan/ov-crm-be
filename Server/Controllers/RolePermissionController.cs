@@ -80,6 +80,13 @@ namespace Server.Controllers
             var roles = await _service.GetAllRolesAsync(partner);
             return Ok(roles);
         }
+
+        [HttpGet("crm-permissions")]
+        public async Task<IActionResult> GetAllPermissions()
+        {
+            var roles = await _service.GetAllPermissionsAsync();
+            return Ok(roles);
+        }
     }
 
 }

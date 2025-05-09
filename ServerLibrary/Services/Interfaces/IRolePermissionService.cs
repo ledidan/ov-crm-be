@@ -14,5 +14,7 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<List<CRMRoleDTO>> GetAllRolesAsync(Partner partner);
 
+        Task<List<CRMPermissionsDTO>> GetAllPermissionsAsync();
+
     }
 }

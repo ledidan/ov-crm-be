@@ -2352,6 +2352,48 @@ namespace ServerLibrary.Migrations
                     b.ToTable("PasswordResetTokens");
                 });
 
+            modelBuilder.Entity("Data.Entities.PaymentToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("CardNumber")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ExpiryDate")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PartnerLicenseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerId");
+
+                    b.HasIndex("PartnerLicenseId");
+
+                    b.ToTable("PaymentTokens");
+                });
+
             modelBuilder.Entity("Data.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -3054,6 +3096,65 @@ namespace ServerLibrary.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Data.Entities.Transactions", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(15,2)");
+
+                    b.Property<int>("ApplicationId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ApplicationPlanId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Metadata")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<int>("PartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PartnerLicenseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("ApplicationPlanId");
+
+                    b.HasIndex("PartnerId");
+
+                    b.HasIndex("PartnerLicenseId");
+
+                    b.ToTable("Transactions");
+                });
+
             modelBuilder.Entity("Data.Entities.UserRole", b =>
                 {
                     b.Property<int>("Id")
@@ -3598,6 +3699,25 @@ namespace ServerLibrary.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Data.Entities.PaymentToken", b =>
+                {
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.PartnerLicense", "PartnerLicense")
+                        .WithMany()
+                        .HasForeignKey("PartnerLicenseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Partner");
+
+                    b.Navigation("PartnerLicense");
+                });
+
             modelBuilder.Entity("Data.Entities.Product", b =>
                 {
                     b.HasOne("Data.Entities.Partner", "Partner")
@@ -3714,6 +3834,39 @@ namespace ServerLibrary.Migrations
                         .HasForeignKey("PartnerId");
 
                     b.Navigation("Partner");
+                });
+
+            modelBuilder.Entity("Data.Entities.Transactions", b =>
+                {
+                    b.HasOne("Data.Entities.Application", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.ApplicationPlan", "ApplicationPlan")
+                        .WithMany()
+                        .HasForeignKey("ApplicationPlanId");
+
+                    b.HasOne("Data.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Entities.PartnerLicense", "PartnerLicense")
+                        .WithMany()
+                        .HasForeignKey("PartnerLicenseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+
+                    b.Navigation("ApplicationPlan");
+
+                    b.Navigation("Partner");
+
+                    b.Navigation("PartnerLicense");
                 });
 
             modelBuilder.Entity("Data.Entities.UserRole", b =>

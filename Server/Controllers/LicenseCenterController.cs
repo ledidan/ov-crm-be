@@ -132,5 +132,33 @@ namespace Server.Controllers
             // Logic lấy data
             return Ok();
         }
+
+        [HttpGet("check")]
+        public async Task<IActionResult> CheckLicense([FromQuery] int UserId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            if (UserId == null)
+            {
+                return Unauthorized("Unauthorized access");
+            }
+            if (partner == null)
+            {
+                return Unauthorized("Unauthorized access");
+            }
+            try
+            {
+                var userLicenses = await _licenseService.GetLicenseDetailsByUserAsync(UserId, partner.Id);
+                if (userLicenses == null)
+                {
+                    return NotFound("No users or licenses found for this partner");
+                }
+                return Ok(userLicenses);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 }

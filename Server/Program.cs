@@ -15,6 +15,7 @@ using System.Text.Json.Serialization;
 using ServerLibrary.Services;
 using ServerLibrary.Hubs;
 using ServerLibrary.MiddleWare;
+using ServerLibrary.Patterns;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -147,7 +148,7 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IJobGroupService, JobGroupService>();
 builder.Services.AddScoped<IProductInventoryService, ProductInventoryService>();
 builder.Services.AddScoped<ISupportTicketService, SupportTicketService>();
-builder.Services.AddScoped<ICustomerCareService, CustomerCareService>();
+builder.Services.AddScoped<ICustomerCareService, CustomerCareService>(); 
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IQuoteService, QuoteService>();
 builder.Services.AddScoped<IOpportunityService, OpportunityService>();
@@ -155,6 +156,17 @@ builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
 builder.Services.AddScoped<ILicenseCenterService, LicenseCenterService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<S3Service>();
+
+// ** KeyedScoped
+builder.Services.AddKeyedScoped<IPaymentStrategy, VnpayService>("vnpay");
+
+builder.Services.AddHttpClient<VnpayService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    MaxConnectionsPerServer = 10
+});
 
 builder.Services.Configure<FrontendConfig>(
     builder.Configuration.GetSection("Frontend"));

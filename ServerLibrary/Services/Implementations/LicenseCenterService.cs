@@ -219,7 +219,7 @@ namespace ServerLibrary.Services.Implementations
             return partnerUsers;
         }
 
-        public async Task<UserLicenseDto> GetUserLicenseDetailsAsync(int userId, int? applicationId = null)
+        public async Task<UserLicenseDto> GetLicenseDetailsByUserAsync(int userId, int partnerId)
         {
             var partnerUser = await _context.PartnerUsers
                 .Include(pu => pu.User)
@@ -245,9 +245,9 @@ namespace ServerLibrary.Services.Implementations
                          && l.StartDate <= DateTime.UtcNow
                          && l.EndDate >= DateTime.UtcNow);
 
-            if (applicationId.HasValue)
+            if (partnerId != null)
             {
-                licenseQuery = licenseQuery.Where(l => l.ApplicationId == applicationId.Value);
+                licenseQuery = licenseQuery.Where(l => l.PartnerId == partnerId);
             }
 
             var licenses = await licenseQuery

@@ -209,9 +209,9 @@ namespace ServerLibrary.Services.Implementations
 
             var roles = new List<CRMRole>
     {
-        new CRMRole { Name = "Admin", PartnerId = partnerId },
-        new CRMRole { Name = "Employee", PartnerId = partnerId },
-        new CRMRole { Name = "Shipper", PartnerId = partnerId }
+        new CRMRole { Name = "Admin", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow },
+        new CRMRole { Name = "Employee", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow },
+        new CRMRole { Name = "Shipper", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow }
     };
             appDbContext.CRMRoles.AddRange(roles);
             await appDbContext.SaveChangesAsync();
@@ -436,7 +436,7 @@ namespace ServerLibrary.Services.Implementations
                 return new GeneralResponse(false, "Client URL is not configured");
 
             string token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-            DateTime expiration = DateTime.UtcNow.AddMinutes(5);
+            DateTime expiration = DateTime.UtcNow.AddHours(24);
 
             var emailVerification = new EmailVerification
             {

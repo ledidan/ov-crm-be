@@ -1513,6 +1513,94 @@ namespace ServerLibrary.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "PaymentTokens",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    PartnerId = table.Column<int>(type: "int", nullable: false),
+                    PartnerLicenseId = table.Column<int>(type: "int", nullable: false),
+                    PaymentMethod = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Token = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CardNumber = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ExpiryDate = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PaymentTokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PaymentTokens_PartnerLicenses_PartnerLicenseId",
+                        column: x => x.PartnerLicenseId,
+                        principalTable: "PartnerLicenses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PaymentTokens_Partners_PartnerId",
+                        column: x => x.PartnerId,
+                        principalTable: "Partners",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Transactions",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    PartnerId = table.Column<int>(type: "int", nullable: false),
+                    PartnerLicenseId = table.Column<int>(type: "int", nullable: false),
+                    ApplicationId = table.Column<int>(type: "int", nullable: false),
+                    ApplicationPlanId = table.Column<int>(type: "int", nullable: true),
+                    Amount = table.Column<decimal>(type: "decimal(15,2)", nullable: false),
+                    Currency = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PaymentMethod = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Status = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TransactionId = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Metadata = table.Column<string>(type: "json", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Transactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Transactions_ApplicationPlans_ApplicationPlanId",
+                        column: x => x.ApplicationPlanId,
+                        principalTable: "ApplicationPlans",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Transactions_Applications_ApplicationId",
+                        column: x => x.ApplicationId,
+                        principalTable: "Applications",
+                        principalColumn: "ApplicationId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Transactions_PartnerLicenses_PartnerLicenseId",
+                        column: x => x.PartnerLicenseId,
+                        principalTable: "PartnerLicenses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Transactions_Partners_PartnerId",
+                        column: x => x.PartnerId,
+                        principalTable: "Partners",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Products",
                 columns: table => new
                 {
@@ -2404,6 +2492,16 @@ namespace ServerLibrary.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PaymentTokens_PartnerId",
+                table: "PaymentTokens",
+                column: "PartnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentTokens_PartnerLicenseId",
+                table: "PaymentTokens",
+                column: "PartnerLicenseId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProductCategories_ParentProductCategoryID",
                 table: "ProductCategories",
                 column: "ParentProductCategoryID");
@@ -2505,6 +2603,26 @@ namespace ServerLibrary.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Transactions_ApplicationId",
+                table: "Transactions",
+                column: "ApplicationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_ApplicationPlanId",
+                table: "Transactions",
+                column: "ApplicationPlanId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_PartnerId",
+                table: "Transactions",
+                column: "PartnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_PartnerLicenseId",
+                table: "Transactions",
+                column: "PartnerLicenseId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserRoles_RoleId",
                 table: "UserRoles",
                 column: "RoleId");
@@ -2579,13 +2697,13 @@ namespace ServerLibrary.Migrations
                 name: "OrderEmployees");
 
             migrationBuilder.DropTable(
-                name: "PartnerLicenses");
-
-            migrationBuilder.DropTable(
                 name: "PartnerUsers");
 
             migrationBuilder.DropTable(
                 name: "PasswordResetTokens");
+
+            migrationBuilder.DropTable(
+                name: "PaymentTokens");
 
             migrationBuilder.DropTable(
                 name: "ProductEmployees");
@@ -2598,6 +2716,9 @@ namespace ServerLibrary.Migrations
 
             migrationBuilder.DropTable(
                 name: "RefreshTokenInfos");
+
+            migrationBuilder.DropTable(
+                name: "Transactions");
 
             migrationBuilder.DropTable(
                 name: "UserRoles");
@@ -2615,16 +2736,13 @@ namespace ServerLibrary.Migrations
                 name: "Orders");
 
             migrationBuilder.DropTable(
-                name: "ApplicationPlans");
-
-            migrationBuilder.DropTable(
-                name: "Applications");
-
-            migrationBuilder.DropTable(
                 name: "Employees");
 
             migrationBuilder.DropTable(
                 name: "Products");
+
+            migrationBuilder.DropTable(
+                name: "PartnerLicenses");
 
             migrationBuilder.DropTable(
                 name: "ApplicationUsers");
@@ -2658,6 +2776,12 @@ namespace ServerLibrary.Migrations
 
             migrationBuilder.DropTable(
                 name: "Suppliers");
+
+            migrationBuilder.DropTable(
+                name: "ApplicationPlans");
+
+            migrationBuilder.DropTable(
+                name: "Applications");
 
             migrationBuilder.DropTable(
                 name: "Partners");
