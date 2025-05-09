@@ -7,11 +7,11 @@
     "DatabaseName": "ov-crm"
   },
   "VNPAY": {
-    "TmnCode": "your_tmn_code",
-    "HashSecret": "your_hash_secret",
+    "TmnCode": "EYME99GU",
+    "HashSecret": "C9SUPLFALKCR66M4MUA03J590XJW13K1",
     "PaymentUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
-    "ReturnUrl": "https://yourdomain.com/payment/vnpay-return",
-    "IpnUrl": "https://yourdomain.com/api/Payment/webhook/vnpay"
+    "ReturnUrl": "https://subscription.autuna.com/payment/vnpay-return",
+    "IpnUrl": "https://head.autuna.com/api/Payment/webhook/vnpay"
 },
   "AWS": {
     "AccessKey": "AKIAQ4J5YKGFYVISUHIU",
