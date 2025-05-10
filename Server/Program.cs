@@ -14,8 +14,7 @@ using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
 using ServerLibrary.Services;
 using ServerLibrary.Hubs;
-using ServerLibrary.MiddleWare;
-using ServerLibrary.Patterns;
+using ServerLibrary.Libraries;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -156,6 +155,7 @@ builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
 builder.Services.AddScoped<ILicenseCenterService, LicenseCenterService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<S3Service>();
+builder.Services.AddScoped<VnPayLibrary>();
 
 // ** KeyedScoped
 builder.Services.AddKeyedScoped<IPaymentStrategy, VnpayService>("vnpay");

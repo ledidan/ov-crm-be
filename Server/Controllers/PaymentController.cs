@@ -1,12 +1,9 @@
 
 using System.Net;
-using System.Text.Json;
 using Data.DTOs;
-using Data.Responses;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using ServerLibrary.MiddleWare;
-using ServerLibrary.Patterns;
+using ServerLibrary.Services.Interfaces;
+
 
 namespace ServerLibrary.Controllers
 {
@@ -18,13 +15,14 @@ namespace ServerLibrary.Controllers
         private readonly IPaymentStrategy _vnpayStrategy;
         public PaymentController(
             [FromKeyedServices("vnpay")] IPaymentStrategy vnpayStrategy
-        ) {
+        )
+        {
             _vnpayStrategy = vnpayStrategy;
         }
         [HttpPost("create-payment")]
         public async Task<IActionResult> CreatePayment([FromBody] AppPaymentRequest request)
         {
-  try
+            try
             {
                 if (request == null || string.IsNullOrEmpty(request.PaymentMethod))
                 {
@@ -53,17 +51,12 @@ namespace ServerLibrary.Controllers
         {
             try
             {
-                // Lấy query parameters từ webhook
-                var queryParams = HttpContext.Request.Query
-                    .ToDictionary(q => q.Key, q => q.Value.ToString());
-
-                await _vnpayStrategy.HandleWebhook(queryParams);
-                return Ok("Webhook xử lý ngon lành, cảm ơn VNPAY nha!");
+                await _vnpayStrategy.HandleWebhook(null); 
+                return Ok(new { RspCode = "00", Message = "Confirm Success" });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Lỗi webhook VNPAY: {ex.Message}");
-                return StatusCode(500, $"{ex.Message}");
+                return BadRequest(new { RspCode = "97", Message = $"Invalid signature or error: {ex.Message}" });
             }
         }
     }

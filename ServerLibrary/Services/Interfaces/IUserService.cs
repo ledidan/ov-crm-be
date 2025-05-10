@@ -23,7 +23,7 @@ namespace ServerLibrary.Services.Interfaces
         Task<ApplicationUser?> FindUserByEmail(string? email);
         Task<GeneralResponse> ResendVerificationAsync(string email);
 
-        // Task<List<ApplicationUser?>> GetAllMembersAsync(Partner partner);
+        Task<List<ApplicationUser?>> GetAllMembersAsync(Partner partner);
 
         Task<bool> ResetPasswordAsync(ResetPasswordDTO request);
 
