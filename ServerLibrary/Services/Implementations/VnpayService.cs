@@ -72,9 +72,10 @@ namespace ServerLibrary.Services.Implementations
                     _logger.LogWarning("CreatePayment: VNPAYQR không hỗ trợ AutoRenew");
                     throw new Exception("VNPAYQR không hỗ trợ AutoRenew nha, chọn VNBANK hoặc INTCARD!");
                 }
-
+                
                 var ipAddr = _vnPayLibrary.GetIpAddress(_httpContextAccessor.HttpContext);
-                var createDate = DateTime.Now;
+                var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+                var createDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
                 var expireDate = createDate.AddMinutes(15); // Hết hạn sau 15 phút
 
                 var vnpRequest = new
