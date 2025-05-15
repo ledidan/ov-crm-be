@@ -12,5 +12,11 @@ namespace ServerLibrary.Services.Interfaces
         Task<bool?> FindByClaim(ClaimsIdentity? claimsIdentity);
         Task<List<MergedEmployeeUserDTO>> GetMergedEmployeeUserDataAsync(Partner partner);
         Task<GeneralResponse> DeactivateAccount(int userId, Partner partner);
+
+        Task<List<TransactionForUserDTO>> GetAllHistoryPaymentLicenseAsync(int userId);
+
+        Task<List<LicenseForUserDTO>> GetAllLicensesAsync(int userId);
+
+        
     }
 }

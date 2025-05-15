@@ -289,7 +289,7 @@ namespace Server.Controllers
             var response = await _customerService.RemoveContactFromCustomer(id, contactId, partner);
 
             if (response.Flag == false)
-                return BadRequest(response.Message);
+                return BadRequest(response);
 
             return Ok(response);
 
@@ -305,7 +305,7 @@ namespace Server.Controllers
 
             var response = await _customerService.UnassignActivityFromCustomer(id, activityId, partner);
             if (response.Flag == false)
-                return BadRequest(response.Message);
+                return BadRequest(response);
 
             return Ok(response);
         }
@@ -320,7 +320,7 @@ namespace Server.Controllers
 
             var response = await _customerService.UnassignOrderFromCustomer(id, orderId, partner);
             if (response.Flag == false)
-                return BadRequest(response.Message);
+                return BadRequest(response);
 
             return Ok(response);
         }
@@ -335,7 +335,7 @@ namespace Server.Controllers
 
             var response = await _customerService.UnassignInvoiceFromCustomer(id, invoiceId, partner);
             if (response.Flag == false)
-                return BadRequest(response.Message);
+                return BadRequest(response);
 
             return Ok(response);
         }
@@ -434,7 +434,7 @@ namespace Server.Controllers
 
             var response = await _customerService.UnassignQuoteFromCustomer(id, quoteId, partner);
             if (response.Flag == false)
-                return BadRequest(response.Message);
+                return BadRequest(response);
 
             return Ok(response);
         }
@@ -450,7 +450,7 @@ namespace Server.Controllers
 
             var response = await _customerService.UnassignTicketFromCustomer(id, ticketId, partner);
             if (response.Flag == false)
-                return BadRequest(response.Message);
+                return BadRequest(response);
 
             return Ok(response);
         }
@@ -466,7 +466,7 @@ namespace Server.Controllers
 
             var response = await _customerService.UnassignCustomerCareTicketFromCustomer(id, customerCareTicketId, partner);
             if (response.Flag == false)
-                return BadRequest(response.Message);
+                return BadRequest(response);
 
             return Ok(response);
         }

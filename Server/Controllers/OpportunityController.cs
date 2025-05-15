@@ -158,7 +158,7 @@ namespace Server.Controllers
             var response = await opportunityService.RemoveContactFromId(id, contactId, partner);
 
             if (response.Flag == false)
-                return BadRequest(response.Message);
+                return BadRequest(response);
 
             return Ok(response);
         }
@@ -178,7 +178,7 @@ namespace Server.Controllers
             var response = await opportunityService.UnassignOrderFromId(id, orderId, partner);
 
             if (response.Flag == false)
-                return BadRequest(response.Message);
+                return BadRequest(response);
 
             return Ok(response);
         }
@@ -198,7 +198,7 @@ namespace Server.Controllers
             var response = await opportunityService.UnassignActivityFromId(id, activityId, partner);
 
             if (response.Flag == false)
-                return BadRequest(response.Message);
+                return BadRequest(response);
 
             return Ok(response);
         }
@@ -218,7 +218,7 @@ namespace Server.Controllers
             var response = await opportunityService.UnassignQuoteFromId(id, quoteId, partner);
 
             if (response.Flag == false)
-                return BadRequest(response.Message);
+                return BadRequest(response);
 
             return Ok(response);
 

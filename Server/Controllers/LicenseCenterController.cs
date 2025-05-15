@@ -3,6 +3,9 @@ using System.Security.Claims;
 using Data.DTOs;
 using Data.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using ServerLibrary.Data;
 using ServerLibrary.Services;
 using ServerLibrary.Services.Interfaces;
 
@@ -12,18 +15,20 @@ namespace Server.Controllers
     [Route("api/[controller]")]
     public class LicenseCenterController : ControllerBase
     {
-
+        private readonly AppDbContext _dbcontext;
         private readonly ILicenseCenterService _licenseService;
 
         private readonly IPartnerService _partnerService;
 
         public LicenseCenterController(
             IPartnerService partnerService,
-            ILicenseCenterService licenseService
+            ILicenseCenterService licenseService,
+            AppDbContext dbcontext
         )
         {
             _licenseService = licenseService;
             _partnerService = partnerService;
+            _dbcontext = dbcontext;
         }
 
         // ──────── APPLICATIONS ────────
@@ -52,11 +57,10 @@ namespace Server.Controllers
         }
 
         [HttpPost("applications/plans")]
-        public async Task<IActionResult> CreatePlan(int appId, [FromBody] ApplicationPlanDTO plan)
+        public async Task<IActionResult> CreatePlan([FromBody] ApplicationPlanDTO plan)
         {
-            plan.ApplicationId = appId;
             var created = await _licenseService.CreatePlanAsync(plan);
-            return CreatedAtAction(nameof(GetPlans), new { appId = appId }, created);
+            return CreatedAtAction(nameof(GetPlans), new { appId = plan.ApplicationId }, created);
         }
 
         // ──────── PARTNER LICENSES ────────
@@ -66,6 +70,10 @@ namespace Server.Controllers
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
+            if(partner == null)
+            {
+                return Unauthorized("Unauthorized access");
+            }
             var licenses = await _licenseService.GetPartnerLicensesAsync(partner.Id);
             return Ok(licenses);
         }
@@ -75,6 +83,10 @@ namespace Server.Controllers
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
+            if (partner == null)
+            {
+                return Unauthorized("Unauthorized access");
+            }
             license.PartnerId = partner.Id;
             var created = await _licenseService.CreateLicenseAsync(license);
             return CreatedAtAction(nameof(GetPartnerLicenses), new { partnerId = partner.Id }, created);
@@ -159,6 +171,67 @@ namespace Server.Controllers
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+
+        [HttpPost("activate")]
+        public async Task<IActionResult> Activate([FromBody] ActivateLicenseRequest request)
+        {
+            try
+            {
+                var response = await _licenseService.ActivateLicense(request);
+                
+                if (response.Flag)
+                {
+                    return Ok(response);
+                }
+
+                return BadRequest(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi hệ thống, thử lại sau!, {ex.Message}");
+            }
+        }
+
+        [HttpGet("is-active")]
+        public async Task<IActionResult> CheckLicenseActive(int userId)
+        {
+            var isActive = await _licenseService.IsLicenseActiveAsync(userId);
+            if (isActive == null)
+            {
+                return NotFound("License not found");
+            }
+            return Ok(isActive);
+        }
+
+        [HttpPut("application/{id}")]
+        public async Task<IActionResult> UpdateApplication(int id, [FromBody] ApplicationDTO app)
+        {
+            if (id != app.ApplicationId)
+            {
+                return BadRequest("Application ID mismatch");
+            }
+            var updated = await _licenseService.UpdateApplicationAsync(app);
+            if (updated.Flag)
+            {
+                return Ok(updated);
+            }
+            return BadRequest(updated);
+        }
+
+        [HttpPut("plan/{id}")]
+        public async Task<IActionResult> UpdatePlan(int id, [FromBody] ApplicationPlanDTO plan)
+        {
+            if (id != plan.Id)
+            {
+                return BadRequest("Application Plan ID mismatch");
+            }
+            var updated = await _licenseService.UpdatePlanAsync(plan);
+            if (updated.Flag)
+            {
+                return Ok(updated);
+            }
+            return BadRequest(updated);
         }
     }
 }

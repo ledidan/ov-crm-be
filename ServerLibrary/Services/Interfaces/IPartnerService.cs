@@ -7,7 +7,13 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IPartnerService
     {
-        Task<DataObjectResponse> CreateAsync(CreatePartner partner);
+        Task<DataObjectResponse> CreatePartnerFreeTrialAsync(CreatePartner partner);
+        Task<Partner> CreatePartnerAsync(CreatePartner partner);
+
+
+        Task<bool?> FindUserOfPartner(int userId);
+
+        // Task<DataObjectResponse> CreateAndUpdatePartnerAfterActivatedLicenseAsync(UpdatePartner partner);
         Task<Partner?> FindById(int id);
         Task<List<Partner>> GetAsync();
         Task<Partner?> FindByClaim(ClaimsIdentity? claimsIdentity);

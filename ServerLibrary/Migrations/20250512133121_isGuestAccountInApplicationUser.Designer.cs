@@ -12,8 +12,8 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250509141858_init")]
-    partial class init
+    [Migration("20250512133121_isGuestAccountInApplicationUser")]
+    partial class isGuestAccountInApplicationUser
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -711,6 +711,9 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool?>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsGuestAccount")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("ModifiedDate")
@@ -2267,7 +2270,7 @@ namespace ServerLibrary.Migrations
                     b.Property<int?>("MaxEmployeesExpected")
                         .HasColumnType("int");
 
-                    b.Property<int>("PartnerId")
+                    b.Property<int?>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
@@ -2276,6 +2279,9 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -3127,7 +3133,7 @@ namespace ServerLibrary.Migrations
                         .IsRequired()
                         .HasColumnType("json");
 
-                    b.Property<int>("PartnerId")
+                    b.Property<int?>("PartnerId")
                         .HasColumnType("int");
 
                     b.Property<int>("PartnerLicenseId")
@@ -3144,6 +3150,9 @@ namespace ServerLibrary.Migrations
                     b.Property<string>("TransactionId")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -3666,9 +3675,7 @@ namespace ServerLibrary.Migrations
 
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany("PartnerLicenses")
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PartnerId");
 
                     b.Navigation("Application");
 
@@ -3853,9 +3860,7 @@ namespace ServerLibrary.Migrations
 
                     b.HasOne("Data.Entities.Partner", "Partner")
                         .WithMany()
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PartnerId");
 
                     b.HasOne("Data.Entities.PartnerLicense", "PartnerLicense")
                         .WithMany()

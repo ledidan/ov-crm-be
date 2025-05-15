@@ -10,10 +10,10 @@ using ServerLibrary.Services.Interfaces;
 
 namespace Server.Controllers
 {
-    [RequireValidLicense]
+    // [RequireValidLicense]
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    // [Authorize]
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
@@ -30,6 +30,29 @@ namespace Server.Controllers
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var partner = await _partnerService.FindByClaim(identity);
             var data = await _accountService.GetMergedEmployeeUserDataAsync(partner);
+            return Ok(data);
+        }
+        
+        [HttpGet("{id:int}/licenses")]
+        public async Task<IActionResult> GetAllLicenses(int id) //** User ID
+        {
+            if(id == null) {
+                return BadRequest("User ID is required.");
+            }
+
+            var data = await _accountService.GetAllLicensesAsync(id);
+
+            return Ok(data);
+        }
+        [HttpGet("{id:int}/historyPayment")]
+        public async Task<IActionResult> GetAllHistoryPayment(int id) //** User ID
+        {
+            if(id == null) {
+                return BadRequest("User ID is required.");
+            }
+
+            var data = await _accountService.GetAllHistoryPaymentLicenseAsync(id);
+
             return Ok(data);
         }
     }

@@ -9,13 +9,11 @@ namespace Data.Entities
     public class Transactions
     {
         public long Id { get; set; }
-        [Required]
-        public int PartnerId { get; set; }
+        public int UserId { get; set; }
+        public int? PartnerId { get; set; }
         public Partner Partner { get; set; }
-        [Required]
         public int PartnerLicenseId { get; set; }
         public PartnerLicense PartnerLicense { get; set; }
-        [Required]
         public int ApplicationId { get; set; }
         public Application Application { get; set; }
 
@@ -25,15 +23,12 @@ namespace Data.Entities
         [Column(TypeName = "decimal(15,2)")]
         public decimal Amount { get; set; }
 
-        [Required]
         public string Currency { get; set; } = "VND";
 
-        [Required]
         public string PaymentMethod { get; set; } // vnpay, momo
 
         public string Status { get; set; } // pending, success, failed
 
-        [Required]
         public string TransactionId { get; set; }
 
         [Column(TypeName = "json")]

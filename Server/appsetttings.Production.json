@@ -27,7 +27,8 @@
   },
   "Frontend": {
     "BaseUrl": "https://app.autuna.com",
-    "DevUrl": "http://localhost:3000"
+    "DevUrl": "http://localhost:3000",
+    "SubscriptionUrl": "http://localhost:3001"
   },
   "JwtSection": {
     "Key": "TthlUMLddbON00TthlUMLddbON00TthlUMLddbON00",

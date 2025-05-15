@@ -20,6 +20,7 @@ namespace ServerLibrary.Services.Implementations
 
         private readonly AppDbContext _appDbContext;
 
+
         public AccountService(AppDbContext appDbContext)
         {
             _appDbContext = appDbContext;
@@ -51,6 +52,57 @@ namespace ServerLibrary.Services.Implementations
                 return true;
             }
             return false;
+        }
+
+        public async Task<List<TransactionForUserDTO>> GetAllHistoryPaymentLicenseAsync(int userId)
+        {
+            if (userId == null)
+            {
+                throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
+            }
+            var transactions = await _appDbContext.Transactions
+                .Where(t => t.UserId == userId)
+                .Select(t => new TransactionForUserDTO
+                {
+                    Id = t.Id,
+                    Amount = t.Amount,
+                    ApplicationId = t.ApplicationId,
+                    PaymentMethod = t.PaymentMethod,
+                    Status = t.Status,
+                    CreatedAt = t.CreatedAt,
+                })
+                .ToListAsync();
+            if (transactions == null)
+            {
+                return new List<TransactionForUserDTO>();
+            }
+            return transactions;
+        }
+
+        public async Task<List<LicenseForUserDTO>> GetAllLicensesAsync(int userId)
+        {
+            if (userId == null)
+            {
+                throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
+            }
+
+            var licenses = _appDbContext.PartnerLicenses
+                .Include(l => l.Application)
+                .Include(p => p.ApplicationPlan)
+                .Where(l => l.UserId == userId)
+                .Select(l => new LicenseForUserDTO
+                {
+                    Id = l.Id,
+                    MaxEmployeesExpected = l.MaxEmployeesExpected,
+                    ApplicationId = l.ApplicationId,
+                    ApplicationName = l.Application.Name,
+                    PlanName = l.ApplicationPlan.Name,
+                    LicenceType = l.LicenceType,
+                    StartDate = l.StartDate,
+                    EndDate = l.EndDate,
+                })
+                .ToList();
+            return licenses;
         }
 
         public async Task<List<MergedEmployeeUserDTO>> GetMergedEmployeeUserDataAsync(Partner partner)
@@ -104,9 +156,9 @@ namespace ServerLibrary.Services.Implementations
                     })
                 .Skip(0).Take(50)
                 .ToListAsync();
-
             return result;
         }
+
 
     }
 

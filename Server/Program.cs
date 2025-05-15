@@ -26,7 +26,6 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
 builder.Services.AddLogging(logging =>
 {
     logging.AddConsole();
@@ -147,20 +146,21 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IJobGroupService, JobGroupService>();
 builder.Services.AddScoped<IProductInventoryService, ProductInventoryService>();
 builder.Services.AddScoped<ISupportTicketService, SupportTicketService>();
-builder.Services.AddScoped<ICustomerCareService, CustomerCareService>(); 
+builder.Services.AddScoped<ICustomerCareService, CustomerCareService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IQuoteService, QuoteService>();
 builder.Services.AddScoped<IOpportunityService, OpportunityService>();
 builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
 builder.Services.AddScoped<ILicenseCenterService, LicenseCenterService>();
+builder.Services.AddScoped<ICRMService, CRMService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<S3Service>();
 builder.Services.AddScoped<VnPayLibrary>();
 
 // ** KeyedScoped
-builder.Services.AddKeyedScoped<IPaymentStrategy, VnpayService>("vnpay");
+builder.Services.AddKeyedScoped<IPaymentStrategy, PaymentService>("vnpay");
 
-builder.Services.AddHttpClient<VnpayService>(client =>
+builder.Services.AddHttpClient<PaymentService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
 }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
@@ -197,9 +197,11 @@ builder.Services.AddAuthentication(options =>
 });
 var baseUrl = frontendSection["BaseUrl"];
 var devUrl = frontendSection["DevUrl"];
+var subscriptionUrl = frontendSection["SubscriptionUrl"];
 var clientUrls = new List<string>();
 if (!string.IsNullOrEmpty(baseUrl)) clientUrls.Add(baseUrl);
 if (!string.IsNullOrEmpty(devUrl)) clientUrls.Add(devUrl);
+if (!string.IsNullOrEmpty(subscriptionUrl)) clientUrls.Add(subscriptionUrl);
 // CORS configuration
 Console.WriteLine($"CORS allowed origins: {string.Join(", ", clientUrls)}");
 builder.Services.AddCors(options =>
@@ -216,12 +218,11 @@ var httpClient = new HttpClient();
 var ip = await httpClient.GetStringAsync("https://api.ipify.org");
 Console.WriteLine($"Outbound IP: {ip}");
 Console.WriteLine($"CORS allowed origins: {string.Join(", ", clientUrls)}");
-
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication();
 
 var app = builder.Build();
-
+app.UseStaticFiles();
 // Configure the HTTP request pipeline.
 // if (app.Environment.IsDevelopment())
 // {

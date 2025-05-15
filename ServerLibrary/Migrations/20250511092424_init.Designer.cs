@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServerLibrary.Data;
 
@@ -11,9 +12,11 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250511092424_init")]
+    partial class init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -708,9 +711,6 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool?>("IsActive")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool?>("IsGuestAccount")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("ModifiedDate")
@@ -2239,9 +2239,6 @@ namespace ServerLibrary.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ActivationCode")
-                        .HasColumnType("longtext");
-
                     b.Property<int>("ApplicationId")
                         .HasColumnType("int");
 
@@ -2264,6 +2261,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("LicenceType")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<int?>("MaxEmployeesExpected")
@@ -2276,6 +2274,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Status")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<int>("UserId")

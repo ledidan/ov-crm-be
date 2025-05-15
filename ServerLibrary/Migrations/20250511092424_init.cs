@@ -985,7 +985,8 @@ namespace ServerLibrary.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    PartnerId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    PartnerId = table.Column<int>(type: "int", nullable: true),
                     ApplicationId = table.Column<int>(type: "int", nullable: false),
                     ApplicationPlanId = table.Column<int>(type: "int", nullable: true),
                     StartDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
@@ -1019,8 +1020,7 @@ namespace ServerLibrary.Migrations
                         name: "FK_PartnerLicenses_Partners_PartnerId",
                         column: x => x.PartnerId,
                         principalTable: "Partners",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -1554,7 +1554,8 @@ namespace ServerLibrary.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    PartnerId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    PartnerId = table.Column<int>(type: "int", nullable: true),
                     PartnerLicenseId = table.Column<int>(type: "int", nullable: false),
                     ApplicationId = table.Column<int>(type: "int", nullable: false),
                     ApplicationPlanId = table.Column<int>(type: "int", nullable: true),
@@ -1595,8 +1596,7 @@ namespace ServerLibrary.Migrations
                         name: "FK_Transactions_Partners_PartnerId",
                         column: x => x.PartnerId,
                         principalTable: "Partners",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 

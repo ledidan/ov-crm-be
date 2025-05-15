@@ -103,7 +103,7 @@ namespace Server.Controllers
             {
                 return Ok(response);
             }
-            return BadRequest(response.Message);
+            return BadRequest(response);
         }
 
         [HttpPost("mission")]
@@ -132,7 +132,7 @@ namespace Server.Controllers
             {
                 return Ok(response);
             }
-            return BadRequest(response.Message);
+            return BadRequest(response);
         }
 
         [HttpGet("{id:int}")]

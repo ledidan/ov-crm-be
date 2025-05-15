@@ -13,14 +13,14 @@ namespace Data.Enums
         {
             ApplicationId = 1,
             Name = "CRM",
-            Description = "Customer Relationship Management",
-        },
-        new Application
-        {
-            ApplicationId = 2,
-            Name = "HRM",
-            Description = "Human Resources Management",
+            Description = "Phần mềm quản lý quan hệ khách hàng (Autuna CRM)",
         }
+        // new Application
+        // {
+        //     ApplicationId = 2,
+        //     Name = "HRM",
+        //     Description = "Human Resources Management",
+        // }
     };
         public static readonly List<CRMRole> Roles = new()
     {

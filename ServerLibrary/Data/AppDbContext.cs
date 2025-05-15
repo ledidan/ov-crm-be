@@ -96,7 +96,7 @@ namespace ServerLibrary.Data
             builder.Entity<Application>().HasData(SeedData.Applications.ToArray());
             // builder.Entity<CRMRole>().HasData(SeedData.Roles.ToArray());
             builder.Entity<CRMRolePermission>()
-           .HasKey(rp => new { rp.RoleId, rp.PermissionId});
+           .HasKey(rp => new { rp.RoleId, rp.PermissionId });
 
             builder.Entity<PartnerLicense>(entity =>
    {
@@ -104,7 +104,8 @@ namespace ServerLibrary.Data
 
        entity.HasOne(pl => pl.Partner)
            .WithMany(p => p.PartnerLicenses)
-           .HasForeignKey(pl => pl.PartnerId);
+           .HasForeignKey(pl => pl.PartnerId)
+           .IsRequired(false);
 
        entity.HasOne(pl => pl.Application)
            .WithMany(a => a.PartnerLicenses)
@@ -365,7 +366,6 @@ namespace ServerLibrary.Data
                 .HasForeignKey(p => p.SupplierId)
                 .OnDelete(DeleteBehavior.SetNull);
             base.OnModelCreating(builder);
-
         }
         public DbSet<InvoiceEmployees> InvoiceEmployees { get; set; }
         public DbSet<CustomerContacts> CustomerContacts { get; set; }
@@ -419,6 +419,6 @@ namespace ServerLibrary.Data
         // ** Payment Dbset
         public DbSet<PaymentToken> PaymentTokens { get; set; }
         public DbSet<Transactions> Transactions { get; set; }
-        
+
     }
 }

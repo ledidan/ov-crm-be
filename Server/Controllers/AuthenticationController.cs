@@ -2,7 +2,6 @@
 using Data.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ServerLibrary.Helpers;
 using ServerLibrary.Services.Interfaces;
 
 namespace Server.Controllers
@@ -11,24 +10,14 @@ namespace Server.Controllers
     [ApiController]
     public class AuthenticationController(IUserService userService, IPartnerService partnerService) : ControllerBase
     {
-        // [HttpPost("register-guest")]
-        // [Authorize(Roles = "Admin,SysAdmin")]
-        // public async Task<IActionResult> CreateUserAsync(Register user)
-        // {
-        //     if (user == null) return BadRequest("Thông tin người dùng không được để trống");
 
-        //     var result = await userService.CreateUnverifiedAdminAsync(user);
-        //     return Ok(result);
-        // }
+        [HttpPost("register-admin")]
 
-        [HttpPost("register-guest")]
-        // [Authorize(Roles = "SysAdmin")]
-        public async Task<IActionResult> CreateAdminAsync(RegisterAdmin user)
+        public async Task<IActionResult> CreateAdminAsync([FromBody] RegisterAdminWithPartner request)
         {
-            if (user == null) return BadRequest("Vui lòng nhập đầy đủ thông tin đăng ký");
+            if (request.User == null || request.Partner == null) return BadRequest("Vui lòng nhập đầy đủ thông tin người dùng đăng ký");
 
-            string role = Constants.Role.Admin;
-            var result = await userService.CreateUnverifiedAdminAsync(user);
+            var result = await userService.CreateUnverifiedAdminAsync(request.User, request.Partner);
             return Ok(result);
         }
 
@@ -51,6 +40,14 @@ namespace Server.Controllers
             return Ok(result);
         }
 
+        [HttpPost("login-guest")]
+        public async Task<IActionResult> SigninAsGuestAsync(Login user)
+        {
+            if (user == null) return BadRequest("User is empty");
+            var result = await userService.SignInGuestAsync(user);
+            return Ok(result);
+        }
+
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshTokenAsync(RefreshToken token)
         {
@@ -62,7 +59,22 @@ namespace Server.Controllers
         [HttpPost("register-new-user")]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterUserDTO userDto)
         {
-            var result = await userService.CreateUnverifiedUserAsync(userDto);
+            var result = await userService.CreateUnverifiedUserByPartnerAsync(userDto);
+
+            if (!result.Flag)
+            {
+                return BadRequest(new { Flag = result.Flag, message = result.Message });
+            }
+
+            return Ok(new { Flag = result.Flag, Message = result.Message });
+        }
+
+        [HttpPost("active-new-partner")]
+        public async Task<IActionResult> RegisterNewPartnerForActiveLicense([FromBody] RegisterNewPartnerForActiveLicense request)
+        {
+            if (request.Email == null || request.createPartner == null)
+                return BadRequest(new { message = "Email hoặc thông tin đối tác là bắt buộc" });
+            var result = await userService.HandleUserWithActiveLicenseAsync(request.Email, request.createPartner);
 
             if (!result.Flag)
             {
@@ -76,24 +88,24 @@ namespace Server.Controllers
         public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequestDto request)
         {
             if (string.IsNullOrEmpty(request.Email) && string.IsNullOrEmpty(request.PhoneNumber))
-                return BadRequest(new { message = "Email hoặc số điện thoại là bắt buộc" });
+                return BadRequest(new { Flag = false, Message = "Email hoặc số điện thoại là bắt buộc" });
 
             string token = await userService.GeneratePasswordResetTokenAsync(request.Email, request.PhoneNumber);
             if (token == null)
-                return NotFound(new { message = "Không tìm thấy tài khoản" });
+                return NotFound(new { Flag = false, Message = "Không tìm thấy tài khoản" });
 
             // TODO: Gửi email hoặc SMS chứa token (chưa tích hợp)
-            return Ok(new { message = "Token đã được gửi", token });
+            return Ok(new { Flag = true, Message = $"Mã kích hoạt đã được gửi tới email: {request.Email}" });
         }
 
         [HttpPost("reset-new-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO request)
         {
-            bool result = await userService.ResetPasswordAsync(request);
-            if (!result)
-                return BadRequest(new { message = "Token không hợp lệ hoặc đã sử dụng" });
+            var result = await userService.ResetPasswordAsync(request);
+            if (!result.Flag)
+                return BadRequest(result);
 
-            return Ok(new { message = "Mật khẩu đã được cập nhật thành công" });
+            return Ok(new { Flag = true, Message = "Mật khẩu đã được cập nhật thành công" });
         }
 
         [HttpGet("activate-user")]
@@ -109,14 +121,14 @@ namespace Server.Controllers
             return BadRequest(response);
         }
 
-        [HttpGet("validate-reset-token")]
-        public async Task<IActionResult> ValidateResetToken([FromQuery] ValidateTokenDto request)
+        [HttpPost("validate-reset-token")]
+        public async Task<IActionResult> ValidateResetToken([FromBody] ValidateTokenDto request)
         {
             bool isValid = await userService.IsValidResetTokenAsync(request.Email, request.PhoneNumber, request.Token);
             if (!isValid)
-                return BadRequest(new { message = "Token không hợp lệ hoặc đã sử dụng" });
+                return BadRequest(new { Flag = false, Message = "Mã code không hợp lệ hoặc đã sử dụng" });
 
-            return Ok(new { message = "Token hợp lệ" });
+            return Ok(new { Flag = true, Message = "Mã code hợp lệ" });
         }
 
         [HttpPost("send-email-verification")]
@@ -151,7 +163,7 @@ namespace Server.Controllers
         {
             var response = await userService.ResendVerificationAsync(request.Email);
             if (response.Flag) return Ok(response);
-            return BadRequest(response.Message);
+            return BadRequest(response);
         }
 
         [HttpGet("Member/get-all")]
@@ -164,6 +176,18 @@ namespace Server.Controllers
             var result = await userService.GetAllMembersAsync(partner);
 
             return Ok(result);
+        }
+        [HttpPost("register-guest")]
+        public async Task<IActionResult> CreateGuest([FromBody] RegisterGuestDTO userDto)
+        {
+            var result = await userService.RegisterForGuestAsync(userDto);
+
+            if (!result.Flag)
+            {
+                return BadRequest(new { Flag = result.Flag, message = result.Message });
+            }
+
+            return Ok(new { Flag = result.Flag, Message = result.Message });
         }
     }
 }

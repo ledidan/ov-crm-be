@@ -15,7 +15,8 @@ namespace Data.Entities
         public DateTime? Birthday { get; set; }
         public string? Password { get; set; }
         public bool? IsActive { get; set; } = false;
-
+        
+        public bool? IsGuestAccount { get; set; } = false;
         public AccountStatus AccountStatus { get; set; }
         public bool? IsActivateEmail { get; set; } = false;
     }

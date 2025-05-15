@@ -1,0 +1,133 @@
+@using Data.DTOs
+@model ActivationEmailModel
+
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kích hoạt tài khoản @Model.AppName</title>
+</head>
+
+<body style="margin: 0; padding: 0; font-family: 'Arial', sans-serif; background-color: #f4f4f4;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0"
+                    style="width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td
+                            style="padding: 20px; background: linear-gradient(135deg, #4e4d95, #007bff); border-radius: 8px 8px 0 0; text-align: center;">
+                            <img src="https://via.placeholder.com/150x50?text=Your+Logo" alt="Logo"
+                                style="max-width: 150px; height: auto;" />
+                            <h1 style="color: #ffffff; font-size: 24px; margin: 10px 0;">Kích hoạt ứng dụng !</h1>
+                        </td>
+                    </tr>
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding: 30px; color: #333333;">
+                            <h2 style="font-size: 20px; color: #4e4d95; margin-top: 0;">Xin chào @Model.FullName,</h2>
+                            <p style="font-size: 16px; line-height: 1.6; margin: 10px 0;">
+                                Cảm ơn bạn đã chọn <strong>@Model.AppName</strong>! Bạn chỉ còn một bước nữa để bắt đầu
+                                trải nghiệm ứng dụng tuyệt vời của chúng tôi.
+                            </p>
+                            <p style="font-size: 16px; line-height: 1.6; margin: 10px 0;">
+                                Dùng mã kích hoạt dưới đây để cập nhật thông tin doanh nghiệp và kích hoạt tài khoản của
+                                bạn:
+                            </p>
+                            <div
+                                style="background-color: #e9ecef; padding: 15px; border-radius: 6px; text-align: center; margin: 20px 0;">
+                                <strong style="font-size: 18px; color: #007bff;">Mã kích hoạt:
+                                    @Model.ActivationCode</strong>
+                            </div>
+                            <p style="font-size: 16px; line-height: 1.6; margin: 10px 0;">
+                                Nhấp vào nút dưới đây để truy cập form kích hoạt:
+                            </p>
+                            <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 20px auto;">
+                                <tr>
+                                    <td
+                                        style="border-radius: 6px; background: linear-gradient(40deg, #4e4d95, #007bff);">
+                                        <a href="@Model.VerificationLink" style="display: inline-block; padding: 12px 30px; color: #ffffff;
+                                         font-size: 16px; text-decoration: none; border-radius: 6px;">Kích hoạt
+                                            ngay</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="font-size: 14px; line-height: 1.6; margin: 10px 0; color: #666666;">
+                                Nếu nút không hoạt động, sao chép và dán link sau vào trình duyệt:
+                                <br><a href="@Model.VerificationLink"
+                                    style="color: #007bff; text-decoration: none;">@Model.VerificationLink</a>
+                            </p>
+                            <p style="font-size: 14px; line-height: 1.6; margin: 10px 0; color: #666666;">
+                                Hoặc bạn có thể sao chép mã kích hoạt dưới đây và dán vào form kích hoạt:
+                                <br><a href="https://app.autuna.com/auth/activate-license"
+                                    style="color: #007bff; text-decoration: none;">https://app.autuna.com/auth/activate-license</a>
+                            </p>
+                            <p style="font-size: 16px; line-height: 1.6; margin: 20px 0 0;">
+                                Cần hỗ trợ? Liên hệ chúng tôi qua <a href="mailto:support@autuna.com"
+                                    style="color: #007bff; text-decoration: none;">support@autuna.com</a>.
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td
+                            style="padding: 20px; background-color: #f8f9fa; border-radius: 0 0 8px 8px; text-align: center; font-size: 14px; color: #666666;">
+                            <p style="margin: 0 0 10px;">Kết nối với chúng tôi:</p>
+                            <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
+                                <tr>
+                                    <td style="padding: 0 7px;">
+                                        <a href="https://facebook.com/autuna-software" style="text-decoration: none;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"
+                                                style="width: 20px; height: 20px; filter: invert(45%) sepia(99%) saturate(1352%) hue-rotate(180deg) brightness(97%) contrast(96%);">
+                                                <path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5
+           c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z" />
+                                            </svg>
+
+                                        </a>
+                                    </td>
+                                    <td style="padding: 0 7px;">
+                                        <a href="https://x.com/autuna-software" style="text-decoration: none;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
+                                                style="width: 20px; height: 20px; filter: invert(0%) sepia(100%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%);">
+                                                <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 
+           26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z" />
+                                            </svg>
+
+                                        </a>
+                                    </td>
+                                    <td style="padding: 0 7px;">
+                                        <a href="https://instagram.com/autuna-software" style="text-decoration: none;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"
+                                                style="width: 20px; height: 20px; filter: invert(38%) sepia(99%) saturate(1352%) hue-rotate(320deg) brightness(97%) contrast(96%);">
+                                                <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9
+           287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7
+           74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8
+           -14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2
+           c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1
+           -184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0
+           184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9
+           0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8
+           0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1
+           9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1
+           s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9
+           s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1
+           s2.7 102.7-9 132.1z" />
+                                            </svg>
+
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin: 10px 0 0;">&copy; 2025 @Model.AppName - Autuna Ltd. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
