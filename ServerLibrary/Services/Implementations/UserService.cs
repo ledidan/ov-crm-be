@@ -107,7 +107,7 @@ namespace ServerLibrary.Services.Implementations
             return await appDbContext.SystemRoles.FirstOrDefaultAsync(_ => _.Id == roleId);
         }
 
-        public async Task<LoginResponse> SignInAsync(Login user)
+        public async Task<LoginResponse> SignInAppAsync(Login user)
         {
             var applicationUser = await FindUserByEmail(user.Email);
             if (applicationUser == null) return new LoginResponse(false, "Email không tìm thấy");
@@ -610,7 +610,7 @@ namespace ServerLibrary.Services.Implementations
                 var apps = licenses.Select(l => new
                 {
                     AppName = l.Name,
-                    PartnerLicenseId = l.Id,
+                    PartnerLicenseId = l.Id.ToString(),
                     AppId = l.ApplicationId.ToString(),
                     AppExpiredAt = l.EndDate.ToString("o")
                 }).ToList();

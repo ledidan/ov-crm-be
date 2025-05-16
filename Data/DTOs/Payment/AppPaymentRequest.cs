@@ -6,6 +6,8 @@ namespace Data.DTOs
     {
         public int UserId { get; set; }
         public int? PartnerLicenseId { get; set; }
+
+        public int? PartnerId { get; set; }
         public List<AppItem> AppItems { get; set; } = new List<AppItem>();
         public decimal Amount { get; set; }
         public string Currency { get; set; } = "VND";

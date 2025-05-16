@@ -22,6 +22,35 @@ namespace Data.Enums
         //     Description = "Human Resources Management",
         // }
     };
+        public static readonly List<ApplicationPlan> ApplicationPlans = new() {
+        new ApplicationPlan {
+            Id=1,
+            ApplicationId = 1,
+            Name = "Standard",
+            Description = "Gói tiêu chuẩn",
+            PriceMonthly = 220000,
+            PriceYearly = 2400000,
+            MaxEmployees = 5
+        },
+        new ApplicationPlan {
+            Id= 2,
+            ApplicationId = 1,
+            Name = "Premium",
+            Description = "Gói dành cho SME nhỏ, đầy đủ tính năng cho mọi ngành",
+            PriceMonthly = 420000,
+            PriceYearly = 4599000,
+            MaxEmployees = 10
+        },
+        new ApplicationPlan {
+            Id= 3,
+            ApplicationId = 1,
+            Name = "Enterprise",
+            Description = "Gói dành cho doanh nghiệp lớn, full tính năng bán hàng và tool marketing cho mọi ngành.",
+            PriceMonthly = 800000,
+            PriceYearly = 9600000,
+            MaxEmployees = 10
+        },
+    };
         public static readonly List<CRMRole> Roles = new()
     {
         new CRMRole { Id = 1, Name = "Khách hàng - Default", CreatedDate = DateTime.Now, ModifiedDate = DateTime.Now },

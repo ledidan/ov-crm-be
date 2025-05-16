@@ -33,10 +33,10 @@ namespace Server.Controllers
         // }
 
         [HttpPost("login")]
-        public async Task<IActionResult> SigninAsync(Login user)
+        public async Task<IActionResult> SigninAppAsync(Login user)
         {
             if (user == null) return BadRequest("User is empty");
-            var result = await userService.SignInAsync(user);
+            var result = await userService.SignInAppAsync(user);
             return Ok(result);
         }
 

@@ -16,7 +16,7 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<GeneralResponse> CreateSysAdminAsync(RegisterSysAdmin user, string? role);
         Task<GeneralResponse> CreateUnverifiedAdminAsync(RegisterAdmin user, CreatePartner partner);
-        Task<LoginResponse> SignInAsync(Login user);
+        Task<LoginResponse> SignInAppAsync(Login user);
         Task<LoginResponse> SignInGuestAsync(Login user);
         Task<LoginResponse> RefreshTokenAsync(RefreshToken token);
 

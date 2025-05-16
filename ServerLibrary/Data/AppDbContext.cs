@@ -94,6 +94,7 @@ namespace ServerLibrary.Data
             // Seed CRMPermissions
             builder.Entity<CRMPermission>().HasData(SeedData.Permissions);
             builder.Entity<Application>().HasData(SeedData.Applications.ToArray());
+            builder.Entity<ApplicationPlan>().HasData(SeedData.ApplicationPlans.ToArray());
             // builder.Entity<CRMRole>().HasData(SeedData.Roles.ToArray());
             builder.Entity<CRMRolePermission>()
            .HasKey(rp => new { rp.RoleId, rp.PermissionId });

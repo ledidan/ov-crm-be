@@ -82,9 +82,6 @@ namespace ServerLibrary.Services.Implementations
                 // ** Get Ip
                 var ipAddr = _vnPayLibrary.GetIpAddress(_httpContextAccessor.HttpContext);
 
-                // var createDate = DateTime.UtcNow;
-                // var createDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
-                // var expireDate = createDate.AddMinutes(15); // Hết hạn sau 15 phút
                 // 2. Kiểm tra giao dịch cũ
                 var existingTransaction = await _dbContext.Transactions
                     .FirstOrDefaultAsync(t => t.UserId == request.UserId
@@ -98,7 +95,7 @@ namespace ServerLibrary.Services.Implementations
                             : DateTime.Now.ToString("yyyyMMddHHmmss"),
                         "yyyyMMddHHmmss",
                         null);
-                    var expireDate = createDate.AddMinutes(30); // Đồng bộ với vnp_ExpireDate
+                    var expireDate = createDate.AddMinutes(15); // Đồng bộ với vnp_ExpireDate
                     if (DateTime.Now > expireDate)
                     {
                         existingTransaction.Status = "expired";
@@ -121,8 +118,8 @@ namespace ServerLibrary.Services.Implementations
                     TmnCode = _configuration["VNPAY:TmnCode"],
                     Amount = request.Amount,
                     Command = token != null && licenses.Any(l => l.AutoRenew) && !isTransfer ? "pay_with_token" : "pay",
-                    CreateDate = DateTime.Now.ToString("yyyyMMddHHmmss"),
-                    ExpireDate = DateTime.Now.AddMinutes(30).ToString("yyyyMMddHHmmss"), // Tăng lên 30 phút
+                    CreateDate = DateTime.Now,
+                    ExpireDate = DateTime.Now.AddMinutes(15).ToString("yyyyMMddHHmmss"), // Hết hạn 15 phút
                     CurrCode = "VND",
                     IpAddr = ipAddr,
                     Locale = "vn",
@@ -368,29 +365,47 @@ namespace ServerLibrary.Services.Implementations
 
         private async Task UpdateLicenseAndTransactionAfterSuccessPayment(Transactions transaction, List<PartnerLicense> licenses, ApplicationUser user)
         {
+
+            _logger.LogInformation("===> Start updating licenses for user {UserId} with transaction {TransactionId}", user.Id, transaction.Id);
+
+            if (string.IsNullOrWhiteSpace(transaction.Metadata))
+            {
+                _logger.LogError("Transaction {TransactionId} metadata is null or empty", transaction.Id);
+                return;
+            }
             transaction.Status = "success";
             var metadata = JsonConvert.DeserializeObject<dynamic>(transaction.Metadata);
+
             var appItems = JsonConvert.DeserializeObject<List<AppItem>>(((object)metadata.AppItems).ToString());
             var licenseAppIds = licenses.Select(l => l.ApplicationId).ToList();
 
             var hasActiveLicenses = await _dbContext.PartnerLicenses
-            .AnyAsync(l => l.UserId == user.Id && l.Status == "Active"
-                && licenseAppIds.Contains(l.ApplicationId));
+            .AnyAsync(l => l.UserId == user.Id && (l.Status == "Active" || l.Status == "Expired") && licenseAppIds.Contains(l.ApplicationId));
+
+            _logger.LogInformation("User {UserId} has active licenses: {HasActive}", user.Id, hasActiveLicenses);
 
             for (int i = 0; i < licenses.Count; i++)
             {
                 var license = licenses[i];
                 var appItem = appItems[i];
+                if (appItem == null)
+                {
+                    _logger.LogWarning("AppItem not found for license index {Index}", i);
+                    continue;
+                }
 
                 if (hasActiveLicenses)
                 {
-                    _logger.LogInformation("Cập nhật license cho user {UserId}", user.Id);
+                    _logger.LogInformation("Updating existing license for AppId {AppId}", license.ApplicationId);
                     license.LicenceType = appItem.LicenceType;
+                    license.AutoRenew = appItem.AutoRenew;
                     license.LastRenewedAt = DateTime.UtcNow;
+                    license.ApplicationPlanId = appItem.ApplicationPlanId;
 
                     // Query existingLicense cho app hiện tại
                     var existingLicense = await _dbContext.PartnerLicenses
-                        .FirstOrDefaultAsync(l => l.UserId == user.Id && l.ApplicationId == license.ApplicationId && l.Status == "Active");
+                        .FirstOrDefaultAsync(l => l.UserId == user.Id
+                        && l.ApplicationId == license.ApplicationId && l.Status == "Active");
 
                     // Tính ngày trial còn lại
                     var remainingTrialDays = existingLicense != null && existingLicense.EndDate > DateTime.UtcNow
@@ -410,6 +425,8 @@ namespace ServerLibrary.Services.Implementations
                     {
                         license.EndDate = DateTime.MaxValue;
                     }
+                    _logger.LogInformation("License {LicenseId} updated. New EndDate: {EndDate}", license.Id, license.EndDate);
+
                 }
                 else
                 {
@@ -434,7 +451,10 @@ namespace ServerLibrary.Services.Implementations
                     license.ActivationCode = activationCode;
                     license.LastRenewedAt = DateTime.UtcNow;
                     license.LicenceType = appItem.LicenceType;
+                    license.ApplicationPlanId = appItem.ApplicationPlanId;
+                    license.UserId = user.Id;
                     int duration = appItem.LicenceType == "Lifetime" ? 0 : (appItem.Duration ?? 1);
+
                     if (appItem.LicenceType == "Monthly")
                     {
                         license.EndDate = DateTime.UtcNow.AddMonths(duration).AddDays(15); // Tặng 15 ngày trial
@@ -447,6 +467,8 @@ namespace ServerLibrary.Services.Implementations
                     {
                         license.EndDate = DateTime.MaxValue;
                     }
+                    _logger.LogInformation("New license {LicenseId} created. EndDate: {EndDate}", license.Id, license.EndDate);
+
                 }
 
                 _dbContext.PartnerLicenses.Update(license);
