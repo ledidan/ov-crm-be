@@ -32,7 +32,6 @@ namespace Server.Controllers
         }
 
         [HttpGet("summaryOrders")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetOrderStatsForAllOrders()
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;

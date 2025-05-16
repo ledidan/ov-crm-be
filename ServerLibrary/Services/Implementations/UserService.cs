@@ -642,6 +642,10 @@ namespace ServerLibrary.Services.Implementations
             }).ToList();
 
             appDbContext.CRMRolePermissions.AddRange(rolePermissions);
+
+            var systemAdminRole = await CheckSystemRole(Constants.Role.Admin);
+            await appDbContext.InsertIntoDb(new UserRole() { Role = systemAdminRole, User = adminUser });
+
             await appDbContext.SaveChangesAsync();
 
             var employeeData = new CreateEmployee
@@ -761,8 +765,7 @@ namespace ServerLibrary.Services.Implementations
                 _logger.LogInformation("Tạo {Count} license FreeTrial cho user {UserId}, chờ kích hoạt nha! 🔑", licenses.Count, user.Id);
 
                 // Liên kết user với partner
-                var adminRole = await CheckSystemRole(Constants.Role.Admin);
-                await appDbContext.InsertIntoDb(new UserRole() { Role = adminRole, User = user });
+
                 var employee = await SeedDefaultEmployeeRolesAndAdminAsync(newPartner.Id, user);
                 await appDbContext.InsertIntoDb(new PartnerUser
                 {
@@ -816,8 +819,6 @@ namespace ServerLibrary.Services.Implementations
                 _logger.LogInformation("Liên kết {Count} license active với partner {PartnerId} cho user {UserId}", activeLicenses.Count, newPartner.Id, checkingUser.Id);
 
                 // Liên kết user với partner
-                var adminRole = await CheckSystemRole(Constants.Role.Admin);
-                await appDbContext.InsertIntoDb(new UserRole { Role = adminRole, User = checkingUser });
                 var employee = await SeedDefaultEmployeeRolesAndAdminAsync(newPartner.Id, checkingUser);
                 await appDbContext.InsertIntoDb(new PartnerUser
                 {
@@ -912,15 +913,6 @@ namespace ServerLibrary.Services.Implementations
                     await appDbContext.SaveChangesAsync();
                     _logger.LogInformation("Tạo {Count} license FreeTrial active cho user {UserId}", licenses.Count, applicationUser.Id);
 
-                    // Gán role Admin và liên kết partner
-                    var adminRole = await CheckSystemRole(Constants.Role.Admin);
-                    if (adminRole == null)
-                    {
-                        await transaction.RollbackAsync();
-                        _logger.LogError("Vai trò Admin không tồn tại");
-                        return new GeneralResponse(false, "Vai trò Admin không được tìm thấy");
-                    }
-                    await appDbContext.InsertIntoDb(new UserRole { Role = adminRole, User = applicationUser });
                     var employee = await SeedDefaultEmployeeRolesAndAdminAsync(newPartner.Id, applicationUser);
                     if (employee == null)
                     {
