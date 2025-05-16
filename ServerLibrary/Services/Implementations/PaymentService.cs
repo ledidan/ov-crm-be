@@ -118,7 +118,7 @@ namespace ServerLibrary.Services.Implementations
                     TmnCode = _configuration["VNPAY:TmnCode"],
                     Amount = request.Amount,
                     Command = token != null && licenses.Any(l => l.AutoRenew) && !isTransfer ? "pay_with_token" : "pay",
-                    CreateDate = DateTime.Now,
+                    CreateDate = DateTime.Now.ToString("yyyyMMddHHmmss"),
                     ExpireDate = DateTime.Now.AddMinutes(15).ToString("yyyyMMddHHmmss"), // Hết hạn 15 phút
                     CurrCode = "VND",
                     IpAddr = ipAddr,
