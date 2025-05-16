@@ -12,6 +12,7 @@ using ServerLibrary.Data;
 using ServerLibrary.Libraries;
 using ServerLibrary.Services.Interfaces;
 using Data.Enums;
+using ServerLibrary.Helpers;
 
 namespace ServerLibrary.Services.Implementations
 {
@@ -81,7 +82,9 @@ namespace ServerLibrary.Services.Implementations
 
                 // ** Get Ip
                 var ipAddr = _vnPayLibrary.GetIpAddress(_httpContextAccessor.HttpContext);
-
+                var vnTimeZone = GetRegionTimeZone.GetVietnamTimeZone(); // ** Set Timezone for vnpay transaction
+                var createdDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+                var expireDate = createdDate.AddMinutes(20); // Hết hạn sau 15 phút
                 // 2. Kiểm tra giao dịch cũ
                 var existingTransaction = await _dbContext.Transactions
                     .FirstOrDefaultAsync(t => t.UserId == request.UserId
@@ -95,7 +98,6 @@ namespace ServerLibrary.Services.Implementations
                             : DateTime.Now.ToString("yyyyMMddHHmmss"),
                         "yyyyMMddHHmmss",
                         null);
-                    var expireDate = createDate.AddMinutes(15); // Đồng bộ với vnp_ExpireDate
                     if (DateTime.Now > expireDate)
                     {
                         existingTransaction.Status = "expired";
@@ -118,8 +120,8 @@ namespace ServerLibrary.Services.Implementations
                     TmnCode = _configuration["VNPAY:TmnCode"],
                     Amount = request.Amount,
                     Command = token != null && licenses.Any(l => l.AutoRenew) && !isTransfer ? "pay_with_token" : "pay",
-                    CreateDate = DateTime.Now.ToString("yyyyMMddHHmmss"),
-                    ExpireDate = DateTime.Now.AddMinutes(15).ToString("yyyyMMddHHmmss"), // Hết hạn 15 phút
+                    CreateDate = createdDate.ToString("yyyyMMddHHmmss"),
+                    ExpireDate = expireDate.ToString("yyyyMMddHHmmss"),
                     CurrCode = "VND",
                     IpAddr = ipAddr,
                     Locale = "vn",

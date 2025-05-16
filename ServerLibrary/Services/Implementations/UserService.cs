@@ -693,7 +693,7 @@ namespace ServerLibrary.Services.Implementations
         public async Task<GeneralResponse> RegisterForGuestAsync(RegisterGuestDTO guest)
         {
             var checkingUser = await FindUserByEmail(guest.Email);
-            if (checkingUser != null) return new GeneralResponse(false, "User already exists");
+            if (checkingUser != null) return new GeneralResponse(false, "Tài khoản đã tồn tại !");
             var role = Constants.Role.User;
             var applicationUser = new ApplicationUser
             {

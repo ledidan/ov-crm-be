@@ -184,7 +184,7 @@ namespace Server.Controllers
 
             if (!result.Flag)
             {
-                return BadRequest(new { Flag = result.Flag, message = result.Message });
+                return BadRequest(new { Flag = result.Flag, Message = result.Message });
             }
 
             return Ok(new { Flag = result.Flag, Message = result.Message });

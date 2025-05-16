@@ -6,6 +6,29 @@ using Newtonsoft.Json.Linq;
 
 namespace ServerLibrary.Helpers
 {
+
+    public static class GetRegionTimeZone
+    {
+        public static TimeZoneInfo GetVietnamTimeZone()
+        {
+            try
+            {
+                return TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // Windows
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                try
+                {
+                    return TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"); // Linux (if applicable)
+                }
+                catch (TimeZoneNotFoundException ex)
+                {
+                    throw new Exception("Vietnam time zone not found on this system.", ex);
+                }
+            }
+        }
+    }
+
     public static class JsonExtensions
     {
         public static string ToJson(this object obj)
