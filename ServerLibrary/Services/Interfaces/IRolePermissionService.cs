@@ -12,9 +12,13 @@ namespace ServerLibrary.Services.Interfaces
         Task<GeneralResponse> AssignPermissionsToRoleAsync(int roleId, List<int> permissionIds, int partnerId);
         Task<List<RolePermissionsResponse>> GetPermissionsForRoleAsync(int roleId, int? partnerId);
 
+        Task<List<RolePermissionsResponse>> GetRolesForEmployeeAsync(int employeeId, int? partnerId);
+
         Task<List<CRMRoleDTO>> GetAllRolesAsync(Partner partner);
 
         Task<List<CRMPermissionsDTO>> GetAllPermissionsAsync();
 
+
+        Task<DataObjectResponse> AssignRoleForEmployeesAsync(List<int> employeeIds, int roleId, int partnerId);
     }
 }

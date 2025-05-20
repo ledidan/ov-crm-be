@@ -18,5 +18,9 @@ namespace Data.DTOs
         public string? LogoUrl { get; set; }
         public string? EmailContact { get; set; }
         public string? PhoneNumber { get; set; }
+
+         public bool? IsInitialized { get; set; } = false;
+
+        public DateTime? InitializedAt { get; set; } = DateTime.Now;
     }
 }

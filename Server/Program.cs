@@ -15,6 +15,8 @@ using System.Text.Json.Serialization;
 using ServerLibrary.Services;
 using ServerLibrary.Hubs;
 using ServerLibrary.Libraries;
+using Quartz;
+using ServerLibrary.Jobs;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,14 +41,6 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
-
-builder.Services.AddSignalR(options =>
-{
-    options.KeepAliveInterval = TimeSpan.FromSeconds(15); // Ping client mỗi 15s
-    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30); // Timeout sau 30s
-    options.MaximumReceiveMessageSize = 32 * 1024; // Giới hạn message 32KB
-    options.EnableDetailedErrors = true; // Debug chi tiết (tắt trong production)
-});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -127,9 +121,28 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     );
 });
 
-builder.Services.AddSingleton<TimestampInterceptor>();
 
-// services
+// ** Register Quartz + SignalR + hosted service
+builder.Services.AddSignalR();
+// builder.Services.AddQuartz(q =>
+// {
+//     var jobKey = new JobKey("SetupCRMForPartnerJob");
+//     q.AddJob<SetupCRMForPartnerJob>(opts => opts.WithIdentity(jobKey));
+// });
+builder.Services.AddQuartz(q =>
+{
+    var jobKey = new JobKey("NotifyFrontendJob");
+    q.AddJob<NotifyFrontendJob>(opts => opts.WithIdentity(jobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(jobKey)
+        // .WithSimpleSchedule(s => s.WithIntervalInMinutes(1).RepeatForever())
+        .WithIdentity("NotifyFrontendTrigger"));
+});
+// ** Quartz Hosted Service
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
+// ** SingleTon
+builder.Services.AddSingleton<TimestampInterceptor>();
+// ** Services
 builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("JwtSection"));
 builder.Services.AddScoped<IPartnerService, PartnerService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -240,5 +253,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<ChatHub>("/chathub");
-
+app.MapHub<NotificationHub>("/hubs/notification");
 app.Run();

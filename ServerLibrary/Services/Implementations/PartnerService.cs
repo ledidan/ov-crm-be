@@ -6,19 +6,20 @@ using ServerLibrary.Data;
 using ServerLibrary.Services.Interfaces;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
+using AutoMapper;
 namespace ServerLibrary.Services.Implementations
 {
     public class PartnerService : IPartnerService
     {
         private readonly AppDbContext appDbContext;
         private readonly ILogger<PartnerService> logger;
-        private readonly IJobGroupService _jobGroupService;
+        private readonly IMapper _mapper;
 
-        public PartnerService(AppDbContext _appDbContext, ILogger<PartnerService> logger)
+        public PartnerService(AppDbContext _appDbContext, ILogger<PartnerService> logger, IMapper mapper)
         {
             appDbContext = _appDbContext;
-            // _jobGroupService = jobGroupService;
             logger = logger;
+            _mapper = mapper;
         }
 
         public async Task<DataObjectResponse> CreatePartnerFreeTrialAsync(CreatePartner partner)
@@ -111,6 +112,23 @@ namespace ServerLibrary.Services.Implementations
             return false;
         }
 
+        public async Task<PartnerDTO> GetPartnerInfoAsync(int partnerId)
+        {
+            var result = await appDbContext.Partners.FirstOrDefaultAsync(_ => _.Id == partnerId);
+            var response = new PartnerDTO
+            {
+                Id = result.Id,
+                Name = result.Name,
+                TotalEmployees = result.TotalEmployees,
+                IsOrganization = result.IsOrganization,
+                OwnerFullName = result.OwnerFullName,
+                LogoUrl = result.LogoUrl,
+                IsInitialized = result.IsInitialized,
+                ShortName = result.ShortName,
+            };
+            return response;
+        }
+
         public async Task<Partner> CreatePartnerAsync(CreatePartner partner)
         {
             var partnerExist = await FindPartnerByEmail(partner.EmailContact);
@@ -154,5 +172,49 @@ namespace ServerLibrary.Services.Implementations
             return await appDbContext.PartnerUsers
                 .AnyAsync(pu => pu.User.Id == userId);
         }
+
+        public async Task<Partner> UpdatePartnerAsync(PartnerDTO model)
+        {
+            var existingPartner = await appDbContext.Partners.FindAsync(model.Id);
+            if (existingPartner == null)
+            {
+                logger?.LogWarning("Attempt to update non-existent partner with ID: {Id}", model.Id);
+                throw new Exception("Không tìm thấy doanh nghiệp để cập nhật");
+            }
+
+            if (!string.IsNullOrEmpty(model.EmailContact) && model.EmailContact != existingPartner.EmailContact)
+            {
+                var emailUsed = await appDbContext.Partners.AnyAsync(p => p.EmailContact == model.EmailContact && p.Id != model.Id);
+                if (emailUsed)
+                {
+                    throw new Exception("Email đã được sử dụng bởi doanh nghiệp khác");
+                }
+            }
+            try
+            {
+                existingPartner.ShortName = model.ShortName;
+                existingPartner.Name = model.Name;
+                existingPartner.TaxIdentificationNumber = model.TaxIdentificationNumber;
+                existingPartner.LogoUrl = model.LogoUrl;
+                existingPartner.EmailContact = model.EmailContact;
+                existingPartner.TotalEmployees = model.TotalEmployees;
+                existingPartner.IsOrganization = model.IsOrganization;
+                existingPartner.OwnerFullName = model.OwnerFullName;
+                existingPartner.PhoneNumber = model.PhoneNumber;
+                existingPartner.ModifiedDate = DateTime.UtcNow;
+
+                appDbContext.Partners.Update(existingPartner);
+                await appDbContext.SaveChangesAsync();
+
+                logger?.LogInformation("Partner {Name} (ID: {Id}) updated successfully", existingPartner.Name, existingPartner.Id);
+                return existingPartner;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Error updating partner with ID: {Id}", model.Id);
+                throw new Exception("Đã xảy ra lỗi khi cập nhật doanh nghiệp");
+            }
+        }
+
     }
 }

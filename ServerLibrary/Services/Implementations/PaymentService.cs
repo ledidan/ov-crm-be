@@ -206,13 +206,7 @@ namespace ServerLibrary.Services.Implementations
                     _logger.LogWarning("CreatePaymentForExistedLicense: Không tìm thấy ApplicationPlan {ApplicationPlanId}", item.ApplicationPlanId);
                     throw new Exception($"Plan {item.ApplicationPlanId} không tồn tại, chọn lại nha!");
                 }
-
-                // var validLicenceTypes = new[] { "Pro", "FreeTrial", "Enterprise", "Lifetime" };
-                // if (!validLicenceTypes.Contains(item.LicenceType))
-                // {
-                //     _logger.LogWarning("CreatePaymentForExistedLicense: LicenceType {LicenceType} không hợp lệ", item.LicenceType);
-                //     throw new Exception($"LicenceType {item.LicenceType} không hỗ trợ nha!");
-                // }
+            
                 if ((item.LicenceType == "Monthly" || item.LicenceType == "Yearly") && (!item.Duration.HasValue || item.Duration <= 0))
                 {
                     _logger.LogWarning("CreatePaymentForExistedLicense: Duration phải lớn hơn 0 cho LicenceType {LicenceType}", item.LicenceType);

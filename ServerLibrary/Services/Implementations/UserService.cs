@@ -26,6 +26,8 @@ namespace ServerLibrary.Services.Implementations
         private readonly IEmployeeService employeeService;
         private readonly IEmailService emailService;
 
+        private readonly IJobGroupService jobGroupService;
+
         private readonly IOptions<FrontendConfig> _frontendConfig;
 
         private readonly ILogger<UserService> _logger;
@@ -36,6 +38,7 @@ namespace ServerLibrary.Services.Implementations
         IPartnerService _partnerService,
         IEmployeeService _employeeService,
         IEmailService _emailService,
+        IJobGroupService _jobGroupService,
         IConfiguration configuration,
         ILogger<UserService> logger,
         IOptions<FrontendConfig> frontendConfig)
@@ -43,6 +46,7 @@ namespace ServerLibrary.Services.Implementations
             config = _config;
             appDbContext = _appDbContext;
             partnerService = _partnerService;
+            jobGroupService = _jobGroupService;
             employeeService = _employeeService;
             emailService = _emailService;
             _frontendConfig = frontendConfig;
@@ -604,7 +608,6 @@ namespace ServerLibrary.Services.Implementations
          .Where(l => l.PartnerId == partnerUser.Partner.Id)
          .Select(l => new { l.Id, l.ApplicationId, l.EndDate, l.Application.Name })
          .ToListAsync();
-
             if (licenses.Any())
             {
                 var apps = licenses.Select(l => new
@@ -612,41 +615,20 @@ namespace ServerLibrary.Services.Implementations
                     AppName = l.Name,
                     PartnerLicenseId = l.Id.ToString(),
                     AppId = l.ApplicationId.ToString(),
-                    AppExpiredAt = l.EndDate.ToString("o")
+                    AppExpiredAt = l.EndDate.ToString("o"),
                 }).ToList();
                 claims.Add(new Claim("Apps", JsonSerializer.Serialize(apps)));
             }
             return claims;
         }
 
-
-        public async Task<EmployeeDTO> SeedDefaultEmployeeRolesAndAdminAsync(int partnerId, ApplicationUser adminUser)
+        private async Task<EmployeeDTO> CreateEmployeeByAdminAsync(int partnerId, ApplicationUser adminUser)
         {
-            var allPermissions = await appDbContext.CRMPermissions.ToListAsync();
-
-            var roles = new List<CRMRole>
-    {
-        new CRMRole { Name = "Admin", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow },
-        new CRMRole { Name = "Employee", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow },
-        new CRMRole { Name = "Shipper", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow }
-    };
-            appDbContext.CRMRoles.AddRange(roles);
-            await appDbContext.SaveChangesAsync();
-
-            var adminRole = roles.First(r => r.Name == "Admin");
-
-            var rolePermissions = allPermissions.Select(p => new CRMRolePermission
+            if (partnerId < 0)
             {
-                RoleId = adminRole.Id,
-                PermissionId = p.Id
-            }).ToList();
-
-            appDbContext.CRMRolePermissions.AddRange(rolePermissions);
-
-            var systemAdminRole = await CheckSystemRole(Constants.Role.Admin);
-            await appDbContext.InsertIntoDb(new UserRole() { Role = systemAdminRole, User = adminUser });
-
-            await appDbContext.SaveChangesAsync();
+                throw new Exception("PartnerId không hợp lệ");
+            }
+            if (adminUser == null) throw new Exception("User không hợp lệ");
 
             var employeeData = new CreateEmployee
             {
@@ -655,12 +637,10 @@ namespace ServerLibrary.Services.Implementations
                 Email = adminUser.Email,
                 // ** Auto-generated
                 EmployeeCode = "NV0000001",
-                CRMRoleId = adminRole.Id,
                 PartnerId = partnerId
             };
             return await employeeService.CreateEmployeeAdminAsync(employeeData);
         }
-
         public async Task<LoginResponse> SignInGuestAsync(Login user)
         {
             var applicationUser = await FindUserByEmail(user.Email);
@@ -764,9 +744,27 @@ namespace ServerLibrary.Services.Implementations
                 await appDbContext.SaveChangesAsync();
                 _logger.LogInformation("Tạo {Count} license FreeTrial cho user {UserId}, chờ kích hoạt nha! 🔑", licenses.Count, user.Id);
 
-                // Liên kết user với partner
+                // ** Setup User với Role.
+                var adminRole = await CheckSystemRole(Constants.Role.Admin);
+                if (adminRole == null)
+                {
+                    _logger?.LogError("System role 'Admin' not found.");
+                    return new GeneralResponse(false, "Không tìm thấy role hệ thống.");
+                }
 
-                var employee = await SeedDefaultEmployeeRolesAndAdminAsync(newPartner.Id, user);
+                var existingRole = await appDbContext.UserRoles
+                    .FirstOrDefaultAsync(ur => ur.Id == user.Id && ur.Role.Id == adminRole.Id);
+
+                if (existingRole == null)
+                {
+                    await appDbContext.InsertIntoDb(new UserRole
+                    {
+                        Role = adminRole,
+                        User = user
+                    });
+                }
+                // **Liên kết user với partner
+                var employee = await CreateEmployeeByAdminAsync(newPartner.Id, user);
                 await appDbContext.InsertIntoDb(new PartnerUser
                 {
                     User = user,
@@ -818,8 +816,27 @@ namespace ServerLibrary.Services.Implementations
                 await appDbContext.SaveChangesAsync();
                 _logger.LogInformation("Liên kết {Count} license active với partner {PartnerId} cho user {UserId}", activeLicenses.Count, newPartner.Id, checkingUser.Id);
 
+                // ** Setup User với Role.
+                var adminRole = await CheckSystemRole(Constants.Role.Admin);
+                if (adminRole == null)
+                {
+                    _logger?.LogError("System role 'Admin' not found.");
+                    return new GeneralResponse(false, "Không tìm thấy role hệ thống.");
+                }
+
+                var existingRole = await appDbContext.UserRoles
+                    .FirstOrDefaultAsync(ur => ur.Id == checkingUser.Id && ur.Role.Id == adminRole.Id);
+
+                if (existingRole == null)
+                {
+                    await appDbContext.InsertIntoDb(new UserRole
+                    {
+                        Role = adminRole,
+                        User = checkingUser
+                    });
+                }
                 // Liên kết user với partner
-                var employee = await SeedDefaultEmployeeRolesAndAdminAsync(newPartner.Id, checkingUser);
+                var employee = await CreateEmployeeByAdminAsync(newPartner.Id, checkingUser);
                 await appDbContext.InsertIntoDb(new PartnerUser
                 {
                     User = checkingUser,
@@ -913,12 +930,31 @@ namespace ServerLibrary.Services.Implementations
                     await appDbContext.SaveChangesAsync();
                     _logger.LogInformation("Tạo {Count} license FreeTrial active cho user {UserId}", licenses.Count, applicationUser.Id);
 
-                    var employee = await SeedDefaultEmployeeRolesAndAdminAsync(newPartner.Id, applicationUser);
+                    var employee = await CreateEmployeeByAdminAsync(newPartner.Id, applicationUser);
                     if (employee == null)
                     {
                         await transaction.RollbackAsync();
                         _logger?.LogError("Tạo employee thất bại cho user {Email}", user.Email);
                         return new GeneralResponse(false, "Không thể tạo employee!");
+                    }
+                    // ** Setup User với Role.
+                    var adminRole = await CheckSystemRole(Constants.Role.Admin);
+                    if (adminRole == null)
+                    {
+                        _logger?.LogError("System role 'Admin' not found.");
+                        return new GeneralResponse(false, "Không tìm thấy role hệ thống.");
+                    }
+
+                    var existingRole = await appDbContext.UserRoles
+                        .FirstOrDefaultAsync(ur => ur.Id == applicationUser.Id && ur.Role.Id == adminRole.Id);
+
+                    if (existingRole == null)
+                    {
+                        await appDbContext.InsertIntoDb(new UserRole
+                        {
+                            Role = adminRole,
+                            User = applicationUser
+                        });
                     }
                     await appDbContext.InsertIntoDb(new PartnerUser
                     {

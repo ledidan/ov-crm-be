@@ -6,6 +6,7 @@ using Data.Responses;
 using Mapper.EmployeeMapper;
 using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
+using ServerLibrary.Helpers;
 using ServerLibrary.Services.Interfaces;
 
 namespace ServerLibrary.Services.Implementations
@@ -18,6 +19,10 @@ namespace ServerLibrary.Services.Implementations
             //check partner
             var partner = await partnerService.FindById(employee.PartnerId);
             if (partner == null) throw new KeyNotFoundException("Partner not found");
+
+            var checkEmailExist = await IsEmailExists(employee.Email);
+            if (checkEmailExist == true) throw new Exception("Email đã tồn tại, vui lòng nhập email khác");
+
 
             var checkEmployeeExist = await CheckMatchingEmployeeCode(employee.EmployeeCode, partner.Id);
             if (checkEmployeeExist == true)
@@ -41,7 +46,7 @@ namespace ServerLibrary.Services.Implementations
                 SignedContractDate = employee.SignedContractDate,
                 SignedProbationaryContract = employee.SignedProbationaryContract,
                 Resignation = employee.Resignation,
-                JobStatus = JobStatus.Active,
+                JobStatus = employee.JobStatus,
                 CRMRoleId = employee.CRMRoleId,
                 Partner = partner
             };
@@ -104,6 +109,11 @@ namespace ServerLibrary.Services.Implementations
             return new GeneralResponse(true, "Employee updated successfully");
         }
 
+        private async Task<bool> IsEmailExists(string email)
+        {
+            return await appDbContext.Employees.AnyAsync(s => s.Email == email);
+        }
+
 
         public async Task<bool> EmployeeExists(int id, int partnerId)
         {
@@ -140,6 +150,10 @@ namespace ServerLibrary.Services.Implementations
             //check partner
             if (partner == null) return new DataStringResponse(false, "Không tìm thấy tổ chức", null);
 
+            var checkEmailExist = await IsEmailExists(employee.Email);
+            if (checkEmailExist == true) return new DataStringResponse(false, "Email đã tồn tại, vui lòng nhập email khác");
+
+
             var checkEmployeeExist = await CheckMatchingEmployeeCode(employee.EmployeeCode, partner.Id);
             if (checkEmployeeExist == true)
             {
@@ -162,7 +176,7 @@ namespace ServerLibrary.Services.Implementations
                 SignedContractDate = employee.SignedContractDate ?? null,
                 SignedProbationaryContract = employee.SignedProbationaryContract,
                 Resignation = employee.Resignation,
-                JobStatus = JobStatus.Active,
+                JobStatus = employee.JobStatus,
                 CRMRoleId = employee.CRMRoleId,
                 Partner = partner
             };
@@ -170,6 +184,49 @@ namespace ServerLibrary.Services.Implementations
 
             return new DataStringResponse(true, "Khởi tạo hồ sơ nhân viên thành công !", newEmployee.Id.ToString());
         }
+
+        private async Task<DataObjectResponse> GetEmployeeByCode(string code, Partner partner)
+        {
+            var existingEmployee = await appDbContext.Employees
+                .FirstOrDefaultAsync(c => c.EmployeeCode == code && c.PartnerId == partner.Id);
+
+            if (existingEmployee == null)
+                return new DataObjectResponse(false, "Không tìm thấy nhân viên", null);
+
+            return new DataObjectResponse(true, "Tìm thấy nhân viên ", new EmployeeDTO
+            {
+                Id = existingEmployee.Id,
+                EmployeeCode = existingEmployee.EmployeeCode,
+                FullName = existingEmployee.FullName ?? "",
+            });
+        }
+
+        public async Task<DataObjectResponse?> GenerateEmployeeCodeAsync(Partner partner)
+        {
+            var codeGenerator = new GenerateNextCode(appDbContext);
+
+            var employeeCode = await codeGenerator
+            .GenerateNextCodeAsync<Employee>(prefix: "NV",
+                codeSelector: c => c.EmployeeCode,
+                filter: c => c.PartnerId == partner.Id);
+
+            return new DataObjectResponse(true, "Tạo mã nhân viên thành công", employeeCode);
+        }
+
+        public async Task<DataObjectResponse?> CheckEmployeeCodeAsync(string code, Employee employee, Partner partner)
+        {
+            var employeeDetail = await GetEmployeeByCode(code, partner);
+
+            if (employeeDetail.Data == null)
+            {
+                return new DataObjectResponse(true, "Mã nhân viên có thể sử dụng", null);
+            }
+            else
+            {
+                return new DataObjectResponse(false, "Mã nhân viên đã tồn tại", employeeDetail.Data);
+            }
+        }
+
 
     }
 }

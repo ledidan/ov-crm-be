@@ -25,6 +25,9 @@ namespace Data.DTOs
         public DateTime? Resignation { get; set; }
         public DateTime? SignedContractDate { get; set; }
         public int PartnerId { get; set; }
+
+        public string? PartnerName { get; set; }
+        public string? RoleName { get; set; }
         public int UserId { get; set; }
         public string? UserFullName { get; set; }
         public string? Avatar { get; set; }

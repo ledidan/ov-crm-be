@@ -17,6 +17,5 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<List<LicenseForUserDTO>> GetAllLicensesAsync(int userId);
 
-        
     }
 }

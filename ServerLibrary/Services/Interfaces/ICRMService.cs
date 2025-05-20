@@ -8,8 +8,6 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface ICRMService
     {
-        Task<EmployeeDTO> SeedDefaultEmployeeRolesAndAdminAsync(int partnerId, ApplicationUser adminUser);
-
-        Task<DataObjectResponse> FirstSetupCRMPartnerAsync(CreatePartner partner, int userId);
+        Task<DataObjectResponse> FirstSetupCRMPartnerAsync(int partnerId, int userId, int employeeId);
     }
 }

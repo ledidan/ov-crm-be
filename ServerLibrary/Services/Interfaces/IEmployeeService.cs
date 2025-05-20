@@ -7,6 +7,9 @@ namespace ServerLibrary.Services.Interfaces
 {
     public interface IEmployeeService
     {
+
+        Task<DataObjectResponse?> GenerateEmployeeCodeAsync(Partner partner);
+        Task<DataObjectResponse?> CheckEmployeeCodeAsync(string code, Employee employee, Partner partner);
         Task<EmployeeDTO> CreateEmployeeAdminAsync(CreateEmployee employee);
         Task<DataStringResponse> CreateEmployeeAsync(CreateEmployee employee, Partner partner);
         Task<Employee?> FindByIdAsync(int id);

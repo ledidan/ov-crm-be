@@ -20,10 +20,13 @@ namespace ServerLibrary.Services.Implementations
 
         private readonly AppDbContext _appDbContext;
 
+        private readonly IRolePermissionService _rolePermissionService;
 
-        public AccountService(AppDbContext appDbContext)
+
+        public AccountService(AppDbContext appDbContext, IRolePermissionService rolePermissionService)
         {
-            _appDbContext = appDbContext;
+            _appDbContext = appDbContext;   
+            _rolePermissionService = rolePermissionService;
         }
 
         public async Task<GeneralResponse> DeactivateAccount(int userId, Partner partner)
@@ -56,7 +59,7 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<List<TransactionForUserDTO>> GetAllHistoryPaymentLicenseAsync(int userId)
         {
-            if (userId == null)
+            if (userId < 0)
             {
                 throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
             }
@@ -65,11 +68,13 @@ namespace ServerLibrary.Services.Implementations
                 .Select(t => new TransactionForUserDTO
                 {
                     Id = t.Id,
+                    TransactionId = t.TransactionId,
                     Amount = t.Amount,
                     ApplicationId = t.ApplicationId,
                     PaymentMethod = t.PaymentMethod,
                     Status = t.Status,
                     CreatedAt = t.CreatedAt,
+                    ApplicationName = t.Application.Name,
                 })
                 .ToListAsync();
             if (transactions == null)
@@ -81,7 +86,7 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<List<LicenseForUserDTO>> GetAllLicensesAsync(int userId)
         {
-            if (userId == null)
+            if (userId < 0)
             {
                 throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
             }
@@ -97,7 +102,7 @@ namespace ServerLibrary.Services.Implementations
                     ApplicationId = l.ApplicationId,
                     ApplicationName = l.Application.Name,
                     PlanName = l.ApplicationPlan.Name,
-                    LicenceType = l.LicenceType,
+                    LicenceType = l.LicenceType ?? string.Empty,
                     StartDate = l.StartDate,
                     EndDate = l.EndDate,
                 })
@@ -128,28 +133,25 @@ namespace ServerLibrary.Services.Implementations
                     {
                         EmployeeId = emp_pu.emp.Id,
                         EmployeeCode = emp_pu.emp.EmployeeCode,
-                        EmployeeFullName = emp_pu.emp.FullName,
-                        EmployeeGender = emp_pu.emp.Gender,
-                        EmployeeDOB = emp_pu.emp.DateOfBirth,
-                        EmployeePhone = emp_pu.emp.PhoneNumber,
-                        EmployeeEmail = emp_pu.emp.Email,
-                        EmployeeAddress = emp_pu.emp.Address,
-                        OfficePhone = emp_pu.emp.OfficePhone,
-                        OfficeEmail = emp_pu.emp.OfficeEmail,
-                        TaxIdentificationNumber = emp_pu.emp.TaxIdentificationNumber,
+                        EmployeeFullName = emp_pu.emp.FullName ?? string.Empty,
+                        EmployeeGender = emp_pu.emp.Gender ?? string.Empty,
+                        EmployeePhone = emp_pu.emp.PhoneNumber ?? string.Empty,
+                        EmployeeEmail = emp_pu.emp.Email ?? string.Empty,
+                        TaxIdentificationNumber = emp_pu.emp.TaxIdentificationNumber ?? string.Empty,
                         JobStatus = emp_pu.emp.JobStatus,
-                        SignedProbationaryContract = emp_pu.emp.SignedProbationaryContract,
+                        SignedProbationaryContract = emp_pu.emp.SignedProbationaryContract ,
                         Resignation = emp_pu.emp.Resignation,
-                        SignedContractDate = emp_pu.emp.SignedContractDate,
-                        PartnerId = emp_pu.emp.PartnerId,
+                        SignedContractDate = emp_pu.emp.SignedContractDate ,
                         UserId = user.Id,
+                        PartnerName = emp_pu.emp.Partner.Name,
+                        RoleName  = emp_pu.emp.CRMRole.Name ?? string.Empty, 
                         // Avoid NullReferenceException by checking if `user` is not null
                         UserFullName = user.FullName ?? "N/A",
                         Avatar = user.Avatar ?? string.Empty,
                         UserEmail = user.Email ?? string.Empty,
                         UserPhone = user.Phone ?? string.Empty,
                         UserGender = user.Gender ?? string.Empty,
-                        UserDOB = user.Birthday,
+                        UserDOB = user.Birthday ,
                         IsActive = user.IsActive ?? false,
                         AccountStatus = user.AccountStatus,
                         IsActivateEmail = user.IsActivateEmail ?? false
@@ -158,8 +160,6 @@ namespace ServerLibrary.Services.Implementations
                 .ToListAsync();
             return result;
         }
-
-
     }
 
 }

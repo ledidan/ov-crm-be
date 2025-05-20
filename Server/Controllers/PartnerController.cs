@@ -8,10 +8,14 @@ using ServerLibrary.Services.Interfaces;
 
 namespace Server.Controllers
 {
+
     [Route("api/[controller]")]
     [ApiController]
     // [Authorize(Roles = "SysAdmin")]
-    public class PartnerController(IPartnerService partnerService, ICRMService crmService) : Controller
+    public class PartnerController(IPartnerService partnerService,
+    IUserService userService,
+    ICRMService crmService,
+    IEmployeeService employeeService) : Controller
     {
 
         [HttpPost("setup")]
@@ -22,33 +26,51 @@ namespace Server.Controllers
             var result = await partnerService.CreatePartnerFreeTrialAsync(partner);
             return Ok(result);
         }
-        [HttpPost("CRM/first-setup")]
-        public async Task<IActionResult> FirstSetupCRMPartner([FromBody] CreatePartner partner)
+        [HttpGet("partner")]
+        public async Task<IActionResult> GetPartnerById()
         {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId == null)
-                {
-                    return BadRequest("User ID not found.");
-                }
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
 
-                var result = await crmService.FirstSetupCRMPartnerAsync(partner, int.Parse(userId));
-                if (result.Flag)
-                {
-                    return Ok(result);
-                }
-                else
-                {
-                    return BadRequest(result);
-                }
-            }
-            catch (Exception ex)
+            if (identity == null)
             {
-                return BadRequest(ex.Message);
+                return NotFound("Không tìm thấy thông tin người dùng từ claims");
             }
 
+            var partner = await partnerService.FindByClaim(identity);
+            if (partner == null)
+            {
+                return NotFound("Không tìm thấy thông tin doanh nghiệp");
+            }
+
+            var result = await partnerService.GetPartnerInfoAsync(partner.Id);
+            if (result == null)
+            {
+                return NotFound("Không tìm thấy thông tin doanh nghiệp với ID này");
+            }
+
+            return Ok(result);
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpPost("initialize")]
+        public async Task<IActionResult> InitializePartnerAsync([FromBody] RequestInitializePartner request)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await partnerService.FindByClaim(identity);
+            var employee = await employeeService.FindByClaim(identity);
+            if (partner.Id < 0 || request.UserId < 0 || employee.Id < 0)
+            {
+                return NotFound("Partner not found or user not found");
+            }
+            var IsUserOwner = await partnerService.CheckClaimByOwner(identity);
+            if (IsUserOwner != null && IsUserOwner == false)
+                return Forbid("Bạn không phải là Owner để khởi tạo CRM.");
+
+            var result = await crmService.FirstSetupCRMPartnerAsync(partner.Id, request.UserId, employee.Id);
+            if (result == null)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
     }
-
 }

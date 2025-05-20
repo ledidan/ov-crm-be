@@ -16,10 +16,13 @@ namespace Server.Controllers
         private readonly IRolePermissionService _service;
         private readonly IPartnerService _partnerService;
 
-        public RolePermissionController(IRolePermissionService service, IPartnerService partnerService)
+        private readonly IEmployeeService _employeeService;
+
+        public RolePermissionController(IRolePermissionService service, IPartnerService partnerService, IEmployeeService employeeService)
         {
             _service = service;
             _partnerService = partnerService;
+            _employeeService = employeeService;
         }
 
         [HttpPost("create-role")]
@@ -72,6 +75,19 @@ namespace Server.Controllers
             return Ok(permissions);
         }
 
+        [HttpGet("user")]
+        public async Task<IActionResult> GetPermissionsForUser()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            var permissions = await _service.GetRolesForEmployeeAsync(employee.Id, partner.Id);
+            if (permissions == null)
+                return NotFound("No permissions found for user's role.");
+            return Ok(permissions);
+        }
+
+
         [HttpGet("roles")]
         public async Task<IActionResult> GetAllRoles()
         {
@@ -87,6 +103,14 @@ namespace Server.Controllers
             var roles = await _service.GetAllPermissionsAsync();
             return Ok(roles);
         }
+        [HttpPut("{id:int}/assign-users")]
+        public async Task<IActionResult> AssignRoleForEmployeesAsync(int id, [FromBody] List<int> employeeIds)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var response = await _service.AssignRoleForEmployeesAsync(employeeIds, id, partner.Id);
+            if(!response.Flag) return BadRequest(response);
+            return Ok(response);
+        }
     }
-
 }

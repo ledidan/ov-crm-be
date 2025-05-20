@@ -38,7 +38,7 @@ namespace Server.Controllers
             var result = await _employeeService.CreateEmployeeAsync(employee, partner);
             if (!result.Flag)
             {
-                return BadRequest("Tạo nhân viên không thành công");
+                return BadRequest(result.Message);
             }
             return Ok(result);
         }
@@ -53,7 +53,8 @@ namespace Server.Controllers
                 return BadRequest("Không tìm thấy tổ chức");
             }
             var result = await _employeeService.CreateEmployeeAdminAsync(employee);
-            if(result == null) {
+            if (result == null)
+            {
                 return BadRequest("Tạo nhân viên cho Admin không thành công");
             }
             return Ok(result);
@@ -90,6 +91,40 @@ namespace Server.Controllers
             {
                 return StatusCode(500, $"An error occurred while converting the employee to DTO: {ex.Message}");
             }
+        }
+
+        [HttpPost("generate-code")]
+        public async Task<IActionResult> GenerateEmployeeCode()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await _employeeService.GenerateEmployeeCodeAsync(partner);
+
+            if (!result.Flag)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost("check-code")]
+        public async Task<IActionResult> CheckEmployeeCode([FromBody] string code)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (partner == null || employee == null)
+                return BadRequest("Model is empty");
+
+            var result = await _employeeService.CheckEmployeeCodeAsync(code, employee, partner);
+
+            if (!result.Flag)
+                return BadRequest(result);
+
+            return Ok(result);
         }
     }
 

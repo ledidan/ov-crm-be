@@ -7,6 +7,7 @@ using Data.Entities;
 using Data.Responses;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
 using ServerLibrary.Helpers;
 using ServerLibrary.Services.Interfaces;
@@ -18,22 +19,31 @@ namespace ServerLibrary.Services.Implementations
         private readonly AppDbContext _appDbContext;
 
         private readonly IMapper _mapper;
-        private readonly IPartnerService _partnerService;
-        private readonly IEmployeeService _employeeService;
         private readonly IUserService _userService;
-        private readonly ILicenseCenterService _licenseCenterService;
+
+        private readonly IPartnerService _partnerService;
+
+        private readonly IEmployeeService _employeeService;
+
+        private readonly ILogger<CRMService> logger;
+
+        private readonly IJobGroupService _jobGroupService;
+
         public CRMService(AppDbContext appDbContext,
-        IPartnerService partnerService, IEmployeeService employeeService,
-IUserService _userService,
-        IMapper mapper, IHttpContextAccessor httpContextAccessor,
-        ILicenseCenterService _licenseCenterService
+IUserService userService,
+IJobGroupService jobGroupService,
+IPartnerService partnerService,
+IEmployeeService employeeService,
+ILogger<CRMService> _logger,
+        IMapper mapper
         )
         {
             _appDbContext = appDbContext;
+            _userService = userService;
             _partnerService = partnerService;
+            _jobGroupService = jobGroupService;
             _employeeService = employeeService;
-            _licenseCenterService = _licenseCenterService;
-            _userService = _userService;
+            logger = _logger;
             _mapper = mapper;
         }
 
@@ -42,97 +52,126 @@ IUserService _userService,
             return await _appDbContext.SystemRoles.FirstOrDefaultAsync(r => r.Name!.ToLower().Equals(role.ToLower()));
         }
 
-
-
-        public async Task<DataObjectResponse> FirstSetupCRMPartnerAsync(CreatePartner partner, int userId)
+        public async Task<DataObjectResponse> FirstSetupCRMPartnerAsync(int partnerId, int userId, int employeeId)
         {
-            // Kiểm tra user đã có license active chưa
-            var hasActiveLicense = await _licenseCenterService.IsLicenseActiveAsync(userId);
-            if (hasActiveLicense == true)
-            {
-                return new DataObjectResponse(false, "User đã có license active.");
-            }
+            var strategy = _appDbContext.Database.CreateExecutionStrategy();
 
-            // Lấy thông tin user
-            var applicationUser = await _userService.GetApplicationUserByIdAsync(userId);
-            if (applicationUser == null)
+            return await strategy.ExecuteAsync(async () =>
             {
-                return new DataObjectResponse(false, "Không tìm thấy user.");
-            }
+                await using var transaction = await _appDbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    // Check user
+                    var applicationUser = await _userService.GetApplicationUserByIdAsync(userId);
+                    if (applicationUser == null)
+                    {
+                        logger?.LogWarning("User ID {UserId} not found when initializing CRM.", userId);
+                        return new DataObjectResponse(false, "Không tìm thấy user.");
+                    }
 
-            // Lấy role hệ thống "Admin"
-            var adminRole = await CheckSystemRole(Constants.Role.Admin);
-            if (adminRole == null)
-            {
-                return new DataObjectResponse(false, "Không tìm thấy role hệ thống.");
-            }
+                    // Check partner
+                    var partner = await _partnerService.FindById(partnerId);
+                    if (partner == null)
+                    {
+                        logger?.LogWarning("Partner ID {PartnerId} not found.", partnerId);
+                        return new DataObjectResponse(false, "Không tìm thấy doanh nghiệp.");
+                    }
 
-            // Tạo Partner
-            var newPartner = await _partnerService.CreatePartnerAsync(partner);
-            if (newPartner == null)
-            { 
-                return new DataObjectResponse(false, "Tạo partner thất bại.");
-            }
+                    if (partner.IsInitialized == true)
+                    {
+                        logger?.LogInformation("Partner {PartnerId} already initialized.", partnerId);
+                        return new DataObjectResponse(false, "Doanh nghiệp đã được khởi tạo CRM.");
+                    }
 
-            // Gán system role cho user
-            await _appDbContext.InsertIntoDb(new UserRole
-            {
-                Role = adminRole,
-                User = applicationUser
+                    var result = await SeedDefaultRolesAndAdminAsync(partnerId, employeeId);
+                    if (!result.Flag)
+                    {
+                        logger?.LogError("Failed to seed default roles: {Message}", result.Message);
+                        await transaction.RollbackAsync();
+                        return result;
+                    }
+
+                    // Create Default Job Structure
+                    await _jobGroupService.CreateDefaultJobPosition(partner);
+                    await _jobGroupService.CreateDefaultJobTitle(partner);
+
+                    // Mark as initialized
+                    partner.IsInitialized = true;
+                    partner.InitializedAt = DateTime.UtcNow;
+                    _appDbContext.Partners.Update(partner);
+
+                    await _appDbContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    logger?.LogInformation("Partner {PartnerId} initialized successfully by user {UserId}", partnerId, userId);
+                    return new DataObjectResponse(true, "Khởi tạo CRM partner thành công.", partnerId);
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "Error initializing CRM for partner {PartnerId}", partnerId);
+                    await transaction.RollbackAsync();
+                    return new DataObjectResponse(false, $"Lỗi khi khởi tạo CRM: {ex.Message}");
+                }
             });
-
-            // Seed mặc định các role CRM và tạo employee admin
-            var employee = await SeedDefaultEmployeeRolesAndAdminAsync(newPartner.Id, applicationUser);
-
-            // Liên kết PartnerUser
-            await _appDbContext.InsertIntoDb(new PartnerUser
-            {
-                User = applicationUser,
-                Partner = newPartner,
-                EmployeeId = employee.Id
-            });
-
-            return new DataObjectResponse(true, "Khởi tạo CRM partner thành công.", newPartner);
         }
 
-
-        public async Task<EmployeeDTO> SeedDefaultEmployeeRolesAndAdminAsync(int partnerId, ApplicationUser adminUser)
+        public async Task<DataObjectResponse> SeedDefaultRolesAndAdminAsync(int partnerId, int employeeId)
         {
-            var allPermissions = await _appDbContext.CRMPermissions.ToListAsync();
-
-            var roles = new List<CRMRole>
-    {
-        new CRMRole { Name = "Admin", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow },
-        new CRMRole { Name = "Employee", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow },
-        new CRMRole { Name = "Shipper", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow }
-    };
-            _appDbContext.CRMRoles.AddRange(roles);
-            await _appDbContext.SaveChangesAsync();
-
-            var adminRole = roles.First(r => r.Name == "Admin");
-
-            var rolePermissions = allPermissions.Select(p => new CRMRolePermission
+            try
             {
-                RoleId = adminRole.Id,
-                PermissionId = p.Id
-            }).ToList();
+                var allPermissions = await _appDbContext.CRMPermissions.ToListAsync();
+                var employee = await _employeeService.FindByIdAsync(employeeId);
+                if (employee == null)
+                {
+                    return new DataObjectResponse(false, "Không tìm thấy nhân viên.");
+                }
+                var existingRoles = await _appDbContext.CRMRoles
+                    .Where(r => r.PartnerId == partnerId)
+                    .ToListAsync();
 
-            _appDbContext.CRMRolePermissions.AddRange(rolePermissions);
-            await _appDbContext.SaveChangesAsync();
+                if (existingRoles.Any())
+                {
+                    logger?.LogWarning("Default roles already exist for partner {PartnerId}", partnerId);
+                    return new DataObjectResponse(true, "Vai trò mặc định đã tồn tại.");
+                }
+                var roles = new List<CRMRole>
+        {
+            new CRMRole { Name = "Admin", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow },
+            new CRMRole { Name = "Employee", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow },
+            new CRMRole { Name = "Shipper", PartnerId = partnerId, CreatedDate = DateTime.UtcNow, ModifiedDate = DateTime.UtcNow }
+        };
 
-            var employeeData = new CreateEmployee
+                _appDbContext.CRMRoles.AddRange(roles);
+                await _appDbContext.SaveChangesAsync();
+
+                var adminRole = roles.First(r => r.Name == "Admin");
+
+                var rolePermissions = allPermissions.Select(p => new CRMRolePermission
+                {
+                    RoleId = adminRole.Id,
+                    PermissionId = p.Id
+                }).ToList();
+                
+                // ** Updated employee data;
+                employee.CRMRoleId = adminRole.Id;
+                employee.CRMRole = adminRole;
+
+                _appDbContext.CRMRolePermissions.AddRange(rolePermissions);
+                _appDbContext.Employees.Update(employee);
+
+                logger.LogInformation("Updated CRM Role permision and updated Employee CRM Role ID");
+
+                await _appDbContext.SaveChangesAsync();
+
+                logger?.LogInformation("Default roles and permissions seeded for partner {PartnerId}", partnerId);
+
+                return new DataObjectResponse(true, "Khởi tạo vai trò thành công.");
+            }
+            catch (Exception ex)
             {
-                // ** Manually Enter 
-                FullName = adminUser.FullName,
-                Email = adminUser.Email,
-                // ** Auto-generated
-                EmployeeCode = "NV0000001",
-                CRMRoleId = adminRole.Id,
-                PartnerId = partnerId
-            };
-            return await _employeeService.CreateEmployeeAdminAsync(employeeData);
+                logger?.LogError(ex, "Error seeding default roles for partner {PartnerId}", partnerId);
+                return new DataObjectResponse(false, $"Lỗi khi khởi tạo vai trò: {ex.Message}");
+            }
         }
-
-
     }
 }

@@ -15,6 +15,7 @@ namespace Data.DTOs
         public string? EmailContact { get; set; }
         public string? PhoneNumber { get; set; }
 
+        public bool? IsInitialized { get; set; } = false;
         public string? TotalEmployees { get; set; }
         [Required]
         public bool? IsOrganization { get; set; }

@@ -5,6 +5,7 @@ using Data.DTOs;
 using Data.Entities;
 using Data.Responses;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
 using ServerLibrary.Services.Interfaces;
 
@@ -13,12 +14,16 @@ namespace ServerLibrary.Services.Implementations
     public class RolePermissionService : IRolePermissionService
     {
         private readonly AppDbContext _context;
+        private readonly IEmployeeService _employeeService;
 
+        private readonly ILogger<RolePermissionService> _logger;
         private readonly string[] _protectedRoles = { "Admin", "Employee", "Shipper" };
 
-        public RolePermissionService(AppDbContext context)
+        public RolePermissionService(AppDbContext context, IEmployeeService employeeService, ILogger<RolePermissionService> logger)
         {
             _context = context;
+            _employeeService = employeeService;
+            _logger = logger;
         }
 
         public async Task<CRMRole> GetRoleAsync(int roleId, int? partnerId)
@@ -237,31 +242,54 @@ namespace ServerLibrary.Services.Implementations
         {
             return await _context.CRMRoles.AnyAsync(r => r.Id == roleId);
         }
-
         public async Task<List<RolePermissionsResponse>> GetPermissionsForRoleAsync(int roleId, int? partnerId)
         {
+            _logger?.LogInformation("Fetching permissions for role ID {RoleId} with partner ID {PartnerId}", roleId, partnerId);
+
+            // Check role existence
             var isRoleExisted = await CheckPermissionRoleExisted(roleId);
-            if (isRoleExisted == false) return null;
+            if (!isRoleExisted)
+            {
+                _logger?.LogWarning("Role ID {RoleId} not found.", roleId);
+                throw new Exception("Role not found");
+            }
+
+            // Get role
             var role = await GetRoleAsync(roleId, partnerId);
+            if (role == null)
+            {
+                _logger?.LogWarning("Role ID {RoleId} not found for partner ID {PartnerId}.", roleId, partnerId);
+                throw new Exception("Role not found or does not belong to the specified partner");
+            }
+
+            // Query role permissions
             var query = _context.CRMRolePermissions
-            .Where(rp => rp.RoleId == roleId)
-            .Include(rp => rp.Role)
-            .Include(rp => rp.Permission)
-            .AsQueryable();
+                .Where(rp => rp.RoleId == roleId && rp.Role != null && rp.Permission != null)
+                .Include(rp => rp.Role)
+                .Include(rp => rp.Permission)
+                .AsQueryable();
+
             if (partnerId.HasValue)
             {
                 query = query.Where(rp => rp.Role.PartnerId == partnerId.Value);
             }
+
             var rolePermissions = await query.ToListAsync();
+            _logger?.LogInformation("Found {Count} role permissions for role ID {RoleId}.", rolePermissions.Count, roleId);
 
-            var permissions = rolePermissions.Select(rp => new CRMPermission
-            {
-                Id = rp.Permission.Id,
-                Action = rp.Permission.Action,
-                Resource = rp.Permission.Resource
-            }).DistinctBy(p => p.Id).ToList();
+            // Map permissions
+            var permissions = rolePermissions
+                .Select(rp => new CRMPermission
+                {
+                    Id = rp.Permission.Id,
+                    Action = rp.Permission.Action,
+                    Resource = rp.Permission.Resource
+                })
+                .DistinctBy(p => p.Id)
+                .ToList();
 
-            var result = new RolePermissionsResponse()
+            // Build response
+            var result = new RolePermissionsResponse
             {
                 Role = new CRMRoleDTO
                 {
@@ -272,6 +300,7 @@ namespace ServerLibrary.Services.Implementations
                 Permissions = permissions
             };
 
+            _logger?.LogInformation("Successfully fetched permissions for role ID {RoleId}.", roleId);
             return new List<RolePermissionsResponse> { result };
         }
 
@@ -281,9 +310,10 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<List<CRMPermissionsDTO>> GetAllPermissionsAsync()
         {
-            var list =  await _context.CRMPermissions.ToListAsync();
+            var list = await _context.CRMPermissions.ToListAsync();
 
-            var result = list.Select(p => new CRMPermissionsDTO {
+            var result = list.Select(p => new CRMPermissionsDTO
+            {
                 Id = p.Id,
                 Action = p.Action,
                 Resource = p.Resource
@@ -302,11 +332,140 @@ namespace ServerLibrary.Services.Implementations
             {
                 Id = r.Id,
                 Name = r.Name,
-                Description = r.Description
+                Description = r.Description ?? ""
             }).ToList();
             return result;
         }
 
+        public async Task<List<RolePermissionsResponse>> GetRolesForEmployeeAsync(int employeeId, int? partnerId)
+        {
+            // Check employee
+            var employee = await _employeeService.FindByIdAsync(employeeId);
+            if (employee == null)
+            {
+                throw new Exception("Employee not found");
+            }
+            var roleId = employee.CRMRoleId ?? 0;
+            if (roleId == 0)
+            {
+                throw new Exception("Employee has no assigned CRM role");
+            }
+            _logger?.LogInformation("Fetching permissions for role ID {RoleId} with partner ID {PartnerId}", roleId, partnerId);
+
+            // Check role existence
+            var isRoleExisted = await CheckPermissionRoleExisted(roleId);
+            if (!isRoleExisted)
+            {
+                _logger?.LogWarning("Role ID {RoleId} not found.", roleId);
+                throw new Exception("Role not found");
+            }
+
+            // Get role
+            var role = await GetRoleAsync(roleId, partnerId);
+            if (role == null)
+            {
+                _logger?.LogWarning("Role ID {RoleId} not found for partner ID {PartnerId}.", roleId, partnerId);
+                throw new Exception("Role not found or does not belong to the specified partner");
+            }
+
+            // Query role permissions
+            var query = _context.CRMRolePermissions
+                .Where(rp => rp.RoleId == roleId && rp.Role != null && rp.Permission != null)
+                .Include(rp => rp.Role)
+                .Include(rp => rp.Permission)
+                .AsQueryable();
+
+            if (partnerId.HasValue)
+            {
+                query = query.Where(rp => rp.Role.PartnerId == partnerId.Value);
+            }
+
+            var rolePermissions = await query.ToListAsync();
+            _logger?.LogInformation("Found {Count} role permissions for role ID {RoleId}.", rolePermissions.Count, roleId);
+
+            // Map permissions
+            var permissions = rolePermissions
+                .Select(rp => new CRMPermission
+                {
+                    Id = rp.Permission.Id,
+                    Action = rp.Permission.Action,
+                    Resource = rp.Permission.Resource
+                })
+                .DistinctBy(p => p.Id)
+                .ToList();
+
+            // Build response
+            var result = new RolePermissionsResponse
+            {
+                Role = new CRMRoleDTO
+                {
+                    Id = role.Id,
+                    Name = role.Name,
+                    Description = role.Description ?? ""
+                },
+                Permissions = permissions
+            };
+
+            _logger?.LogInformation("Successfully fetched permissions for role ID {RoleId}.", roleId);
+            return new List<RolePermissionsResponse> { result };
+        }
+
+        public async Task<DataObjectResponse> AssignRoleForEmployeesAsync(List<int> employeeIds, int roleId, int partnerId)
+        {
+            if (employeeIds == null || !employeeIds.Any())
+            {
+                _logger.LogWarning("No employee IDs provided for role assignment.");
+                return new DataObjectResponse(false, "Danh sách nhân viên rỗng.");
+            }
+
+            // Check role existence
+            var isRoleExisted = await CheckPermissionRoleExisted(roleId);
+            if (!isRoleExisted)
+            {
+                _logger.LogWarning("Role ID {RoleId} not found.", roleId);
+                return new DataObjectResponse(false, "Không tìm thấy vai trò.");
+            }
+
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    var failedEmployees = new List<int>();
+                    foreach (var employeeId in employeeIds)
+                    {
+                        // Check employee
+                        var employee = await _employeeService.FindByIdAsync(employeeId);
+                        if (employee == null || employee.PartnerId != partnerId)
+                        {
+                            _logger.LogWarning("Employee ID {EmployeeId} not found or does not belong to partner ID {PartnerId}.", employeeId, partnerId);
+                            failedEmployees.Add(employeeId);
+                            continue;
+                        }
+                        employee.CRMRoleId = roleId;
+                        await _context.UpdateDb(employee);
+                    }
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    if (failedEmployees.Any())
+                    {
+                        var message = $"Phân quyền thành công, nhưng không thể gán cho nhân viên: {string.Join(", ", failedEmployees)}.";
+                        _logger.LogWarning(message);
+                        return new DataObjectResponse(true, message);
+                    }
+
+                    _logger.LogInformation("Assigned role ID {RoleId} to {Count} employees.", roleId, employeeIds.Count);
+                    return new DataObjectResponse(true, "Phân quyền cho nhân viên thành công.");
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Error assigning role ID {RoleId} to employees.", roleId);
+                    return new DataObjectResponse(false, "Lỗi khi phân quyền cho nhân viên. Vui lòng thử lại sau.");
+                }
+            });
+        }
         #endregion
     }
 
