@@ -7,7 +7,7 @@ namespace Data.Entities
     public class Invoice : BaseEntity
     {
         public int Id { get; set; }
-        public string? InvoiceRequestName { get; set; }
+        public string? InvoiceRequestName { get; set; } // Mã hoá đơn vd: HĐ0000001
         public string? InvoiceAddress { get; set; }
         public string? Description { get; set; }
         [Column(TypeName = "decimal(18, 2)")]

@@ -18,9 +18,12 @@ namespace ServerLibrary.Services.Implementations
         private readonly IMapper _mapper;
         private readonly AppDbContext _appContext;
         private readonly IMongoCollection<InvoiceDetails> _invoicesDetailsCollection;
+
+        private readonly IMongoCollection<OrderDetails> _ordersDetailsCollection;
         public InvoiceService(MongoDbContext dbContext, AppDbContext appContext, IMapper mapper)
         {
             _invoicesDetailsCollection = dbContext.InvoiceDetails;
+            _ordersDetailsCollection = dbContext.OrderDetails;
             _appContext = appContext;
             _mapper = mapper;
         }
@@ -884,6 +887,212 @@ namespace ServerLibrary.Services.Implementations
                     orderDetail.Id
                 });
             }
+        }
+
+        public async Task<GeneralResponse?> CreateInvoiceFromOrdersAsync(List<int> orderIds, Employee employee, Partner partner)
+        {
+            Console.WriteLine($"Starting CreateInvoiceFromOrdersAsync for Employee ID: {employee?.Id}, Partner ID: {partner?.Id}, Order IDs: {string.Join(", ", orderIds)}");
+            var codeGenerator = new GenerateNextCode(_appContext);
+            var strategy = _appContext.Database.CreateExecutionStrategy();
+
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _appContext.Database.BeginTransactionAsync();
+                try
+                {
+                    if (orderIds == null || !orderIds.Any())
+                    {
+                        Console.WriteLine("No order IDs provided.");
+                        return new GeneralResponse(false, "Danh sách đơn hàng không hợp lệ.");
+                    }
+
+                    // Lấy danh sách Order từ database
+                    Console.WriteLine($"Fetching {orderIds.Count} orders from database...");
+                    var orders = await _appContext.Orders
+                        .Where(o => orderIds.Contains(o.Id))
+                        .ToListAsync();
+
+                    if (!orders.Any())
+                    {
+                        Console.WriteLine("No valid orders found.");
+                        return new GeneralResponse(false, "Không tìm thấy đơn hàng hợp lệ.");
+                    }
+
+                    Console.WriteLine($"Found {orders.Count} valid orders.");
+
+                    // Kiểm tra nếu tất cả đơn hàng thuộc cùng CustomerId
+                    var customerIds = orders.Select(o => o.CustomerId).Distinct().ToList();
+                    if (customerIds.Count > 1)
+                    {
+                        Console.WriteLine("Orders belong to multiple customers.");
+                        return new GeneralResponse(false, "Các đơn hàng thuộc nhiều khách hàng khác nhau, không thể tạo hóa đơn chung.");
+                    }
+                    var customerId = customerIds.First();
+                    var customerExists = await _appContext.Customers.AnyAsync(c => c.Id == customerId);
+                    if (!customerExists)
+                    {
+                        Console.WriteLine($"CustomerId {customerId} not found in database.");
+                        return new GeneralResponse(false, "Khách hàng không tồn tại.");
+                    }
+                    Console.WriteLine($"Fetching OrderDetails for {orders.Count} orders...");
+                    var orderDetails = await _ordersDetailsCollection
+                .Find(od => orderIds.Contains(od.OrderId ?? 0))
+                .ToListAsync();
+
+                    if (!orderDetails.Any())
+                    {
+                        Console.WriteLine("No OrderDetails found.");
+                        return new GeneralResponse(false, "Không tìm thấy chi tiết đơn hàng.");
+                    }
+
+                    Console.WriteLine($"Found {orderDetails} OrderDetails.");
+
+                    // Map Order sang InvoiceDTO
+                    var invoiceDto = new InvoiceDTO
+                    {
+                        OwnerTaskExecuteId = orders.First().OwnerTaskExecuteId ?? employee.Id,
+                        OwnerTaskExecuteName = orders.First().OwnerTaskExecuteName ?? employee.FullName,
+                        OwnerIdName = employee.FullName,
+                        OwnerId = employee.Id,
+                        PartnerId = partner.Id,
+                        CustomerId = orders.First().CustomerId ?? null,
+                        CustomerName = orders.First().CustomerName ?? "",
+                        InvoiceRequestName = await codeGenerator.GenerateNextCodeAsync<Invoice>("HĐ",
+                        c => c.InvoiceRequestName,
+                         c => c.Partner.Id == partner.Id),
+                        RequestDate = DateTime.Now,
+                        TotalSummary = orders.Sum(o => o.SaleOrderAmount),
+                        AmountSummary = orders.Sum(o => o.SaleOrderAmount),
+                        InvoiceAddress = orders.First().BillingStreet,
+                        BillingCode = orders.First().BillingCode,
+                        BillingCountryID = orders.First().BillingCountryID,
+                        BillingProvinceID = orders.First().BillingProvinceID,
+                        BillingDistrictID = orders.First().BillingDistrictID,
+                        RecipientName = orders.First().ShippingReceivingPerson,
+                        RecipientEmail = orders.First().InvoiceReceivingEmail,
+                        RecipientPhone = orders.First().InvoiceReceivingPhone,
+                        StatusID = "1", // Pending
+                        CurrencyTypeId = CurrencyType.VND,
+                        Orders = orderIds,
+                        InvoiceDetails = orderDetails.Select(detail => new InvoiceDetailDTO
+                        {
+                            InvoiceId = 0, // Sẽ được gán sau khi tạo Invoice
+                            InvoiceRequestName = null, // Sẽ được gán sau khi tạo Invoice
+                            ProductId = detail.ProductId,
+                            ProductCode = detail.ProductCode,
+                            ProductName = detail.ProductName,
+                            TaxID = detail.TaxID,
+                            TaxAmount = detail.TaxAmount,
+                            TaxIDText = detail.TaxIDText,
+                            DiscountRate = detail.DiscountRate,
+                            DiscountAmount = detail.DiscountAmount,
+                            UnitPrice = detail.UnitPrice,
+                            QuantityInstock = detail.QuantityInstock,
+                            UsageUnitID = detail.UsageUnitID,
+                            UsageUnitIDText = detail.UsageUnitIDText,
+                            Quantity = detail.Quantity,
+                            Total = detail.Total,
+                            AmountSummary = detail.AmountSummary,
+                            OrderId = detail.OrderId,
+                            CustomerId = detail.CustomerId ?? null,
+                            CustomerName = detail.CustomerName,
+                            SaleOrderNo = detail.SaleOrderNo,
+                            PartnerId = detail.PartnerId,
+                            PartnerName = detail.PartnerName,
+                            CreatedAt = DateTime.Now,
+                            UpdatedAt = DateTime.Now
+                        }).ToList()
+                    };
+
+                    Console.WriteLine("Mapping InvoiceDTO to Invoice entity...");
+                    var invoice = _mapper.Map<Invoice>(invoiceDto);
+                    await _appContext.InsertIntoDb(invoice);
+                    await _appContext.SaveChangesAsync();
+                    Console.WriteLine($"Invoice added to SQL database. Invoice ID: {invoice.Id}");
+
+                    // Cập nhật InvoiceId và InvoiceRequestName cho InvoiceDetails
+                    foreach (var detail in invoiceDto.InvoiceDetails)
+                    {
+                        detail.InvoiceId = invoice.Id;
+                        detail.InvoiceRequestName = invoice.InvoiceRequestName;
+                    }
+                    // Create order
+                    var invoiceOrders = orders.Select(order => new InvoiceOrders
+                    {
+                        InvoiceId = invoice.Id,
+                        OrderId = order.Id,
+                        PartnerId = partner.Id
+                    }).ToList();
+
+                    Console.WriteLine($"Adding {invoiceOrders.Count} records to InvoiceOrders table...");
+                    await _appContext.InvoiceOrders.AddRangeAsync(invoiceOrders);
+
+                    foreach (var order in orders)
+                    {
+                        order.IsInvoiced = true;
+                        order.InvoicedAmount = order.SaleOrderAmount;
+                        order.InvoiceDate = DateTime.Now;
+                        order.UnInvoicedAmount = 0; // Giả định toàn bộ đã xuất hóa đơn
+                    }
+                    _appContext.Orders.UpdateRange(orders);
+                    await _appContext.SaveChangesAsync();
+                    Console.WriteLine("Orders updated and InvoiceOrders added to database successfully.");
+
+                    Console.WriteLine("Creating InvoiceDetails for MongoDB...");
+                    var invoiceDetails = invoiceDto.InvoiceDetails.Select(detailDto => new InvoiceDetails
+                    {
+                        Id = ObjectId.GenerateNewId().ToString(),
+                        InvoiceId = detailDto.InvoiceId,
+                        InvoiceRequestName = detailDto.InvoiceRequestName,
+                        ProductId = detailDto.ProductId,
+                        ProductCode = detailDto.ProductCode,
+                        ProductName = detailDto.ProductName,
+                        TaxID = detailDto.TaxID,
+                        TaxAmount = detailDto.TaxAmount,
+                        TaxIDText = detailDto.TaxIDText,
+                        DiscountRate = detailDto.DiscountRate,
+                        DiscountAmount = detailDto.DiscountAmount,
+                        UnitPrice = detailDto.UnitPrice,
+                        QuantityInstock = detailDto.QuantityInstock,
+                        UsageUnitID = detailDto.UsageUnitID,
+                        UsageUnitIDText = detailDto.UsageUnitIDText,
+                        Quantity = detailDto.Quantity,
+                        Total = detailDto.Total,
+                        AmountSummary = detailDto.AmountSummary,
+                        OrderId = detailDto.OrderId,
+                        CustomerId = detailDto.CustomerId ?? null,
+                        CustomerName = detailDto.CustomerName,
+                        SaleOrderNo = detailDto.SaleOrderNo,
+                        PartnerId = detailDto.PartnerId,
+                        PartnerName = detailDto.PartnerName,
+                        CreatedAt = detailDto.CreatedAt,
+                        UpdatedAt = detailDto.UpdatedAt
+                    }).ToList();
+
+                    Console.WriteLine($"Prepared {invoiceDetails.Count} InvoiceDetails.");
+
+                    Console.WriteLine("Inserting InvoiceDetails into MongoDB...");
+                    await _invoicesDetailsCollection.InsertManyAsync(invoiceDetails);
+                    Console.WriteLine("InvoiceDetails inserted into MongoDB successfully.");
+
+                    Console.WriteLine("Committing transaction...");
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully.");
+                    return new GeneralResponse(true, $"Hóa đơn được tạo thành công từ {orders.Count} đơn hàng. Mã hóa đơn: {invoice.Id}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error occurred: {ex.Message}");
+                    Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                    if (ex.InnerException != null)
+                    {
+                        Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                    }
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Transaction rolled back.");
+                    return new GeneralResponse(false, $"Không thể tạo hóa đơn: {ex.Message}");
+                }
+            });
         }
     }
 }

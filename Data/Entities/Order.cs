@@ -33,7 +33,7 @@ namespace Data.Entities
         public decimal? TotalReceiptedAmount { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
         public decimal? BalanceReceiptAmount { get; set; }
-        public bool IsInvoiced { get; set; }
+        public bool IsInvoiced { get; set; } = false;
         [Column(TypeName = "decimal(18, 2)")]
         public decimal? InvoicedAmount { get; set; }
         [Column(TypeName = "decimal(18, 2)")]

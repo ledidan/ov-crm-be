@@ -139,6 +139,7 @@ namespace ServerLibrary.Data
             {
                 j.HasKey(ce => new { ce.ContactId, ce.EmployeeId, ce.PartnerId });
             });
+
             builder.Entity<CustomerEmployees>()
      .Property(ce => ce.AccessLevel)
      .HasConversion<int>();

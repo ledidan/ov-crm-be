@@ -17,9 +17,6 @@ namespace Data.DTOs
             CreateMap<InvoiceDTO, Invoice>()
                 .ForMember(dest => dest.InvoiceOrders, opt => opt.Ignore()) // Ignore InvoiceOrders
                 .ForMember(dest => dest.Orders, opt => opt.Ignore()) // Ignore Orders if it exists
-                .ForMember(dest => dest.Partner, opt => opt.Ignore()) // Ignore Partner (set manually)
-                .ForMember(dest => dest.OwnerId, opt => opt.Ignore()) // Ignore OwnerId (set manually)
-                .ForMember(dest => dest.OwnerTaskExecuteId, opt => opt.Ignore()) // Ignore Owner (set manually)
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<InvoiceDetails, InvoiceDetailDTO>().ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));

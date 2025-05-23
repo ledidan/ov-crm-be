@@ -1,9 +1,11 @@
 using Data.DTOs;
+using Data.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerLibrary.MiddleWare;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Interfaces;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ZstdSharp.Unsafe;
@@ -249,6 +251,23 @@ namespace Server.Controllers
 
             if (!result.Flag)
                 return BadRequest(result.Message);
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("create-from-orders")]
+        [SwaggerOperation(
+            Summary = "Tạo hóa đơn từ danh sách đơn hàng",
+            Description = @"Tạo hóa đơn dựa trên danh sách orderIds"
+        )]
+
+        public async Task<IActionResult> CreateInvoiceFromOrders([FromBody] List<int> orderIds)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            var result = await _invoiceService.CreateInvoiceFromOrdersAsync(orderIds, employee, partner);
 
             return Ok(result);
         }

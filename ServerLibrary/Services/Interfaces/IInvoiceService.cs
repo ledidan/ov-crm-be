@@ -7,7 +7,7 @@ namespace ServerLibrary.Services.Interfaces
     public interface IInvoiceService
     {
 
-         Task<DataObjectResponse?> GenerateInvoiceCodeAsync(Partner partner);
+        Task<DataObjectResponse?> GenerateInvoiceCodeAsync(Partner partner);
         Task<DataObjectResponse?> CheckInvoiceCodeAsync(string code, Employee employee, Partner partner);
 
         Task<PagedResponse<List<InvoiceDTO>>> GetAllInvoicesAsync(Employee employee, Partner partner, int pageNumber, int pageSize);
@@ -33,5 +33,9 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<GeneralResponse?> RemoveActivityFromInvoiceAsync(int id, int activityId, Employee employee, Partner partner);
         // Task<GeneralResponse?> RemoveOrderAsync(int orderId, int employeeId);
+
+
+        // ** Export Invoice from order
+        Task<GeneralResponse?> CreateInvoiceFromOrdersAsync(List<int> orderIds, Employee employee, Partner partner);
     }
 }

@@ -11,7 +11,7 @@ namespace Data.DTOs
     public class InvoiceDTO
     {
         public int Id { get; set; }
-        public string? InvoiceRequestName { get; set; } 
+        public string? InvoiceRequestName { get; set; }
         public string? InvoiceAddress { get; set; }
         public string? Description { get; set; }
         [JsonConverter(typeof(NullableDecimalConverter))]
@@ -47,8 +47,10 @@ namespace Data.DTOs
         public string? RecipientName { get; set; }
         public string? RecipientPhone { get; set; }
         public string? RecipientEmail { get; set; }
+        [JsonConverter(typeof(NullableIntConverter))]
         public int? OwnerTaskExecuteId { get; set; }
-        public int OwnerId { get; set; }
+        [JsonConverter(typeof(NullableIntConverter))]
+        public int? OwnerId { get; set; }
         [JsonConverter(typeof(NullableIntConverter))]
         public int? BuyerId { get; set; }
         [JsonConverter(typeof(NullableIntConverter))]

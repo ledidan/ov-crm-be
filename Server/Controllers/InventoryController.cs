@@ -170,6 +170,25 @@ namespace Server.Controllers
             return Ok(result);
         }
 
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DeleteInventory(int id)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+
+            if (partner == null)
+            {
+                return BadRequest("Đối tác không tồn tại");
+            }
+            var result = await _inventoryService.DeleteInventoryAsync(id, partner);
+
+            if (!result.Flag)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
 
         [HttpPost("generate-code")]
         public async Task<IActionResult> GenerateInventoryCode()

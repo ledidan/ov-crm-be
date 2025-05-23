@@ -124,7 +124,6 @@ namespace ServerLibrary.Services.Implementations
                     $"Không tìm thấy tồn kho với ID {id} cho đối tác này"
                 );
             }
-
             try
             {
                 _context.ProductInventories.Remove(inventory);
@@ -301,9 +300,14 @@ namespace ServerLibrary.Services.Implementations
                     && inventoryDto.ProductId != existingInventory.ProductId
                 )
                 {
-                    var product = await _context.Products.FirstOrDefaultAsync(p =>
-                        p.Id == inventoryDto.ProductId != null && p.Partner.Id == partner.Id
-                    );
+                    var product = await _context.Products
+     .Include(p => p.Partner)
+     .FirstOrDefaultAsync(p =>
+         p.Id == inventoryDto.ProductId &&
+         p.Partner.Id == partner.Id
+     );
+                    Console.WriteLine($"Updating ProductInventory with ProductId: {inventoryDto.ProductId}");
+
                     if (product == null)
                         return new DataObjectResponse(
                             false,

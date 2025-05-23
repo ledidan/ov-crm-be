@@ -87,7 +87,6 @@ builder.Services.AddSwaggerGen(options =>
     });
     options.CustomSchemaIds(type => type.Name);
 });
-
 //** Mongodb database
 builder.Services.Configure<MongoDBSettings>(
     builder.Configuration.GetSection("MongoDBSettings"));
