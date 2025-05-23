@@ -470,5 +470,36 @@ namespace Server.Controllers
 
             return Ok(response);
         }
+     
+        [HttpPost("import")]
+        public async Task<IActionResult> ImportCustomers([FromBody] List<CustomerDTO> customers)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var partner = await _partnerService.FindByClaim(identity);
+            var employee = await _employeeService.FindByClaim(identity);
+            if (customers == null || !customers.Any())
+            {
+                return BadRequest("Danh sách khách hàng không được để trống!");
+            }
+
+            if (employee == null)
+            {
+                return BadRequest($"Không tìm thấy nhân viên với ID {employee.Id}");
+            }
+
+            if (partner == null)
+            {
+                return BadRequest($"Không tìm thấy đối tác với ID {partner.Id}");
+            }
+            try
+            {
+                var result = await _customerService.ImportCustomerDataAsync(customers, employee, partner);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Lỗi hệ thống: {ex.Message}");
+            }
+        }
     }
 }

@@ -168,6 +168,7 @@ builder.Services.AddScoped<ILicenseCenterService, LicenseCenterService>();
 builder.Services.AddScoped<ICRMService, CRMService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<S3Service>();
+builder.Services.AddScoped<IImportLogger, ImportLogger>();
 builder.Services.AddScoped<VnPayLibrary>();
 
 // ** KeyedScoped

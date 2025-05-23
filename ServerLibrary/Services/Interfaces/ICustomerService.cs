@@ -38,8 +38,12 @@ namespace ServerLibrary.Services.Interfaces
 
         Task<GeneralResponse?> UnassignCustomerCareTicketFromCustomer(int id, int customerCareTicketId, Partner partner);
 
-        //  ** Bulk Get Customer Relationship
+        // ** Import Data CSV
 
+        Task<ImportResultDto<CustomerDTO>> ImportCustomerDataAsync(List<CustomerDTO> data, Employee employee, Partner partner);
+        
+        //  ** Bulk Get Customer Relationship
+            
         Task<List<ContactDTO>> GetAllContactsByIdAsync(int id, Partner partner);
 
         Task<PagedResponse<List<ContactDTO>>> GetAllContactAvailableByCustomer(int id, Partner partner, int pageNumber, int pageSize);

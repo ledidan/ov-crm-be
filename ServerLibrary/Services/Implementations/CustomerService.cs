@@ -4,6 +4,7 @@ using Data.DTOs;
 using Data.Entities;
 using Data.Enums;
 using Data.Responses;
+using Data.ThirdPartyModels;
 using Mapper.CustomerMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -18,22 +19,20 @@ namespace ServerLibrary.Services.Implementations
         private readonly AppDbContext _appDbContext;
         private readonly IMapper _mapper;
 
-        private readonly IContactService _contactService;
-
         private readonly IPartnerService _partnerService;
-        private readonly IEmployeeService _employeeService;
+        // private readonly IImportLogger _importLogger;
+
         public CustomerService(AppDbContext appDbContext,
             IPartnerService partnerService,
-            IContactService contactService,
-             IEmployeeService employeeService, IMapper mapper,
+              IMapper mapper,
+            //    IImportLogger importLogger,
              IHttpContextAccessor httpContextAccessor
              ) : base(appDbContext, httpContextAccessor)
         {
             _appDbContext = appDbContext;
             _partnerService = partnerService;
-            _contactService = contactService;
-            _employeeService = employeeService;
             _mapper = mapper;
+            // _importLogger = importLogger ?? throw new ArgumentNullException(nameof(importLogger));
         }
         public async Task<GeneralResponse?> BulkAddContactsIntoCustomer(List<int> contactIds, int customerId, Employee employee, Partner partner)
         {
@@ -1121,6 +1120,170 @@ namespace ServerLibrary.Services.Implementations
                 throw new Exception($"Lấy danh sách thẻ chăm sóc thất bại: {ex.Message}", ex);
             }
         }
-    }
 
+        public async Task<ImportResultDto<CustomerDTO>> ImportCustomerDataAsync(
+    List<CustomerDTO> data,
+    Employee employee,
+    Partner partner)
+        {
+            var result = new ImportResultDto<CustomerDTO>();
+            int rowIndex = 0;
+
+            foreach (var record in data)
+            {
+                rowIndex++;
+                try
+                {
+                    if (string.IsNullOrEmpty(record.AccountNumber))
+                    {
+                        result.Errors.Add(new ImportError<CustomerDTO>
+                        {
+                            Row = rowIndex,
+                            Flag = true,
+                            Data = new CustomerDTO
+                            {
+                                AccountNumber = record.AccountNumber,
+                                AccountName = record.AccountName,
+                            },
+                            Message = "Mã khách hàng (AccountNumber) không được để trống"
+                        });
+                        continue;
+                    }
+
+                    var existingCustomer = await _appDbContext.Customers
+                        .FirstOrDefaultAsync(c => c.AccountNumber == record.AccountNumber && c.PartnerId == partner.Id);
+
+                    if (existingCustomer != null)
+                    {
+                        try
+                        {
+                            _mapper.Map(record, existingCustomer);
+                            _appDbContext.Update(existingCustomer);
+                            await _appDbContext.SaveChangesAsync();
+                            result.Updated.Add(record);
+                        }
+                        catch (Exception ex)
+                        {
+                            result.Errors.Add(new ImportError<CustomerDTO>
+                            {
+                                Row = rowIndex,
+                                Flag = false,
+                                Data = new CustomerDTO
+                                {
+                                    AccountNumber = record.AccountNumber,
+                                    AccountName = record.AccountName,
+                                },
+                                Message = $"Lỗi khi cập nhật: {ex.Message}"
+                            });
+                        }
+                    }
+                    else
+                    {
+                        var createCustomerDto = MapToCreateCustomer(record, employee, partner);
+                        var createResult = await CreateAsync(createCustomerDto, employee, partner);
+
+                        if (createResult.Flag)
+                        {
+                            result.Added.Add(record);
+                        }
+                        else
+                        {
+                            result.Errors.Add(new ImportError<CustomerDTO>
+                            {
+                                Row = rowIndex,
+                                Flag = false,
+                                Data = new CustomerDTO
+                                {
+                                    AccountNumber = record.AccountNumber,
+                                    AccountName = record.AccountName,
+                                },
+                                Message = createResult.Message ?? "Tạo khách hàng thất bại"
+                            });
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.Errors.Add(new ImportError<CustomerDTO>
+                    {
+                        Row = rowIndex,
+                        Flag = false,
+                        Data = new CustomerDTO
+                        {
+                            AccountNumber = record.AccountNumber,
+                            AccountName = record.AccountName,
+                        },
+                        Message = $"Lỗi hệ thống: {ex.Message}"
+                    });
+                }
+            }
+            // result.ErrorLogUrl = await _importLogger.SaveImportErrorsToFile(result.Errors, "customer_import_errors");
+
+            return result;
+        }
+
+        private CreateCustomer MapToCreateCustomer(CustomerDTO record, Employee employee, Partner partner)
+        {
+            return new CreateCustomer
+            {
+                AccountNumber = record.AccountNumber,
+                AccountName = record.AccountName ?? "",
+                AccountReferredID = record.AccountReferredID,
+                AccountShortName = record.AccountShortName,
+                AccountTypeID = record.AccountTypeID,
+                Avatar = record.Avatar,
+                BankAccount = record.BankAccount,
+                BankName = record.BankName,
+                BillingCode = record.BillingCode,
+                BillingCountryID = record.BillingCountryID ?? "",
+                BillingDistrictID = record.BillingDistrictID ?? "",
+                BillingProvinceID = record.BillingProvinceID ?? "",
+                BillingStreet = record.BillingStreet,
+                BillingWardID = record.BillingWardID,
+                BillingLat = record.BillingLat,
+                BillingLong = record.BillingLong,
+                BudgetCode = record.BudgetCode,
+                BusinessTypeID = record.BusinessTypeID,
+                CelebrateDate = record.CelebrateDate,
+                Debt = record.Debt,
+                DebtLimit = record.DebtLimit,
+                Description = record.Description,
+                NumberOfDaysOwed = record.NumberOfDaysOwed,
+                Fax = record.Fax,
+                GenderID = record.GenderID,
+                Identification = record.Identification,
+                Inactive = record.Inactive,
+                IndustryID = record.IndustryID,
+                Latitude = record.Latitude,
+                LeadSourceID = record.LeadSourceID,
+                NoOfEmployeeID = record.NoOfEmployeeID,
+                OfficeEmail = record.OfficeEmail ?? "",
+                OfficeTel = record.OfficeTel ?? "",
+                AnnualRevenueID = record.AnnualRevenueID,
+                RevenueDetail = record.RevenueDetail,
+                SectorText = record.SectorText,
+                ShippingCode = record.ShippingCode,
+                ShippingCountryID = record.ShippingCountryID,
+                ShippingDistrictID = record.ShippingDistrictID,
+                ShippingLat = record.ShippingLat,
+                ShippingLong = record.ShippingLong,
+                ShippingProvinceID = record.ShippingProvinceID,
+                ShippingStreet = record.ShippingStreet,
+                ShippingWardID = record.ShippingWardID,
+                TaxCode = record.TaxCode,
+                CustomerSinceDate = record.CustomerSinceDate ?? DateTime.Now,
+                Website = record.Website,
+                IsPublic = record.IsPublic,
+                IsPartner = record.IsPartner,
+                IsPersonal = record.IsPersonal,
+                IsOldCustomer = record.IsOldCustomer,
+                IsDistributor = record.IsDistributor,
+                OwnerID = employee.Id.ToString(),
+                OwnerIDName = employee.FullName,
+                PartnerId = partner.Id,
+                EmployeeId = employee.Id,
+            };
+        }
+
+    }
 }

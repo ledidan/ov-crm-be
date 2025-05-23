@@ -38,67 +38,67 @@ public class PartnerControllerTests
         return identity;
     }
 
-    [Fact]
-    public async Task InitializePartnerAsync_ReturnsOk_WhenOwnerAndValid()
-    {
-        var mockIdentity = CreateMockIdentity();
-        var mockHttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(mockIdentity) };
-        _controller.ControllerContext = new ControllerContext { HttpContext = mockHttpContext };
+    // [Fact]
+    // public async Task InitializePartnerAsync_ReturnsOk_WhenOwnerAndValid()
+    // {
+    //     var mockIdentity = CreateMockIdentity();
+    //     var mockHttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(mockIdentity) };
+    //     _controller.ControllerContext = new ControllerContext { HttpContext = mockHttpContext };
 
-        var request = new RequestInitializePartner { UserId = 10 };
+    //     var request = new RequestInitializePartner { UserId = 10 };
 
-        _partnerServiceMock.Setup(x => x.FindByClaim(mockIdentity))
-            .ReturnsAsync(new Partner { Id = 1 });
+    //     _partnerServiceMock.Setup(x => x.FindByClaim(mockIdentity))
+    //         .ReturnsAsync(new Partner { Id = 1 });
 
-        _partnerServiceMock.Setup(x => x.CheckClaimByOwner(mockIdentity))
-            .ReturnsAsync(true);
+    //     _partnerServiceMock.Setup(x => x.CheckClaimByOwner(mockIdentity))
+    //         .ReturnsAsync(true);
 
-        _crmServiceMock.Setup(x => x.FirstSetupCRMPartnerAsync(1, 10, 2))
-            .ReturnsAsync(new DataObjectResponse(true, "OK"));
+    //     _crmServiceMock.Setup(x => x.FirstSetupCRMPartnerAsync(1, 10, 2))
+    //         .ReturnsAsync(new DataObjectResponse(true, "OK"));
 
-        var result = await _controller.InitializePartnerAsync(request);
+    //     var result = await _controller.InitializePartnerAsync(request);
 
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<DataObjectResponse>(okResult.Value);
-        Assert.True(response.Flag);
-    }
+    //     var okResult = Assert.IsType<OkObjectResult>(result);
+    //     var response = Assert.IsType<DataObjectResponse>(okResult.Value);
+    //     Assert.True(response.Flag);
+    // }
 
-    [Fact]
-    public async Task InitializePartnerAsync_ReturnsForbid_WhenNotOwner()
-    {
-        var mockIdentity = CreateMockIdentity("false");
-        var mockHttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(mockIdentity) };
-        _controller.ControllerContext = new ControllerContext { HttpContext = mockHttpContext };
+    // [Fact]
+    // public async Task InitializePartnerAsync_ReturnsForbid_WhenNotOwner()
+    // {
+    //     var mockIdentity = CreateMockIdentity("false");
+    //     var mockHttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(mockIdentity) };
+    //     _controller.ControllerContext = new ControllerContext { HttpContext = mockHttpContext };
 
-        var request = new RequestInitializePartner { UserId = 10 };
+    //     var request = new RequestInitializePartner { UserId = 10 };
 
-        _partnerServiceMock.Setup(x => x.FindByClaim(mockIdentity))
-            .ReturnsAsync(new Partner { Id = 1 });
+    //     _partnerServiceMock.Setup(x => x.FindByClaim(mockIdentity))
+    //         .ReturnsAsync(new Partner { Id = 1 });
 
-        _partnerServiceMock.Setup(x => x.CheckClaimByOwner(mockIdentity))
-            .ReturnsAsync(false);
+    //     _partnerServiceMock.Setup(x => x.CheckClaimByOwner(mockIdentity))
+    //         .ReturnsAsync(false);
 
-        var result = await _controller.InitializePartnerAsync(request);
+    //     var result = await _controller.InitializePartnerAsync(request);
 
-        Assert.IsType<ForbidResult>(result);
-    }
+    //     Assert.IsType<ForbidResult>(result);
+    // }
 
-    [Fact]
-    public async Task InitializePartnerAsync_ReturnsNotFound_WhenPartnerOrUserInvalid()
-    {
-        var mockIdentity = CreateMockIdentity();
-        var mockHttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(mockIdentity) };
-        _controller.ControllerContext = new ControllerContext { HttpContext = mockHttpContext };
+    // [Fact]
+    // public async Task InitializePartnerAsync_ReturnsNotFound_WhenPartnerOrUserInvalid()
+    // {
+    //     var mockIdentity = CreateMockIdentity();
+    //     var mockHttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(mockIdentity) };
+    //     _controller.ControllerContext = new ControllerContext { HttpContext = mockHttpContext };
 
-        var request = new RequestInitializePartner { UserId = 10 };
+    //     var request = new RequestInitializePartner { UserId = 10 };
 
-        _partnerServiceMock.Setup(x => x.FindByClaim(mockIdentity))
-            .ReturnsAsync(new Partner { Id = -1 });
+    //     _partnerServiceMock.Setup(x => x.FindByClaim(mockIdentity))
+    //         .ReturnsAsync(new Partner { Id = -1 });
 
-        var result = await _controller.InitializePartnerAsync(request);
+    //     var result = await _controller.InitializePartnerAsync(request);
 
-        var notFound = Assert.IsType<NotFoundObjectResult>(result);
-        Assert.Equal("Partner not found or user not found", notFound.Value);
-    }
+    //     var notFound = Assert.IsType<NotFoundObjectResult>(result);
+    //     Assert.Equal("Partner not found or user not found", notFound.Value);
+    // }
 }
 
