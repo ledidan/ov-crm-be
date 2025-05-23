@@ -12,8 +12,8 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250519133406_update-initialized-data-for-partner")]
-    partial class updateinitializeddataforpartner
+    [Migration("20250523153825_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

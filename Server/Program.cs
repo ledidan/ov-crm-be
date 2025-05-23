@@ -237,15 +237,15 @@ builder.Services.AddAuthentication();
 var app = builder.Build();
 app.UseStaticFiles();
 // Configure the HTTP request pipeline.
-// if (app.Environment.IsDevelopment())
-// {
-app.UseSwagger();
-app.UseSwaggerUI(options =>
+if (app.Environment.IsDevelopment())
 {
-    options.DefaultModelsExpandDepth(-1);
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "API nội bộ Autuna");
-});
-// }
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.DefaultModelsExpandDepth(-1);
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "API nội bộ Autuna");
+    });
+}
 
 // **  Enable Authentication & Authorization
 app.UseCors("AUTUNA_CRM");

@@ -152,6 +152,7 @@ namespace ServerLibrary.Migrations
                     Password = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     IsActive = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    IsGuestAccount = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     AccountStatus = table.Column<int>(type: "int", nullable: false),
                     IsActivateEmail = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
@@ -292,9 +293,13 @@ namespace ServerLibrary.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    CompanyCode = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     ShortName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Name = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Description = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     TaxIdentificationNumber = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -309,6 +314,17 @@ namespace ServerLibrary.Migrations
                     IsOrganization = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     OwnerFullName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    BusinessRegistrationNumber = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    EstablishedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    Address = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Fax = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Website = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsInitialized = table.Column<bool>(type: "tinyint(1)", nullable: true),
+                    InitializedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
@@ -991,12 +1007,14 @@ namespace ServerLibrary.Migrations
                     ApplicationPlanId = table.Column<int>(type: "int", nullable: true),
                     StartDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    LicenceType = table.Column<string>(type: "longtext", nullable: false)
+                    LicenceType = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CustomPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     AutoRenew = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     MaxEmployeesExpected = table.Column<int>(type: "int", nullable: true),
-                    Status = table.Column<string>(type: "longtext", nullable: false)
+                    Status = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ActivationCode = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     LastRenewedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
@@ -2138,13 +2156,19 @@ namespace ServerLibrary.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.InsertData(
-                table: "Applications",
-                columns: new[] { "ApplicationId", "CreatedDate", "Description", "ModifiedDate", "Name" },
+                table: "ApplicationPlans",
+                columns: new[] { "Id", "ApplicationId", "Description", "MaxEmployees", "Name", "PriceMonthly", "PriceYearly" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Customer Relationship Management", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "CRM" },
-                    { 2, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Human Resources Management", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "HRM" }
+                    { 1, 1, "Gói tiêu chuẩn", 5, "Standard", 220000m, 2400000m },
+                    { 2, 1, "Gói dành cho SME nhỏ, đầy đủ tính năng cho mọi ngành", 10, "Premium", 420000m, 4599000m },
+                    { 3, 1, "Gói dành cho doanh nghiệp lớn, full tính năng bán hàng và tool marketing cho mọi ngành.", 10, "Enterprise", 800000m, 9600000m }
                 });
+
+            migrationBuilder.InsertData(
+                table: "Applications",
+                columns: new[] { "ApplicationId", "CreatedDate", "Description", "ModifiedDate", "Name" },
+                values: new object[] { 1, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Phần mềm quản lý quan hệ khách hàng (Autuna CRM)", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "CRM" });
 
             migrationBuilder.InsertData(
                 table: "CRMPermissions",
