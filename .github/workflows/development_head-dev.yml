@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: ${{ github.ref == 'refs/heads/develop' && 'Production' }}
+      name: ${{ github.ref == 'refs/heads/develop' && 'Development' || 'Production' }}
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
       id-token: write #This is required for requesting the JWT
@@ -94,6 +94,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: .net-app
+      - name: Check Azure credentials
+        run: |
+            echo "Branch: ${GITHUB_REF}"
+            echo "Client ID: ${{ secrets.AZUREAPPSERVICE_CLIENTID_24C1FF815FB1407392965800C1A427BC }}"
+            echo "Tenant ID: ${{ secrets.AZUREAPPSERVICE_TENANTID_709BAEBDD9F14D98ADC2231760F80742 }}"
+            echo "Subscription ID: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_37D5841996BA483B8CB5959DD1183E0C }}"
+        env:
+            GITHUB_REF: ${{ github.ref }}
 
       - name: Login to Azure
         uses: azure/login@v2
