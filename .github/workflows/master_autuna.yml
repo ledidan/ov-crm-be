@@ -18,7 +18,7 @@ jobs:
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0'
+          dotnet-version: "8.0"
 
       - name: Check DOTNET_ROOT
         run: echo "DOTNET_ROOT is $DOTNET_ROOT"
@@ -44,6 +44,30 @@ jobs:
           mkdir -p ${{env.DOTNET_ROOT}}/myapp/ServerLibrary/Templates
           cp -r ServerLibrary/Templates/* ${{env.DOTNET_ROOT}}/myapp/ServerLibrary/Templates/
           ls -la ${{env.DOTNET_ROOT}}/myapp/ServerLibrary/Templates/
+
+      - name: Delete old '.net-app' artifacts
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            const oldArtifacts = artifacts.data.artifacts.filter(({ name }) => name === '.net-app');
+
+            for (const artifact of oldArtifacts) {
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id,
+              });
+              core.info(`Deleted artifact: ${artifact.name} (${artifact.id})`);
+            }
+
+            if (oldArtifacts.length === 0) {
+              core.info('No old ".net-app" artifacts found to delete.');
+            }
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

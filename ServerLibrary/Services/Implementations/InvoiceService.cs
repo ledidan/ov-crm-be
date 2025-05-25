@@ -932,7 +932,7 @@ namespace ServerLibrary.Services.Implementations
                     if (!customerExists)
                     {
                         Console.WriteLine($"CustomerId {customerId} not found in database.");
-                        return new GeneralResponse(false, "Khách hàng không tồn tại.");
+                        return new GeneralResponse(false, "Không tìm thấy khách hàng để xuất hoá đơn.");
                     }
                     Console.WriteLine($"Fetching OrderDetails for {orders.Count} orders...");
                     var orderDetails = await _ordersDetailsCollection
