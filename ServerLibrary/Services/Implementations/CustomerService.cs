@@ -25,7 +25,7 @@ namespace ServerLibrary.Services.Implementations
         public CustomerService(AppDbContext appDbContext,
             IPartnerService partnerService,
               IMapper mapper,
-            //    IImportLogger importLogger,
+             //    IImportLogger importLogger,
              IHttpContextAccessor httpContextAccessor
              ) : base(appDbContext, httpContextAccessor)
         {
@@ -1128,7 +1128,6 @@ namespace ServerLibrary.Services.Implementations
         {
             var result = new ImportResultDto<CustomerDTO>();
             int rowIndex = 0;
-
             foreach (var record in data)
             {
                 rowIndex++;
@@ -1217,8 +1216,6 @@ namespace ServerLibrary.Services.Implementations
                     });
                 }
             }
-            // result.ErrorLogUrl = await _importLogger.SaveImportErrorsToFile(result.Errors, "customer_import_errors");
-
             return result;
         }
 
